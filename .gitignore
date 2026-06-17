@@ -1,0 +1,35 @@
+
+# Secrets — real keys live in .env (untracked). Copy .env.example and fill in.
+main
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Hardhat build artifacts
+hardhat/node_modules/
+hardhat/cache/
+hardhat/artifacts/
+hardhat/deployments/sepolia.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+# Logs / debug output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Claude Code local-machine settings (keep .claude/settings.json shareable)
+.claude/settings.local.json

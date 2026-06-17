@@ -1,0 +1,133 @@
+{
+  "case_id": "CASE-EBL-2026-OIL-SG-ULS",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Crude oil (Murban), Singapore -> Ulsan. Priced per barrel. Fields align to docs/PRD.md PricingQuote model. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/crude-sg-ulsan/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/crude-sg-ulsan/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-OIL-0091",
+    "bl_no": "EET-CRUDE-2026-0091",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "essDOCS CargoDocs / TradeTrust",
+    "ebl_title_ref": "TT-EBL-CRUDE-0091-AE73",
+    "shipper": "Equator Energy Trading Pte. Ltd.",
+    "consignee": "TO ORDER OF STANDARD CHARTERED BANK (SINGAPORE) LTD.",
+    "notify_party": "Hanbit Refining Co., Ltd., Ulsan, Republic of Korea",
+    "carrier": "Meridian Tankers Ltd. (MT Strait Voyager)",
+    "vessel": "MT Strait Voyager",
+    "voyage_no": "V.27",
+    "port_of_loading": "Universal Terminal, Jurong Island, Singapore",
+    "port_of_discharge": "Ulsan, Republic of Korea",
+    "incoterms": "CIF Ulsan",
+    "cargo": "Crude Oil (Murban grade, light sweet)",
+    "quantity_bbl": 600000,
+    "quantity_mt": 78221,
+    "api_gravity": 40.5,
+    "sulphur_pct": 0.74,
+    "declared_value_usd": 57900000,
+    "issue_date": "2026-06-01",
+    "shipped_on_board": "2026-06-01",
+    "eta": "2026-06-13",
+    "document_hash": "0x2d77a0c41f6b9e85530a1c4e7f92b6d8430ea15c9b7d206e84f1c3a05e9b6712"
+  },
+  "commercial_invoice": {
+    "invoice_no": "EET-INV-2026-0091",
+    "invoice_date": "2026-06-02",
+    "sales_contract": "EET-HANBIT-CRUDE-2026-04",
+    "incoterms": "CIF Ulsan",
+    "payment_terms": "Irrevocable L/C at sight (90% provisional / 10% on final QP)",
+    "pricing_basis": "Platts Dated Brent (QP mean over 5 quotations from B/L date) + Murban grade differential",
+    "qp_reference_price_usd_per_bbl": 95.2,
+    "grade_differential_usd_per_bbl": 1.3,
+    "unit_price_usd_per_bbl": 96.5,
+    "quantity_bbl": 600000,
+    "total_amount_usd": 57900000,
+    "provisional_payment_usd": 52110000,
+    "currency": "USD",
+    "is_provisional": true
+  },
+  "cargo": {
+    "commodity": "Crude Oil",
+    "grade": "Murban (light sweet), API 40.5, S 0.74%",
+    "hs_code": "270900",
+    "quantity": 600000,
+    "unit": "BBL",
+    "quantity_mt": 78221,
+    "bbl_per_mt": 7.6707
+  },
+  "insurance": {
+    "provider": "Marina Bay Energy Marine Insurance (demo)",
+    "policy_type": "Marine cargo all risks + war risk (energy)",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 63690000,
+    "expires_at": "2026-07-02",
+    "policy_hash": "0x7c10e93a64b2f8851d0a3c7e519b6f24d8730ae1c95b2076e4f8a13c0d6e92f5"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_bbl": 77,
+    "cost_of_goods_usd": 46200000,
+    "expected_gross_profit_usd": 11700000,
+    "gross_margin_pct": 0.2021,
+    "note": "Exporter contracted the cargo at ~USD 77/bbl earlier in the cycle versus the CIF Ulsan invoice of USD 96.5/bbl; the war premium is embedded margin. Profit (= invoice 57,900,000 - COGS 46,200,000 = 11,700,000) funds the RWA discount."
+  },
+  "financing": {
+    "requested_cash_usd": 46000000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.9,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Crude Oil",
+    "benchmark": "ICE Brent / Platts Dated Brent",
+    "price_unit": "USD/bbl",
+    "reference_price_usd_per_bbl": 95.2,
+    "grade_differential_usd_per_bbl": 1.3,
+    "landed_price_usd_per_bbl": 96.5,
+    "initial_price_usd_per_bbl": 66.5,
+    "current_price_usd_per_bbl": 95.2,
+    "bbl_per_mt": 7.6707,
+    "as_of": "2026-06-05",
+    "source": "calibrated to ICE Brent June 2026 (Strait of Hormuz conflict, +43% y/y)"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-01",
+      "type": "loaded_on_board",
+      "description": "600,000 bbl Murban crude loaded ex Universal Terminal shore tanks onto MT Strait Voyager.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-05",
+      "type": "no_damage_reported",
+      "description": "Laden tanker northbound to Ulsan on schedule.",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-05",
+      "type": "war_risk",
+      "region": "Middle East / Strait of Hormuz",
+      "severity": "critical",
+      "description": "US-Iran conflict and threatened closure of the Strait of Hormuz are the dominant driver of crude prices; cargo loads ex-Singapore (post-Hormuz), reducing transit war exposure but not benchmark price risk."
+    },
+    {
+      "date": "2026-06-05",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "severity": "warning",
+      "description": "Brent near USD 95/bbl, +43% y/y, with falling US inventories; large daily swings mean RWA collateral valuation needs a volatility haircut on the war premium."
+    },
+    {
+      "date": "2026-06-05",
+      "type": "fx_volatility",
+      "region": "South Korea (KRW)",
+      "severity": "info",
+      "description": "Energy-driven inflation pressuring KRW; buyer pays in USD under L/C, so direct FX exposure to the pool is limited."
+    }
+  ]
+}

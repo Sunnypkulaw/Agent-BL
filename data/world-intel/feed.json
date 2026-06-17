@@ -1,0 +1,136 @@
+{
+  "feed_version": "2026-06-07",
+  "note": "OFFLINE FALLBACK fixtures for the xAPI world-risk agent (src/agent/worldRiskAgent.js). Used only when XAPI_KEY is absent or a live xAPI call fails, so the demo always runs without network. Content is ILLUSTRATIVE / FICTIONAL, calibrated to the June 2026 Strait of Hormuz war-premium narrative. Handles are demo placeholders, NOT real accounts, and quotes are not attributed to real individuals. With XAPI_KEY set, these are replaced by live Twitter/X, Google News and prediction-market results.",
+  "tweets": [
+    {
+      "id": "demo-tw-0001",
+      "author": { "screen_name": "GulfShippingWatch", "name": "Gulf Shipping Watch (demo)", "verified": true },
+      "full_text": "ALERT: Naval escort convoys suspended near the Strait of Hormuz after overnight escalation; several tankers and bulk carriers holding position outside the Gulf. War-risk surcharges spiking across the route.",
+      "created_at": "2026-06-08T03:12:00Z",
+      "favorite_count": 4820,
+      "retweet_count": 2110,
+      "views_count": 612000,
+      "url": "https://x.com/GulfShippingWatch/status/demo0001",
+      "tags": ["hormuz", "war", "shipping", "strait"]
+    },
+    {
+      "id": "demo-tw-0002",
+      "author": { "screen_name": "MetalsDeskLive", "name": "Metals Desk Live (demo)", "verified": true },
+      "full_text": "LME copper prints a fresh record near $14,200/MT as the Hormuz supply shock and Chilean output weakness compound. Realized vol is extreme — physical premiums blowing out in Shanghai.",
+      "created_at": "2026-06-08T06:40:00Z",
+      "favorite_count": 1530,
+      "retweet_count": 540,
+      "views_count": 188000,
+      "url": "https://x.com/MetalsDeskLive/status/demo0002",
+      "tags": ["copper", "lme", "volatility", "price"]
+    },
+    {
+      "id": "demo-tw-0003",
+      "author": { "screen_name": "GeoRiskMonitor", "name": "Geo Risk Monitor (demo)", "verified": false },
+      "full_text": "Underwriters adding Gulf war exclusions and shortening marine cover windows tonight. If your policy expiry sits near ETA, you may be effectively uninsured on arrival.",
+      "created_at": "2026-06-08T05:05:00Z",
+      "favorite_count": 880,
+      "retweet_count": 410,
+      "views_count": 96000,
+      "url": "https://x.com/GeoRiskMonitor/status/demo0003",
+      "tags": ["insurance", "war", "coverage", "hormuz"]
+    },
+    {
+      "id": "demo-tw-0004",
+      "author": { "screen_name": "PortOpsAsia", "name": "Port Ops Asia (demo)", "verified": false },
+      "full_text": "Yangshan (Shanghai) discharge berths seeing longer waits as rerouted Gulf-origin tonnage piles into East Asia. Typhoon-season system forming in the East China Sea may add delays this week.",
+      "created_at": "2026-06-08T01:55:00Z",
+      "favorite_count": 320,
+      "retweet_count": 150,
+      "views_count": 41000,
+      "url": "https://x.com/PortOpsAsia/status/demo0004",
+      "tags": ["port", "congestion", "shanghai", "weather", "typhoon"]
+    }
+  ],
+  "official_tweets": {
+    "StateDeptDemo": [
+      {
+        "id": "demo-off-0001",
+        "author": { "screen_name": "StateDeptDemo", "name": "Dept. of State Press (demo)", "verified": true },
+        "full_text": "We condemn the attacks threatening freedom of navigation in the Strait of Hormuz and are coordinating with partners on additional sanctions against entities enabling the blockade.",
+        "created_at": "2026-06-08T04:20:00Z",
+        "favorite_count": 9100,
+        "retweet_count": 3300,
+        "views_count": 1450000,
+        "url": "https://x.com/StateDeptDemo/status/demooff0001",
+        "tags": ["hormuz", "sanction", "war", "navigation"]
+      }
+    ],
+    "EnergyGovDemo": [
+      {
+        "id": "demo-off-0002",
+        "author": { "screen_name": "EnergyGovDemo", "name": "Energy Information (demo)", "verified": true },
+        "full_text": "Roughly a fifth of seaborne oil transits Hormuz. A sustained disruption would pressure crude and refined product prices and ripple into industrial metals via energy costs.",
+        "created_at": "2026-06-08T07:10:00Z",
+        "favorite_count": 2600,
+        "retweet_count": 980,
+        "views_count": 510000,
+        "url": "https://x.com/EnergyGovDemo/status/demooff0002",
+        "tags": ["hormuz", "oil", "energy", "price"]
+      }
+    ]
+  },
+  "news": [
+    {
+      "title": "Strait of Hormuz effectively closed after overnight escalation; shippers reroute",
+      "source": "Global Wire (demo)",
+      "date": "2026-06-08",
+      "link": "https://news.example.com/hormuz-closed-demo",
+      "snippet": "Open conflict and the threatened closure of the Strait of Hormuz disrupted one of the world's most critical energy and metals chokepoints, sending war-risk premiums sharply higher.",
+      "tags": ["hormuz", "war", "closure", "shipping"]
+    },
+    {
+      "title": "Copper hits record high as supply-shock fears grip the LME",
+      "source": "Markets Daily (demo)",
+      "date": "2026-06-08",
+      "link": "https://news.example.com/copper-record-demo",
+      "snippet": "Copper surged to a record near $14,200 a tonne as the Hormuz crisis and Chilean supply weakness drove a broad commodity war premium across metals and energy.",
+      "tags": ["copper", "price", "volatility", "record"]
+    },
+    {
+      "title": "New sanctions package targets entities enabling Gulf shipping blockade",
+      "source": "Policy Brief (demo)",
+      "date": "2026-06-08",
+      "link": "https://news.example.com/sanctions-demo",
+      "snippet": "Authorities announced an expanded sanctions and export-control package aimed at vessels and intermediaries linked to the Strait of Hormuz disruption.",
+      "tags": ["sanction", "embargo", "gulf", "export"]
+    }
+  ],
+  "prediction_markets": [
+    {
+      "market": "Strait of Hormuz closure in 2026",
+      "platform": "Polymarket (demo snapshot)",
+      "question": "Will the Strait of Hormuz be closed to commercial shipping at any point before Dec 31, 2026?",
+      "implied_prob": 0.41,
+      "volume_usd": 8200000,
+      "resolution_date": "2026-12-31",
+      "link": "https://polymarket.com/event/hormuz-closure-2026-demo",
+      "tags": ["hormuz", "war", "closure", "strait"]
+    },
+    {
+      "market": "Copper above $15,000/MT in 2026",
+      "platform": "Polymarket (demo snapshot)",
+      "question": "Will LME copper trade above $15,000/MT at any point in 2026?",
+      "implied_prob": 0.33,
+      "volume_usd": 2100000,
+      "resolution_date": "2026-12-31",
+      "link": "https://polymarket.com/event/copper-15k-2026-demo",
+      "tags": ["copper", "price", "volatility"]
+    },
+    {
+      "market": "Major Gulf-linked sanctions escalation in 2026",
+      "platform": "Polymarket (demo snapshot)",
+      "question": "Will a new major sanctions package targeting Gulf shipping be enacted in 2026?",
+      "implied_prob": 0.57,
+      "volume_usd": 1450000,
+      "resolution_date": "2026-12-31",
+      "link": "https://polymarket.com/event/gulf-sanctions-2026-demo",
+      "tags": ["sanction", "embargo", "gulf"]
+    }
+  ]
+}

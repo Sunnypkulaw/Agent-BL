@@ -1,0 +1,10 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
+  "contract": "TradeShieldRWA",
+  "address": "0x9Df67e65B77DdfDceaDf04738Aec911D458E9336",
+  "deployTx": "0xea1abdc2b7902ce34540f049915be7b4c52eb4df1d3830f17826ba94fd93f049",
+  "explorer": "https://sepolia.etherscan.io/address/0x9Df67e65B77DdfDceaDf04738Aec911D458E9336",
+  "deployedAt": "2026-06-07T08:43:22.945Z"
+}

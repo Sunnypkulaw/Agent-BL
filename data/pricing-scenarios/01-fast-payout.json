@@ -1,0 +1,14 @@
+{
+  "name": "fast-payout",
+  "description": "Exporter chooses FAST payout on the clean copper case: profit-driven price ~0.80, opens cleanly.",
+  "base_case": "data/cases/copper-sg-shanghai.case.json",
+  "overrides": { "financing": { "payout_speed": "FAST" } },
+  "pricing_expectations": {
+    "payout_speed": "FAST",
+    "pricing_action": "OPEN_OFFERING",
+    "binding_constraint": "EXPORTER_PROFIT",
+    "risk_level": "MEDIUM",
+    "min_issue_price": 0.79,
+    "max_issue_price": 0.81
+  }
+}

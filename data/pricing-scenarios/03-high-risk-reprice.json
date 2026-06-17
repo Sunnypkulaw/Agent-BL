@@ -1,0 +1,34 @@
+{
+  "name": "high-risk-reprice",
+  "description": "FAST copper offering opens at ~0.80, then a severe-weather + route-deviation event raises risk to WARNING in transit and the RiskPricingOracle reprices the pool DOWN.",
+  "base_case": "data/cases/copper-sg-shanghai.case.json",
+  "overrides": { "financing": { "payout_speed": "FAST" } },
+  "pricing_expectations": {
+    "payout_speed": "FAST",
+    "pricing_action": "OPEN_OFFERING",
+    "risk_level": "MEDIUM",
+    "min_issue_price": 0.79,
+    "max_issue_price": 0.81
+  },
+  "offering_expectations": {
+    "final_state": "Redeemed",
+    "includes_states": ["Repriced"],
+    "events": [
+      {
+        "category": "macro",
+        "date": "2026-06-09",
+        "type": "severe_weather",
+        "region": "East China Sea",
+        "severity": "warning",
+        "description": "Typhoon-season system threatens the Yangshan discharge window."
+      },
+      {
+        "category": "shipment",
+        "date": "2026-06-09",
+        "type": "route_deviation",
+        "severity": "warning",
+        "description": "Vessel reroutes around a security advisory zone; longer transit."
+      }
+    ]
+  }
+}

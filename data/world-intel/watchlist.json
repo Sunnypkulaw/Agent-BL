@@ -1,0 +1,27 @@
+{
+  "watchlist_version": "2026-06-07",
+  "note": "Configures what the xAPI world-risk agent monitors for a cargo: official/institution handles to poll for statements, query templates per signal type, and region keyword sets used to detect chokepoint exposure (e.g. Strait of Hormuz). Handles are DEMO placeholders; replace with real handles when running live.",
+  "official_handles": [
+    { "screen_name": "StateDeptDemo", "name": "Dept. of State Press (demo)", "why": "sanctions / freedom-of-navigation statements" },
+    { "screen_name": "EnergyGovDemo", "name": "Energy Information (demo)", "why": "energy supply / chokepoint commentary" }
+  ],
+  "query_templates": {
+    "war_route": "{region} shipping war risk OR strait closure OR naval escalation",
+    "commodity_vol": "{commodity} price surge OR record high OR supply shock OR volatility",
+    "sanction": "{commodity} sanctions OR embargo OR export ban {region}",
+    "port": "{discharge_port} port congestion OR berth delay OR strike",
+    "prediction": "Polymarket {region} closure OR conflict odds"
+  },
+  "region_keywords": {
+    "hormuz": ["strait of hormuz", "hormuz", "persian gulf", "arabian gulf", "iran", "oman", "gulf"],
+    "red_sea": ["red sea", "bab-el-mandeb", "suez", "houthi", "yemen"],
+    "taiwan_strait": ["taiwan strait", "taiwan", "south china sea"],
+    "black_sea": ["black sea", "bosphorus", "ukraine", "odesa"],
+    "malacca": ["strait of malacca", "malacca", "singapore strait"]
+  },
+  "commodity_aliases": {
+    "copper": ["copper", "cathode", "lme copper", "metals"],
+    "crude oil": ["crude", "oil", "brent", "wti", "petroleum", "energy"],
+    "lng": ["lng", "natural gas", "gas"]
+  }
+}

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TradeShield · AI Dynamic Pricing for eBL-backed RWA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <!-- ============ Sticky top bar: brand · nav tabs · lang · wallet · LIVE ============ -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="brand-mark">◈</span>
+          <div class="brand-text">
+            <strong>TradeShield</strong>
+            <span class="brand-tag" data-i18n="brand_tag">AI 为提单背书 RWA 动态定价 · 链上执行</span>
+          </div>
+        </div>
+
+        <nav id="nav" class="nav" role="tablist" aria-label="views">
+          <button class="nav-tab active" data-view="mint" role="tab" data-i18n="nav_mint">① 提单上链 · 铸造 RWA</button>
+          <button class="nav-tab" data-view="voyage" role="tab" data-i18n="nav_voyage">② 航运追踪 · 实时定价</button>
+        </nav>
+
+        <div class="topbar-right">
+          <button id="lang-btn" class="btn ghost lang-btn" data-i18n-title="lang_btn_title">EN</button>
+          <button id="wallet-btn" class="btn ghost wallet-btn" data-i18n="wallet_connect" data-i18n-title="wallet_title">🦊 连接钱包</button>
+          <div class="live-pill" id="live-pill" data-i18n-title="live_tip">
+            <span class="dot"></span> LIVE
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ Shared sub-bar: trade-case / eBL selector (both views) ============ -->
+    <div class="subbar">
+      <div class="subbar-inner">
+        <label class="control-label" data-i18n="case_label">交易案例 / 电子提单</label>
+        <div id="case-select" class="segmented scenario" role="tablist" aria-label="Trade case"></div>
+        <span id="chain-status" class="chain-status"></span>
+      </div>
+    </div>
+
+    <main class="page">
+      <!-- =================================================================== -->
+      <!-- VIEW ① — Tokenize: Bill of Lading -> Smart Contract -> RWA mint      -->
+      <!-- =================================================================== -->
+      <section class="view" id="view-mint">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow" data-i18n="hero_eyebrow">提单上链 · RWA 折价发行</p>
+            <h1 data-i18n="hero_h1">把在途货物权变成链上 RWA。</h1>
+            <p class="subtitle" data-i18n-html="hero_subtitle">
+              出口商质押电子提单，AI Pricing &amp; Risk Agent 读取货值、单据与实时宏观风险，
+              给出可解释的 RWA 发行折价 —— <em>风险越高 → 发行价越低 → 投资者潜在收益越高</em>。
+              输入融资金额即可铸造 RWA 并锚定上链（Sepolia）。
+            </p>
+            <div id="deal-strip" class="deal-strip"><span class="skeleton-line"></span></div>
+          </div>
+          <div class="hero-price" id="hero-price">
+            <span class="skeleton-block"></span>
+          </div>
+        </section>
+
+        <section class="panel" id="valuation-panel">
+          <div class="panel-head">
+            <h2><span class="seq">1</span> <span data-i18n="p1_h">AI 货值估算 &amp; 航线风险</span></h2>
+            <p class="panel-sub" data-i18n-html="p1_sub">AI 核验的抵押货值，以及这条航线各类风险的分数与<strong>数据来源</strong>。</p>
+          </div>
+          <div class="valuation-grid">
+            <div class="card collateral-card">
+              <span class="metric-label" data-i18n="collateral_label">AI 核验抵押货值</span>
+              <span class="collateral-val" id="mint-collateral">—</span>
+              <div class="collateral-rows" id="collateral-rows"></div>
+            </div>
+            <div class="card risk-card">
+              <div class="card-head">
+                <h3 data-i18n="riskdims_h">航线风险维度</h3>
+                <span id="risk-total" class="risk-total">—</span>
+              </div>
+              <div id="risk-dims" class="risk-dims"></div>
+              <div id="intel-cites" class="intel-cites"></div>
+            </div>
+          </div>
+          <div class="sources-block">
+            <span class="sources-head" data-i18n="sources_head">📑 数据来源</span>
+            <div id="risk-sources" class="risk-sources"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="console-panel">
+          <div class="panel-head">
+            <h2><span class="seq">2</span> <span data-i18n="p2_h">AI 定价台</span></h2>
+            <p class="panel-sub" data-i18n="p2_sub">发行价如何从 $1.00 目标兑付价一步步折下来：base 锚点 → 减急用折价 → 减风险折价。</p>
+          </div>
+          <div id="waterfall" class="waterfall"></div>
+          <p id="console-explain" class="explain"></p>
+        </section>
+
+        <section class="panel" id="mint-panel">
+          <div class="panel-head">
+            <h2><span class="seq">3</span> <span data-i18n="p3_h">融资 &amp; 铸造 RWA</span></h2>
+            <p class="panel-sub" data-i18n="p3_sub">选择到账速度（AI 按可验证毛利分成定价），输入融资金额，铸造 RWA 并上链。</p>
+          </div>
+
+          <div class="control-group speed-group">
+            <label class="control-label" data-i18n="payout_speed_label">出口商到账速度</label>
+            <div id="speed-select" class="segmented speed" role="tablist" aria-label="Payout speed"></div>
+          </div>
+          <div id="speed-cards" class="speed-cards"></div>
+
+          <div class="mint-grid">
+            <div class="card mint-form">
+              <label class="control-label" for="mint-financing" data-i18n="financing_label">商家融资金额 (USD)</label>
+              <div class="mint-input-row">
+                <input id="mint-financing" type="number" min="0" step="100000" inputmode="numeric" />
+                <button id="mint-btn" class="btn" data-i18n="mint_btn">⛓ 铸造 RWA 上链</button>
+              </div>
+              <div class="mint-readout" id="mint-readout"></div>
+              <p class="compliance" id="compliance-note" data-i18n-html="compliance">
+                <strong>非保本。</strong> 1 RWA = $1.00 是<em>目标</em>兑付价，取决于进口商付款、货物结算与保险覆盖。仅限合格投资者。
+              </p>
+            </div>
+
+            <div class="card mint-onchain">
+              <h3 class="card-head-line" data-i18n="onchain_h">链上锚定 · TradeShieldRWA</h3>
+              <div class="hash-row"><span>quote_hash</span><code id="quote-hash" class="hash">—</code></div>
+              <div class="hash-row"><span>evidence_hash</span><code id="evidence-hash" class="hash">—</code></div>
+              <div id="mint-result" class="mint-result">
+                <p class="muted" data-i18n="mint_hint">输入融资金额并点击「铸造 RWA 上链」。连接钱包且合约已部署时铸造真实 Sepolia 交易，否则走高保真模拟交易。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VIEW ② — Voyage tracking + live pricing + in-transit events         -->
+      <!-- =================================================================== -->
+      <section class="view" id="view-voyage" hidden>
+        <section class="panel" id="voyage-panel">
+          <div class="panel-head">
+            <h2><span class="seq">1</span> <span data-i18n="vp1_h">航运进度（虚拟时间）</span></h2>
+            <p class="panel-sub" id="voyage-sub" data-i18n="vp1_sub">将鼠标移到船上可查看当前虚拟时间与所在航段。</p>
+          </div>
+          <div class="voyage">
+            <div class="port port-dep">
+              <span class="port-tag" data-i18n="vp_dep">出发</span>
+              <strong id="dep-port">—</strong>
+              <span id="dep-date" class="port-date">—</span>
+            </div>
+            <div class="voyage-rail" id="voyage-rail">
+              <div class="rail-line"></div>
+              <div class="rail-progress" id="rail-progress"></div>
+              <div class="ship" id="ship" tabindex="0">
+                <span class="ship-icon">🚢</span>
+                <div class="ship-tooltip" id="ship-tooltip">—</div>
+              </div>
+            </div>
+            <div class="port port-arr">
+              <span class="port-tag" data-i18n="vp_arr">预计到达</span>
+              <strong id="arr-port">—</strong>
+              <span id="arr-date" class="port-date">—</span>
+            </div>
+          </div>
+          <div class="voyage-controls">
+            <button id="voyage-play" class="btn ghost sm" data-i18n="pause_label">⏸ 暂停</button>
+            <input id="voyage-scrub" class="scrubber" type="range" min="0" max="1000" value="0" />
+            <span id="voyage-eta-note" class="muted"></span>
+          </div>
+        </section>
+
+        <section class="panel" id="live-panel">
+          <div class="panel-head">
+            <h2><span class="seq">2</span> <span data-i18n="vp2_h">实时 RWA 定价 &amp; 认购进度</span></h2>
+            <p class="panel-sub" data-i18n="vp2_sub">在途风险一旦升级，AI 立即重定价；下方价格随之变化。</p>
+          </div>
+          <div class="live-grid">
+            <div class="card live-price-card">
+              <span class="metric-label" data-i18n="live_price_label">当前 RWA 发行价</span>
+              <div class="live-price" id="live-price">$—</div>
+              <div class="live-meta">
+                <span class="badge" id="live-action">—</span>
+                <span class="live-yield" id="live-yield">—</span>
+              </div>
+            </div>
+            <div class="card live-stats">
+              <div class="live-kv"><span data-i18n="live_risk_label">风险等级</span><strong id="live-risk" class="badge">—</strong></div>
+              <div class="live-kv"><span data-i18n="live_riskbps_label">风险分数</span><strong id="live-riskbps">—</strong></div>
+              <div class="fin-block">
+                <div class="fin-head"><span data-i18n="fin_head">认购进度</span><span id="fin-label">—</span></div>
+                <div class="fin-progress"><div class="fin-bar" id="fin-bar"></div></div>
+              </div>
+            </div>
+          </div>
+          <div id="voyage-callout" class="lc-callout" hidden></div>
+        </section>
+
+        <section class="panel" id="worldrisk-panel">
+          <div class="panel-head">
+            <h2><span class="seq">3</span> <span data-i18n="wp_h">实时世界风险情报（xAPI）</span></h2>
+            <p class="panel-sub" data-i18n="wp_sub">通过 xAPI 拉取 X/推特、官方发言、新闻与预测市场等真实信号，AI 据此对这批货实时风控并重新定价。</p>
+            <div class="timeline-actions">
+              <button id="wr-fetch" class="btn ghost sm" data-i18n="wr_refresh">↻ 刷新实时信号</button>
+              <button id="wr-apply" class="btn sm" data-i18n="wr_apply" hidden>⚡ 用实时情报重新定价</button>
+              <span id="wr-mode" class="wr-mode"></span>
+            </div>
+          </div>
+          <div id="wr-body" class="wr-body"><p class="muted" data-i18n="wr_loading">拉取实时世界风险…</p></div>
+        </section>
+
+        <section class="panel" id="events-panel">
+          <div class="panel-head">
+            <h2><span class="seq">4</span> <span data-i18n="vp3_h">突发事件模拟（Demo）</span></h2>
+            <p class="panel-sub" data-i18n="vp3_sub">点击模拟航运途中发生的突发事件，观察 AI 如何重定价 RWA。</p>
+            <div class="timeline-actions">
+              <div id="event-btns" class="event-btns"></div>
+              <button id="event-reset" class="btn ghost subtle sm" data-i18n="reset_btn" hidden>↺ 重置航程</button>
+            </div>
+          </div>
+          <div id="lifecycle" class="lifecycle"></div>
+          <ol id="timeline" class="timeline"></ol>
+        </section>
+
+        <section class="panel" id="intel-panel">
+          <div class="panel-head">
+            <h2><span class="seq">5</span> <span data-i18n="vp4_h">AI 风险情报（含来源）</span></h2>
+            <p class="panel-sub" data-i18n="vp4_sub">AI 收集的宏观/地缘风险事件，每条标注信息来源；可搜索 RAG 知识库。</p>
+          </div>
+          <div class="card">
+            <div id="risk-feed" class="risk-feed"><p class="muted" data-i18n="feed_loading">加载中…</p></div>
+            <div class="search-bar">
+              <input id="rag-query" data-i18n-ph="rag_ph" placeholder='搜索情报…' />
+              <button id="rag-search-btn" class="btn" data-i18n="rag_btn">搜索</button>
+            </div>
+            <div id="rag-results" class="rag-results"></div>
+          </div>
+        </section>
+      </section>
+
+      <footer class="page-foot">
+        <span data-i18n="footer_left">TradeShield Agent · ETHBeijing 2026 hackathon</span>
+        <span class="muted" data-i18n="footer_right">所有数字由本地 AI 定价引擎实时产生 · 货值估算、风险评分与哈希均确定性、可离线复现 · 上链锚定于 Sepolia 测试网</span>
+      </footer>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

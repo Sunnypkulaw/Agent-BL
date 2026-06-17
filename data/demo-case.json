@@ -1,0 +1,76 @@
+{
+  "case_id": "CASE-EBL-2026-0001",
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-0001",
+    "shipper": "Shanghai Metals Export Co.",
+    "consignee": "Hamburg Industrial GmbH",
+    "carrier": "OceanLink Shipping",
+    "vessel": "Pacific Dawn",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Hamburg",
+    "cargo": "Copper Cathodes",
+    "quantity_mt": 1000,
+    "declared_value_usd": 8500000,
+    "issue_date": "2026-06-01",
+    "eta": "2026-07-16",
+    "document_hash": "0xdemoebl0001"
+  },
+  "insurance": {
+    "provider": "Demo Marine Insurance Ltd.",
+    "insured_value_usd": 8000000,
+    "expires_at": "2026-07-20",
+    "policy_hash": "0xdemoinsurance0001"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_mt": 7400,
+    "cost_of_goods_usd": 7400000,
+    "expected_gross_profit_usd": 1100000,
+    "gross_margin_pct": 0.129,
+    "note": "Exporter contracted 1,000 MT copper at ~USD 7,400/MT versus the USD 8,500/MT declared CIF value; the ~USD 1.1M verified gross profit (= declared 8,500,000 - COGS 7,400,000) is what funds the RWA discount."
+  },
+  "financing": {
+    "requested_amount_usd": 5600000,
+    "duration_days": 45,
+    "expected_yield_bps": 600,
+    "initial_ltv": 0.7,
+    "liquidation_threshold": 0.85,
+    "currency": "USDC",
+    "requested_cash_usd": 5600000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9
+  },
+  "market": {
+    "commodity": "Copper",
+    "initial_price_usd_per_mt": 8500,
+    "current_price_usd_per_mt": 7480,
+    "source": "mock-market-feed"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-01",
+      "type": "loaded_on_board",
+      "description": "Cargo loaded on board at Shanghai.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-12",
+      "type": "bad_weather",
+      "description": "Vessel encountered severe weather in the Indian Ocean.",
+      "severity": "warning"
+    },
+    {
+      "date": "2026-06-19",
+      "type": "delay",
+      "description": "Estimated arrival delayed by 5 days.",
+      "severity": "warning",
+      "delay_days": 5
+    },
+    {
+      "date": "2026-06-20",
+      "type": "insurance_expiry_risk",
+      "description": "New ETA is close to insurance expiry date.",
+      "severity": "warning"
+    }
+  ]
+}

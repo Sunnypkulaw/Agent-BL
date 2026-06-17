@@ -1,0 +1,83 @@
+{
+  "case_id": "CASE-EBL-2026-CRITICAL-LIQUIDATION",
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-CRIT-0001",
+    "shipper": "Shanghai Metals Export Co.",
+    "consignee": "Hamburg Industrial GmbH",
+    "carrier": "OceanLink Shipping",
+    "vessel": "Pacific Dawn",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Hamburg",
+    "cargo": "Copper Cathodes",
+    "quantity_mt": 1000,
+    "declared_value_usd": 8500000,
+    "issue_date": "2026-06-01",
+    "eta": "2026-07-16",
+    "document_hash": "0xcriticalliquidation0001"
+  },
+  "insurance": {
+    "provider": "Demo Marine Insurance Ltd.",
+    "insured_value_usd": 7000000,
+    "expires_at": "2026-07-20",
+    "policy_hash": "0xcriticalpolicy0001"
+  },
+  "financing": {
+    "requested_amount_usd": 5600000,
+    "duration_days": 45,
+    "expected_yield_bps": 850,
+    "initial_ltv": 0.7,
+    "liquidation_threshold": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Copper",
+    "initial_price_usd_per_mt": 8500,
+    "current_price_usd_per_mt": 6500,
+    "source": "mock-market-feed"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-01",
+      "type": "loaded_on_board",
+      "description": "Cargo loaded on board at Shanghai.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-12",
+      "type": "bad_weather",
+      "description": "Vessel encountered severe weather in the Indian Ocean.",
+      "severity": "warning"
+    },
+    {
+      "date": "2026-06-15",
+      "type": "route_deviation",
+      "description": "Carrier reports a route deviation and revised ETA.",
+      "severity": "warning"
+    },
+    {
+      "date": "2026-06-20",
+      "type": "cargo_damage",
+      "description": "Inspection notice reports possible cargo damage.",
+      "severity": "critical"
+    },
+    {
+      "date": "2026-06-21",
+      "type": "insurance_expiry_risk",
+      "description": "Revised ETA is close to insurance expiry date.",
+      "severity": "warning"
+    }
+  ],
+  "expectations": {
+    "contract_action": "TRIGGER_LIQUIDATION",
+    "final_state": "Liquidation",
+    "risk_level": "CRITICAL",
+    "max_health_factor": 0.5,
+    "detected_risks_include": [
+      "commodity_price_drop",
+      "bad_weather",
+      "route_deviation",
+      "cargo_damage",
+      "insurance_expiry_risk"
+    ]
+  }
+}

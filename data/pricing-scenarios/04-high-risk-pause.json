@@ -1,0 +1,14 @@
+{
+  "name": "high-risk-pause",
+  "description": "AI-10: Hormuz war escalates to critical + copper volatility critical + insurance gap. AI marks risk CRITICAL and PAUSES the offering at open.",
+  "base_case": "data/cases/copper-sg-shanghai-warcrisis.case.json",
+  "overrides": { "financing": { "payout_speed": "FAST" } },
+  "pricing_expectations": {
+    "payout_speed": "FAST",
+    "pricing_action": "PAUSE_OFFERING",
+    "risk_level": "CRITICAL"
+  },
+  "offering_expectations": {
+    "final_state": "Paused"
+  }
+}

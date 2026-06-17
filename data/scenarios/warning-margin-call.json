@@ -1,0 +1,71 @@
+{
+  "case_id": "CASE-EBL-2026-WARNING-MARGIN",
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-WARN-0001",
+    "shipper": "Shanghai Metals Export Co.",
+    "consignee": "Hamburg Industrial GmbH",
+    "carrier": "OceanLink Shipping",
+    "vessel": "Pacific Dawn",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Hamburg",
+    "cargo": "Copper Cathodes",
+    "quantity_mt": 1000,
+    "declared_value_usd": 8500000,
+    "issue_date": "2026-06-01",
+    "eta": "2026-07-16",
+    "document_hash": "0xwarningmargin0001"
+  },
+  "insurance": {
+    "provider": "Demo Marine Insurance Ltd.",
+    "insured_value_usd": 8500000,
+    "expires_at": "2026-08-10",
+    "policy_hash": "0xwarningpolicy0001"
+  },
+  "financing": {
+    "requested_amount_usd": 4500000,
+    "duration_days": 45,
+    "expected_yield_bps": 650,
+    "initial_ltv": 0.53,
+    "liquidation_threshold": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Copper",
+    "initial_price_usd_per_mt": 8500,
+    "current_price_usd_per_mt": 8000,
+    "source": "mock-market-feed"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-01",
+      "type": "loaded_on_board",
+      "description": "Cargo loaded on board at Shanghai.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-12",
+      "type": "bad_weather",
+      "description": "Vessel encountered severe weather in the Indian Ocean.",
+      "severity": "warning"
+    },
+    {
+      "date": "2026-06-19",
+      "type": "delay",
+      "description": "Estimated arrival delayed by 5 days.",
+      "severity": "warning",
+      "delay_days": 5
+    }
+  ],
+  "expectations": {
+    "contract_action": "TRIGGER_MARGIN_CALL",
+    "final_state": "Warning",
+    "risk_level": "WARNING",
+    "min_health_factor": 1.05,
+    "max_health_factor": 1.25,
+    "detected_risks_include": [
+      "commodity_price_drop",
+      "bad_weather",
+      "delay"
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "case_id": "CASE-EBL-2026-FREEZE-POOL",
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-FREEZE-0001",
+    "shipper": "Shanghai Metals Export Co.",
+    "consignee": "Hamburg Industrial GmbH",
+    "carrier": "OceanLink Shipping",
+    "vessel": "Pacific Dawn",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Hamburg",
+    "cargo": "Copper Cathodes",
+    "quantity_mt": 1000,
+    "declared_value_usd": 8500000,
+    "issue_date": "2026-06-01",
+    "eta": "2026-07-20",
+    "document_hash": "0xfreezepool0001"
+  },
+  "insurance": {
+    "provider": "Demo Marine Insurance Ltd.",
+    "insured_value_usd": 8300000,
+    "expires_at": "2026-07-25",
+    "policy_hash": "0xfreezepolicy0001"
+  },
+  "financing": {
+    "requested_amount_usd": 3540000,
+    "duration_days": 45,
+    "expected_yield_bps": 750,
+    "initial_ltv": 0.42,
+    "liquidation_threshold": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Copper",
+    "initial_price_usd_per_mt": 8500,
+    "current_price_usd_per_mt": 7800,
+    "source": "mock-market-feed"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-01",
+      "type": "loaded_on_board",
+      "description": "Cargo loaded on board at Shanghai.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-12",
+      "type": "bad_weather",
+      "description": "Vessel encountered severe weather in the Indian Ocean.",
+      "severity": "warning"
+    },
+    {
+      "date": "2026-06-19",
+      "type": "delay",
+      "description": "Estimated arrival delayed by 5 days due to weather.",
+      "severity": "warning",
+      "delay_days": 5
+    },
+    {
+      "date": "2026-06-22",
+      "type": "insurance_expiry_risk",
+      "description": "New ETA is within 5 days of insurance expiry date.",
+      "severity": "warning"
+    }
+  ],
+  "expectations": {
+    "contract_action": "FREEZE_POOL",
+    "final_state": "Frozen",
+    "risk_level": "CRITICAL",
+    "min_health_factor": 1.00,
+    "max_health_factor": 1.05,
+    "detected_risks_include": ["commodity_price_drop", "bad_weather", "delay", "insurance_expiry_risk"]
+  }
+}

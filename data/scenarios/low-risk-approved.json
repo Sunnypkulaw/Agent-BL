@@ -1,0 +1,58 @@
+{
+  "case_id": "CASE-EBL-2026-LOW-APPROVED",
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-LOW-0001",
+    "shipper": "Shanghai Metals Export Co.",
+    "consignee": "Hamburg Industrial GmbH",
+    "carrier": "OceanLink Shipping",
+    "vessel": "Pacific Dawn",
+    "port_of_loading": "Shanghai",
+    "port_of_discharge": "Hamburg",
+    "cargo": "Copper Cathodes",
+    "quantity_mt": 1000,
+    "declared_value_usd": 8500000,
+    "issue_date": "2026-06-01",
+    "eta": "2026-07-16",
+    "document_hash": "0xlowriskapproved0001"
+  },
+  "insurance": {
+    "provider": "Demo Marine Insurance Ltd.",
+    "insured_value_usd": 8500000,
+    "expires_at": "2026-08-10",
+    "policy_hash": "0xlowriskpolicy0001"
+  },
+  "financing": {
+    "requested_amount_usd": 5000000,
+    "duration_days": 45,
+    "expected_yield_bps": 520,
+    "initial_ltv": 0.59,
+    "liquidation_threshold": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Copper",
+    "initial_price_usd_per_mt": 8500,
+    "current_price_usd_per_mt": 8600,
+    "source": "mock-market-feed"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-01",
+      "type": "loaded_on_board",
+      "description": "Cargo loaded on board at Shanghai.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-12",
+      "type": "no_damage_reported",
+      "description": "Carrier update reports no damage or deviation.",
+      "severity": "info"
+    }
+  ],
+  "expectations": {
+    "contract_action": "APPROVE_FINANCING",
+    "final_state": "InTransit",
+    "risk_level": "LOW",
+    "min_health_factor": 1.35
+  }
+}

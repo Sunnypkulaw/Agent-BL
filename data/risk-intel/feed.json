@@ -1,0 +1,116 @@
+{
+  "feed_version": "2026-06-06",
+  "note": "Mock macro risk-intelligence feed + project policy notes for TradeShield's RAG retriever (AI-11). Calibrated to the June 2026 Strait of Hormuz war-premium narrative. Not real intelligence; demo data only.",
+  "documents": [
+    {
+      "id": "MRI-HORMUZ-WAR-2026-06",
+      "type": "war_risk",
+      "region": "Middle East / Strait of Hormuz",
+      "commodity": "all",
+      "severity": "critical",
+      "period": "2026-06",
+      "source": "mock-geopolitical-feed (GDELT-style)",
+      "tags": ["war", "hormuz", "iran", "strait", "sanction", "energy", "metals"],
+      "text": "Escalating US-Iran conflict and the threatened closure of the Strait of Hormuz are the dominant driver of a broad commodity war premium across both energy and metals. Cargoes transiting or loading near the Gulf carry elevated war-risk surcharges; cargoes loading ex-Singapore avoid the transit war exposure but not the benchmark price risk."
+    },
+    {
+      "id": "MRI-COPPER-VOL-2026-06",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "commodity": "copper",
+      "severity": "warning",
+      "period": "2026-06",
+      "source": "mock-LME-desk",
+      "tags": ["copper", "lme", "volatility", "chile", "tariff", "metals"],
+      "text": "LME copper is near record highs (~USD 13,700/MT) on Chilean supply weakness and US tariff arbitrage. Realized volatility is elevated, so RWA collateral valuation against copper cargo should apply a war-premium haircut before pricing the discount."
+    },
+    {
+      "id": "MRI-BRENT-2026-06",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "commodity": "crude oil",
+      "severity": "warning",
+      "period": "2026-06",
+      "source": "mock-ICE-desk",
+      "tags": ["crude", "brent", "oil", "volatility", "inventory", "energy"],
+      "text": "Brent is near USD 95/bbl, up ~43% year-on-year, with falling US inventories. Large daily swings mean crude-backed RWA collateral needs a volatility haircut on the embedded war premium; the benchmark, not the route, is the main price risk for ex-Singapore loadings."
+    },
+    {
+      "id": "MRI-INSURANCE-WAR-CLAUSE-2026",
+      "type": "insurance",
+      "region": "Middle East / Global",
+      "commodity": "all",
+      "severity": "warning",
+      "period": "2026-06",
+      "source": "mock-marine-underwriting-bulletin",
+      "tags": ["insurance", "war", "strikes", "icc", "coverage", "expiry"],
+      "text": "Marine war & strikes clauses are repricing sharply; underwriters are shortening cover windows and adding Gulf exclusions. Verify that ICC(A) all-risks plus war cover remains valid through the full transit, with a buffer beyond ETA, or the cargo may be under-insured at delivery."
+    },
+    {
+      "id": "MRI-PORT-CONGESTION-SHA-2026",
+      "type": "port_congestion",
+      "region": "Shanghai (Yangshan)",
+      "commodity": "all",
+      "severity": "info",
+      "period": "2026-05",
+      "source": "mock-port-ops-feed",
+      "tags": ["port", "congestion", "shanghai", "yangshan", "discharge"],
+      "text": "Yangshan discharge berth waiting times are slightly above seasonal norms but within normal range; no material delay risk currently priced for copper-cathode discharge at Shanghai."
+    },
+    {
+      "id": "MRI-KRW-FX-2026-06",
+      "type": "fx_volatility",
+      "region": "South Korea (KRW)",
+      "commodity": "crude oil",
+      "severity": "info",
+      "period": "2026-06",
+      "source": "mock-fx-desk",
+      "tags": ["fx", "krw", "korea", "inflation", "energy"],
+      "text": "Energy-driven inflation is pressuring the Korean won. Because the buyer pays in USD under the L/C, direct FX exposure to the financing pool is limited; KRW weakness is a buyer-side, not pool-side, risk."
+    },
+    {
+      "id": "MRI-SANCTION-SCREEN-2026",
+      "type": "sanction_risk",
+      "region": "Global",
+      "commodity": "all",
+      "severity": "info",
+      "period": "2026-06",
+      "source": "mock-OFAC-style-list",
+      "tags": ["sanction", "ofac", "screening", "counterparty"],
+      "text": "Counterparty and vessel screening against sanctions lists shows no hits for the demo trade parties; sanction risk is low but must be re-screened if the route or counterparties change."
+    },
+    {
+      "id": "POL-TARGET-REDEMPTION-NOT-GUARANTEED",
+      "type": "policy",
+      "region": "n/a",
+      "commodity": "all",
+      "severity": "info",
+      "period": "2026-06",
+      "source": "TradeShield docs/PRD.md §7",
+      "tags": ["policy", "redemption", "guarantee", "compliance", "non-principal-protection"],
+      "text": "1 RWA = 1.00 USD is a TARGET redemption value, not a guaranteed repayment. Investor returns come from buying at a discount and from trade repayment; actual redemption depends on importer payment, cargo settlement and insurance coverage. Demo uses permissioned mock investors and does no real fundraising."
+    },
+    {
+      "id": "POL-COLLATERAL-COVERAGE-LIMIT",
+      "type": "policy",
+      "region": "n/a",
+      "commodity": "all",
+      "severity": "info",
+      "period": "2026-06",
+      "source": "TradeShield docs/PRD.md §2.3/§2.4",
+      "tags": ["policy", "collateral", "coverage", "guardrail", "exposure"],
+      "text": "Target redemption exposure must stay within AI-verified collateral times the redemption coverage limit (default 0.9). This collateral guardrail caps how much can be issued and acts as a floor on the issue price."
+    },
+    {
+      "id": "POL-PROFIT-SHARE-PRICING",
+      "type": "policy",
+      "region": "n/a",
+      "commodity": "all",
+      "severity": "info",
+      "period": "2026-06",
+      "source": "TradeShield docs/PRD.md §2.4",
+      "tags": ["policy", "pricing", "profit", "discount", "speed", "yield"],
+      "text": "The RWA discount is priced as a share of the exporter's verified trade profit: faster payout gives up a larger share (FAST 50% / BALANCED 33% / LOW_COST 20% base), risk adds to the share, and the issue price is cash/(cash + share x profit)."
+    }
+  ]
+}

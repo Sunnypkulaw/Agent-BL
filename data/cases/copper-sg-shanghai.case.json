@@ -1,0 +1,121 @@
+{
+  "case_id": "CASE-EBL-2026-CU-SG-SHA",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Copper cathodes, Singapore -> Shanghai. Fields align to docs/PRD.md PricingQuote model. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/copper-sg-shanghai/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/copper-sg-shanghai/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-CU-04417",
+    "bl_no": "BSCL/SIN/SHA/2026/04417",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "WaveBL",
+    "ebl_title_ref": "WAVE-EBL-7F3A91C4",
+    "shipper": "Strait Resources Trading Pte. Ltd.",
+    "consignee": "TO ORDER OF DBS BANK LTD., SINGAPORE",
+    "notify_party": "Donghai Copper Materials Co., Ltd., Shanghai, China",
+    "carrier": "BlueStrait Container Lines",
+    "vessel": "MV Marina Star",
+    "voyage_no": "V.0048E",
+    "port_of_loading": "Singapore",
+    "port_of_discharge": "Shanghai (Yangshan)",
+    "incoterms": "CIF Shanghai",
+    "cargo": "Copper Cathodes (LME Grade A, Cu-CATH-1)",
+    "quantity_mt": 500,
+    "containers": "20 x 20'GP (200 bundles)",
+    "declared_value_usd": 6875000,
+    "issue_date": "2026-06-03",
+    "shipped_on_board": "2026-06-03",
+    "eta": "2026-06-15",
+    "document_hash": "0x9a1f4c77e2b8d063a5519e4c2f8b71d4c0a6e93f17b2da845c61f0e9b8773a2c"
+  },
+  "commercial_invoice": {
+    "invoice_no": "SRT-INV-2026-04417",
+    "invoice_date": "2026-06-03",
+    "sales_contract": "SRT-DH-COP-2026-018",
+    "incoterms": "CIF Shanghai",
+    "payment_terms": "Irrevocable L/C at sight",
+    "pricing_basis": "LME Copper Grade A cash settlement (QP = month of B/L) + CIF Shanghai premium",
+    "qp_reference_price_usd_per_mt": 13680,
+    "regional_premium_usd_per_mt": 70,
+    "unit_price_usd_per_mt": 13750,
+    "quantity_mt": 500,
+    "total_amount_usd": 6875000,
+    "currency": "USD",
+    "is_provisional": true
+  },
+  "cargo": {
+    "commodity": "Copper Cathode",
+    "grade": "LME Grade A (Cu-CATH-1), >= 99.9935% Cu",
+    "lme_brand": "ATACAMA-SX (demo)",
+    "hs_code": "740311",
+    "quantity": 500,
+    "unit": "MT"
+  },
+  "insurance": {
+    "provider": "Lion City Marine Insurance Pte. Ltd. (demo)",
+    "policy_type": "ICC(A) all risks, war & strikes clauses",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 7562500,
+    "expires_at": "2026-07-05",
+    "policy_hash": "0x4b2e8f1c90a7d3556e0c1a9f72b4d8e63c5170af9d2e84b1c6f30a72e5841db9"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_mt": 11000,
+    "cost_of_goods_usd": 5500000,
+    "expected_gross_profit_usd": 1375000,
+    "gross_margin_pct": 0.2,
+    "note": "Exporter sourced/contracted the copper pre-Hormuz spike (~USD 11,000/MT) versus the CIF Shanghai invoice of USD 13,750/MT; the war premium is embedded margin. Profit (= invoice 6,875,000 - COGS 5,500,000 = 1,375,000) is what funds the RWA discount."
+  },
+  "financing": {
+    "requested_cash_usd": 3300000,
+    "payout_speed": "FAST",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.9,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Copper",
+    "benchmark": "LME Copper Grade A Cash Settlement",
+    "price_unit": "USD/MT",
+    "reference_price_usd_per_mt": 13680,
+    "regional_premium_usd_per_mt": 70,
+    "landed_price_usd_per_mt": 13750,
+    "initial_price_usd_per_mt": 9850,
+    "current_price_usd_per_mt": 13680,
+    "as_of": "2026-06-04",
+    "source": "calibrated to LME June 2026 (Strait of Hormuz war-premium environment)"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-03",
+      "type": "loaded_on_board",
+      "description": "500 MT copper cathodes loaded on board MV Marina Star at PSA Singapore.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-06",
+      "type": "no_damage_reported",
+      "description": "Vessel transiting South China Sea on schedule, cargo intact.",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-04",
+      "type": "war_risk",
+      "region": "Middle East / Strait of Hormuz",
+      "severity": "warning",
+      "description": "Escalating conflict and near-closure of the Strait of Hormuz are driving commodity supply fears and a broad war premium across metals and energy."
+    },
+    {
+      "date": "2026-06-04",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "severity": "warning",
+      "description": "LME copper near record highs (~USD 13,700/MT) on Chile supply weakness and US tariff arbitrage; realized volatility elevated, so collateral valuation should apply a war-premium haircut."
+    }
+  ]
+}

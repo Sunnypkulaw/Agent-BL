@@ -1,0 +1,35 @@
+{
+  "name": "tradeshield-agent-starter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hackathon harness for an AI dynamic pricing eBL-backed RWA trade finance protocol.",
+  "scripts": {
+    "install": "node scripts/install.mjs",
+    "dev": "node src/app/server.js",
+    "test": "node --test tests/*.test.js",
+    "check": "node scripts/check.mjs",
+    "demo": "node scripts/demo.mjs",
+    "demo:default": "node scripts/demo-default.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "scenarios": "node scripts/scenarios.mjs",
+    "price:scenarios": "node scripts/pricing-scenarios.mjs",
+    "agent:value": "node scripts/agent-valuation.mjs",
+    "price": "node scripts/price.mjs",
+    "qa": "node scripts/judge-qa.mjs",
+    "intel": "node scripts/world-intel.mjs",
+    "mcp": "node scripts/mcp.mjs"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "keywords": [
+    "hackathon",
+    "ai-agent",
+    "blockchain",
+    "trade-finance",
+    "electronic-bill-of-lading",
+    "rwa"
+  ],
+  "license": "MIT"
+}
