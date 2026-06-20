@@ -195,15 +195,14 @@ async function serveStatic(urlPath, response) {
   }
 }
 
-export function createServer() {
-  return http.createServer(async (request, response) => {
-    const url = new URL(request.url, 'http://localhost');
+export async function handleRequest(request, response) {
+  const url = new URL(request.url, 'http://localhost');
 
-    try {
-      if (request.method === 'GET' && url.pathname === '/api/health') {
-        sendJson(response, 200, { ok: true, service: 'tradeshield-agent-harness' });
-        return;
-      }
+  try {
+    if (request.method === 'GET' && url.pathname === '/api/health') {
+      sendJson(response, 200, { ok: true, service: 'tradeshield-agent-harness' });
+      return;
+    }
 
       if (request.method === 'GET' && url.pathname === '/api/demo-data') {
         sendJson(response, 200, await loadDemoCase());
@@ -414,7 +413,10 @@ export function createServer() {
     } catch (error) {
       sendError(response, error);
     }
-  });
+}
+
+export function createServer() {
+  return http.createServer(handleRequest);
 }
 
 const isEntryPoint = process.argv[1]
