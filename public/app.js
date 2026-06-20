@@ -14,6 +14,7 @@ import * as api from './api.js';
 import * as web3 from './web3.js';
 import { t, toggleLang, onLangChange, applyStaticI18n } from './i18n.js';
 import { initVoyage, renderVoyage, startVoyageClock, stopVoyageClock } from './voyage.js';
+import { initPopupAssistant } from './popup-assistant.js';
 
 const PAUSED_ACTIONS = new Set(['PAUSE_OFFERING', 'FREEZE_POOL', 'TRIGGER_LIQUIDATION']);
 
@@ -24,6 +25,7 @@ async function boot() {
   applyStaticI18n();
   wireStaticHandlers();
   initVoyage();
+  initPopupAssistant();
   onLangChange(onLangChanged);
   reflectChainStatus();
   refreshWalletUi();
