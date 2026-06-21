@@ -19,6 +19,18 @@ import { getDeepSeekClient } from './llm-client.js';
 
 const PAUSED_ACTIONS = new Set(['PAUSE_OFFERING', 'FREEZE_POOL', 'TRIGGER_LIQUIDATION']);
 
+/** Resolve the human-readable network name from chain-config. */
+const NETWORK_LABELS = { injective_testnet: 'Injective Testnet', sepolia: 'Sepolia' };
+let _cachedNetworkName = null;
+async function networkName() {
+  if (_cachedNetworkName) return _cachedNetworkName;
+  try {
+    const cfg = await web3.loadChainConfig();
+    _cachedNetworkName = NETWORK_LABELS[cfg?.network] || cfg?.network || 'Injective Testnet';
+  } catch { _cachedNetworkName = 'Injective Testnet'; }
+  return _cachedNetworkName;
+}
+
 // ---- Category filter state ----
 state.categoryFilter = 'all';
 state.searchQuery = '';
@@ -660,7 +672,7 @@ async function onMint() {
     state.mint = res;
     state.poolId = res.poolId && res.poolId !== 'sim' ? res.poolId : state.poolId;
     renderMintResult(res, quote);
-    if (res.mode === 'chain') toast(t('t_minted_chain', { n: f.int(res.mintedAmount) }));
+    if (res.mode === 'chain') toast(t('t_minted_chain', { n: f.int(res.mintedAmount), network: await networkName() }));
     else toast(t('t_minted_sim', { n: f.int(res.mintedAmount) }));
   } catch (e) {
     toast(t('t_mint_fail', { msg: e.message || e }), true);
@@ -681,7 +693,7 @@ function renderMintResult(res, quote) {
   const chain = res.mode === 'chain';
   box.append(
     el('div', { class: 'mint-result-head' },
-      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: chain ? t('res_chain') : t('res_sim') }),
+      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim') }),
       el('span', { class: 'mint-minted' }, t('res_minted_pre') + ' ', el('strong', { text: f.int(res.mintedAmount) }), ' ' + t('res_unit_rwa'))
     ),
     el('div', { class: 'mint-result-rows' },
@@ -716,7 +728,8 @@ async function reflectChainStatus() {
   const elx = $('#chain-status');
   if (!elx) return;
   const real = await web3.isRealChainConfigured();
-  elx.textContent = real ? t('chain_deployed') : t('chain_not_deployed');
+  const net = await networkName();
+  elx.textContent = real ? t('chain_deployed', { network: net }) : t('chain_not_deployed');
   elx.className = `chain-status tone-${real ? 'ok' : 'muted'}`;
 }
 
@@ -742,7 +755,8 @@ async function doConnect() {
   const { address } = await web3.connectWallet();
   state.wallet = { address };
   refreshWalletUi();
-  toast(t('t_wallet_connected'));
+  const net = await networkName();
+  toast(t('t_wallet_connected', { network: net }));
   return address;
 }
 

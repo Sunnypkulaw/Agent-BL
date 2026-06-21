@@ -1,13 +1,12 @@
-// Browser web3 integration for TradeShield View ① (Tokenize / Mint RWA).
+// Browser web3 integration for TradeShield — multi-chain support.
 //
-// Strategy (confirmed with the team): mint on REAL Sepolia via MetaMask when a
-// wallet is connected AND public/chain-config.json carries a deployed
-// TradeShieldRWA address; otherwise fall back to a high-fidelity SIMULATED
-// transaction (the existing push_pricing_to_oracle MCP tool) so the demo never
-// breaks offline / pre-deploy.
+// Primary:  Injective Testnet (inEVM, chainId 1439)
+// Fallback: Ethereum Sepolia (chainId 11155111)
 //
-// ethers v6 is loaded lazily from a CDN (only when the user connects a wallet),
-// keeping the rest of the dashboard dependency-free and offline-capable.
+// Reads /chain-config.json at runtime to determine the target network.
+// Wallet connection auto-detects the chain and prompts the user to switch.
+//
+// ethers v6 is loaded lazily from a CDN (only when the user connects a wallet).
 
 import { priceToE6, riskLevelToUint8, actionToUint8 } from './format.js';
 import { pushPricingToOracle } from './api.js';
@@ -17,14 +16,32 @@ const ETHERS_CDNS = [
   'https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm'
 ];
 
-const SEPOLIA = { hex: '0xaa36a7', decimal: 11155111n };
+// --- Chain presets ---
+const CHAIN_PRESETS = {
+  injective_testnet: {
+    chainName: 'Injective Testnet (inEVM)',
+    nativeCurrency: { name: 'INJ', symbol: 'INJ', decimals: 18 },
+    rpcUrls: [
+      'https://k8s.testnet.json-rpc.injective.network',
+      'https://testnet.sentry.chain.json-rpc.injective.network'
+    ],
+    blockExplorerUrls: ['https://testnet.explorer.injective.network'],
+    faucetUrl: 'https://testnet.faucet.injective.network/'
+  },
+  sepolia: {
+    chainName: 'Sepolia test network',
+    nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
+    rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
+    blockExplorerUrls: ['https://sepolia.etherscan.io']
+  }
+};
 
-// --- module-level caches ----------------------------------------------------
+// --- module-level caches ---
 let _ethers = null;
 let _config = null;
 let _session = null; // { provider, signer, address }
 
-/** Lazy-load ethers v6 from a CDN (cached). Tries mirrors in order. */
+/** Lazy-load ethers v6 from a CDN (cached). */
 export async function loadEthers() {
   if (_ethers) return _ethers;
   let lastErr;
@@ -46,6 +63,12 @@ export async function loadChainConfig() {
     _config = await res.json();
     return _config;
   } catch { return null; }
+}
+
+/** Return the chain preset for the configured network (falls back to injective_testnet). */
+function getPreset(cfg) {
+  const net = cfg?.network || 'injective_testnet';
+  return CHAIN_PRESETS[net] || CHAIN_PRESETS.injective_testnet;
 }
 
 const isAddress = (a) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a);
@@ -74,23 +97,28 @@ function err(code, message) {
   return e;
 }
 
-/** Ensure the wallet is on Sepolia, adding the network if unknown (EIP-3085). */
-async function ensureSepolia() {
+/** Ensure the wallet is on the target chain (from chain-config.json), adding the network if unknown (EIP-3085). */
+async function ensureTargetChain() {
+  const cfg = await loadChainConfig();
+  const preset = getPreset(cfg);
+  const targetHex = cfg?.chainId || '0x59F'; // default: Injective Testnet
+
   const eth = window.ethereum;
   const current = await eth.request({ method: 'eth_chainId' });
-  if (current === SEPOLIA.hex) return;
+  if (current === targetHex) return;
+
   try {
-    await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: SEPOLIA.hex }] });
+    await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: targetHex }] });
   } catch (switchErr) {
     if (switchErr?.code === 4902) {
       await eth.request({
         method: 'wallet_addEthereumChain',
         params: [{
-          chainId: SEPOLIA.hex,
-          chainName: 'Sepolia test network',
-          nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
-          rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
-          blockExplorerUrls: ['https://sepolia.etherscan.io']
+          chainId: targetHex,
+          chainName: preset.chainName,
+          nativeCurrency: preset.nativeCurrency,
+          rpcUrls: preset.rpcUrls,
+          blockExplorerUrls: preset.blockExplorerUrls
         }]
       });
     } else {
@@ -100,7 +128,7 @@ async function ensureSepolia() {
 }
 
 /**
- * Connect MetaMask, ensure Sepolia, cache a signer session.
+ * Connect wallet (MetaMask / any EIP-1193 provider), ensure target chain, cache signer.
  * @returns {Promise<{address:string}>}
  * @throws {Error} with .code: NO_WALLET | REJECTED | NETWORK
  */
@@ -115,10 +143,10 @@ export async function connectWallet() {
     throw e;
   }
   try {
-    await ensureSepolia();
+    await ensureTargetChain();
   } catch (e) {
     if (e?.code === 4001) throw err('REJECTED', '用户拒绝了网络切换');
-    throw err('NETWORK', '无法切换到 Sepolia 测试网：' + (e?.message ?? ''));
+    throw err('NETWORK', '无法切换到目标网络：' + (e?.message ?? ''));
   }
   const provider = new ethers.BrowserProvider(eth);
   const signer = await provider.getSigner();
@@ -144,12 +172,14 @@ async function getContract(write = false) {
 }
 
 function explorerTx(cfg, hash) {
-  return cfg?.explorerBase ? `${cfg.explorerBase}/tx/${hash}` : null;
+  const base = cfg?.explorerBase;
+  if (!base) return null;
+  // Injective explorer uses /tx/ path like Etherscan
+  return `${base}/tx/${hash}`;
 }
 
 /**
  * Build the on-chain tokenize() arguments from a PricingQuote + financing.
- * Shared by the real and (for parity) the display path.
  */
 export function mintArgsFromQuote(quote, financingUsd) {
   return {
@@ -173,7 +203,7 @@ export function mintedTokensFor(quote, financingUsd) {
 }
 
 /**
- * Mint on real Sepolia: call tokenize(), wait, parse the Tokenized event.
+ * Mint on real chain: call tokenize(), wait, parse the Tokenized event.
  * @returns {Promise<{mode:'chain', txHash, poolId, mintedAmount, issuePriceE6, explorerUrl, address, blockNumber}>}
  * @throws {Error} with .code REJECTED on user cancel; others bubble up.
  */

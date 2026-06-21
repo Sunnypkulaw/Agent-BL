@@ -72,7 +72,7 @@ const DICT = {
     case_label: '交易案例 / 电子提单',
     lang_switch_to: 'EN',
     lang_btn_title: '切换语言 / Switch language',
-    wallet_title: '连接 MetaMask，在 Sepolia 测试网铸造',
+    wallet_title: '连接 MetaMask，在 {network} 测试网铸造',
 
 	    // category filter
 	    cat_all: '全部',
@@ -90,13 +90,13 @@ const DICT = {
 	    ai_error: 'AI 解析失败: {msg}',
 
     // chain status
-    chain_deployed: '● 合约已部署 · 连接钱包铸造真实 Sepolia 交易',
+    chain_deployed: '● 合约已部署 · 连接钱包铸造真实 {network} 交易',
     chain_not_deployed: '○ 合约未部署 · 当前为模拟上链（运行 deploy 脚本后切真实链）',
 
     // hero (view 1)
     hero_eyebrow: '提单上链 · RWA 折价发行',
     hero_h1: '把在途货物权变成链上 RWA。',
-    hero_subtitle: '出口商质押电子提单，AI Pricing &amp; Risk Agent 读取货值、单据与实时宏观风险，给出可解释的 RWA 发行折价 —— <em>风险越高 → 发行价越低 → 投资者潜在收益越高</em>。输入融资金额即可铸造 RWA 并锚定上链（Sepolia）。',
+    hero_subtitle: '出口商质押电子提单，AI Pricing &amp; Risk Agent 读取货值、单据与实时宏观风险，给出可解释的 RWA 发行折价 —— <em>风险越高 → 发行价越低 → 投资者潜在收益越高</em>。输入融资金额即可铸造 RWA 并锚定上链（测试网）。',
 
     // view 1 panels
     p1_h: 'AI 货值估算 & 航线风险',
@@ -114,7 +114,7 @@ const DICT = {
     minting: '⛓ 铸造中…',
     compliance: '<strong>非保本。</strong> 1 RWA = $1.00 是<em>目标</em>兑付价，取决于进口商付款、货物结算与保险覆盖。仅限合格投资者。',
     onchain_h: '链上锚定 · TradeShieldRWA',
-    mint_hint: '输入融资金额并点击「铸造 RWA 上链」。连接钱包且合约已部署时铸造真实 Sepolia 交易，否则走高保真模拟交易。',
+    mint_hint: '输入融资金额并点击「铸造 RWA 上链」。连接钱包且合约已部署时铸造真实链上交易，否则走高保真模拟交易。',
 
     // deal strip
     ds_route: '航线', ds_cargo: '货物', ds_ebl: '电子提单', ds_declared: '申报货值', ds_collateral: 'AI 核验货值',
@@ -153,23 +153,23 @@ const DICT = {
     mr_paused: 'AI 已暂停发行（{action}）——当前风险下不开放铸造。',
 
     // mint result
-    res_chain: '⛓ Sepolia 链上', res_sim: '🧪 模拟交易',
+    res_chain: '⛓ {network} 链上', res_sim: '🧪 模拟交易',
     res_minted_pre: '已铸', res_unit_rwa: 'RWA',
     res_price: '发行价', res_balance: '链上 RWA 余额', res_reading: '读取中…',
-    res_sim_foot: '运行 `npm run deploy:tradeshield:sepolia` 并连接钱包后，此处将是真实 Sepolia 交易。',
+    res_sim_foot: '运行 deploy 脚本并连接钱包后，此处将是真实链上交易。',
 
     // toasts
     t_need_financing: '请输入大于 0 的融资金额',
     t_cancel_mint: '已取消铸造',
     t_no_wallet_detected: '未检测到钱包',
     t_chain_call_failed: '链上调用失败，已回退模拟：{msg}',
-    t_minted_chain: '✅ 已在 Sepolia 铸造 {n} RWA',
+    t_minted_chain: '✅ 已在 {network} 铸造 {n} RWA',
     t_minted_sim: '已生成模拟铸造交易（{n} RWA）',
     t_mint_fail: '铸造失败: {msg}',
     t_no_wallet_sim: '未检测到 MetaMask —— 铸造将走模拟交易',
     t_connect_cancel: '已取消连接',
     t_connect_fail: '连接失败: {msg}',
-    t_wallet_connected: '钱包已连接 · Sepolia',
+    t_wallet_connected: '钱包已连接 · {network}',
     t_load_cases_fail: '加载案例失败: {msg}',
     t_pricing_fail: '定价失败: {msg}',
     t_reprice_fail: '重定价失败: {msg}',
@@ -238,7 +238,7 @@ const DICT = {
 
     // footer
     footer_left: 'TradeShield Agent · ETHBeijing 2026 hackathon',
-    footer_right: '所有数字由本地 AI 定价引擎实时产生 · 货值估算、风险评分与哈希均确定性、可离线复现 · 上链锚定于 Sepolia 测试网'
+    footer_right: '所有数字由本地 AI 定价引擎实时产生 · 货值估算、风险评分与哈希均确定性、可离线复现 · 上链锚定于测试网'
   },
 
   en: {
@@ -251,7 +251,7 @@ const DICT = {
     case_label: 'Trade case / eBL',
     lang_switch_to: '中文',
     lang_btn_title: '切换语言 / Switch language',
-    wallet_title: 'Connect MetaMask to mint on the Sepolia testnet',
+    wallet_title: 'Connect MetaMask to mint on the {network} testnet',
 
 	    // category filter
 	    cat_all: 'All',
@@ -269,13 +269,13 @@ const DICT = {
 	    ai_error: 'AI parsing failed: {msg}',
 
     // chain status
-    chain_deployed: '● Contract deployed · connect a wallet to mint a real Sepolia tx',
+    chain_deployed: '● Contract deployed · connect a wallet to mint a real {network} tx',
     chain_not_deployed: '○ Not deployed · simulated minting (run the deploy script to go live)',
 
     // hero (view 1)
     hero_eyebrow: 'Tokenize eBL · discounted RWA issuance',
     hero_h1: 'Turn in-transit cargo title into on-chain RWA.',
-    hero_subtitle: 'An exporter pledges an electronic Bill of Lading; the AI Pricing &amp; Risk Agent reads cargo value, documents and live macro risk to issue a defensible RWA discount — <em>higher risk → lower price → higher investor upside</em>. Enter a financing amount to mint RWA and anchor it on-chain (Sepolia).',
+    hero_subtitle: 'An exporter pledges an electronic Bill of Lading; the AI Pricing &amp; Risk Agent reads cargo value, documents and live macro risk to issue a defensible RWA discount — <em>higher risk → lower price → higher investor upside</em>. Enter a financing amount to mint RWA and anchor it on-chain (testnet).',
 
     // view 1 panels
     p1_h: 'AI Cargo Valuation & Route Risk',
@@ -293,7 +293,7 @@ const DICT = {
     minting: '⛓ Minting…',
     compliance: '<strong>Not principal-protected.</strong> 1 RWA = $1.00 is a <em>target</em> redemption value, depending on importer payment, cargo settlement and insurance coverage. Permissioned investors only.',
     onchain_h: 'On-chain anchoring · TradeShieldRWA',
-    mint_hint: 'Enter a financing amount and click “Mint RWA on-chain”. With a wallet connected and the contract deployed it mints a real Sepolia tx, otherwise a high-fidelity simulated tx.',
+    mint_hint: 'Enter a financing amount and click “Mint RWA on-chain”. With a wallet connected and the contract deployed it mints a real on-chain tx, otherwise a high-fidelity simulated tx.',
 
     // deal strip
     ds_route: 'Route', ds_cargo: 'Cargo', ds_ebl: 'eBL', ds_declared: 'Declared value', ds_collateral: 'AI-verified value',
@@ -332,23 +332,23 @@ const DICT = {
     mr_paused: 'AI has paused the offering ({action}) — minting is closed at the current risk.',
 
     // mint result
-    res_chain: '⛓ Sepolia on-chain', res_sim: '🧪 Simulated tx',
+    res_chain: '⛓ {network} on-chain', res_sim: '🧪 Simulated tx',
     res_minted_pre: 'Minted', res_unit_rwa: 'RWA',
     res_price: 'Issue price', res_balance: 'On-chain RWA balance', res_reading: 'reading…',
-    res_sim_foot: 'After `npm run deploy:tradeshield:sepolia` and connecting a wallet, this becomes a real Sepolia tx.',
+    res_sim_foot: 'After running the deploy script and connecting a wallet, this becomes a real on-chain tx.',
 
     // toasts
     t_need_financing: 'Enter a financing amount greater than 0',
     t_cancel_mint: 'Mint cancelled',
     t_no_wallet_detected: 'No wallet detected',
     t_chain_call_failed: 'On-chain call failed, fell back to simulation: {msg}',
-    t_minted_chain: '✅ Minted {n} RWA on Sepolia',
+    t_minted_chain: '✅ Minted {n} RWA on {network}',
     t_minted_sim: 'Generated a simulated mint tx ({n} RWA)',
     t_mint_fail: 'Mint failed: {msg}',
     t_no_wallet_sim: 'No MetaMask detected — minting will use a simulated tx',
     t_connect_cancel: 'Connection cancelled',
     t_connect_fail: 'Connection failed: {msg}',
-    t_wallet_connected: 'Wallet connected · Sepolia',
+    t_wallet_connected: 'Wallet connected · {network}',
     t_load_cases_fail: 'Failed to load cases: {msg}',
     t_pricing_fail: 'Pricing failed: {msg}',
     t_reprice_fail: 'Reprice failed: {msg}',
@@ -417,6 +417,6 @@ const DICT = {
 
     // footer
     footer_left: 'TradeShield Agent · ETHBeijing 2026 hackathon',
-    footer_right: 'Every number is produced live by the local AI pricing engine · valuation, risk scoring and hashes are deterministic and offline-reproducible · anchored on the Sepolia testnet'
+    footer_right: 'Every number is produced live by the local AI pricing engine · valuation, risk scoring and hashes are deterministic and offline-reproducible · anchored on the testnet'
   }
 };

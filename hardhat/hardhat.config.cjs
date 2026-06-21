@@ -5,7 +5,7 @@ require('@nomicfoundation/hardhat-ethers');
 function requireEnv(name) {
   const value = process.env[name];
   if (!value || value.trim() === '') {
-    throw new Error(`Missing ${name} in project-root .env (required for Sepolia deploy)`);
+    throw new Error(`Missing ${name} in project-root .env`);
   }
   return value.trim();
 }
@@ -28,15 +28,26 @@ module.exports = {
     artifacts: './artifacts'
   },
   networks: {
+    // Ethereum Sepolia (legacy / fallback)
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL || '',
+      accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY.trim()] : []
+    },
+    // Injective Testnet (inEVM) — primary deployment target
+    injective_testnet: {
+      url: process.env.INJECTIVE_RPC_URL || 'https://k8s.testnet.json-rpc.injective.network',
+      chainId: 1439,
       accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY.trim()] : []
     }
   }
 };
 
-// Validate only when user explicitly targets Sepolia via CLI flag.
-if (process.argv.includes('--network') && process.argv.includes('sepolia')) {
+// Validate when user explicitly targets a network via CLI flag.
+const targetNetwork = process.argv.includes('--network') ? process.argv[process.argv.indexOf('--network') + 1] : null;
+if (targetNetwork === 'sepolia') {
   requireEnv('SEPOLIA_RPC_URL');
+  requireEnv('DEPLOYER_PRIVATE_KEY');
+}
+if (targetNetwork === 'injective_testnet') {
   requireEnv('DEPLOYER_PRIVATE_KEY');
 }

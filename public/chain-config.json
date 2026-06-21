@@ -1,13 +1,13 @@
 {
-  "network": "sepolia",
-  "chainId": "0xaa36a7",
-  "chainIdDecimal": 11155111,
-  "explorerBase": "https://sepolia.etherscan.io",
+  "network": "injective_testnet",
+  "chainId": "0x59f",
+  "chainIdDecimal": 1439,
+  "explorerBase": "https://testnet.explorer.injective.network",
   "contracts": {
-    "TradeShieldRWA": "0x9Df67e65B77DdfDceaDf04738Aec911D458E9336"
+    "TradeShieldRWA": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94"
   },
-  "deployedAt": "2026-06-07T08:43:22.945Z",
-  "deployTx": "0xea1abdc2b7902ce34540f049915be7b4c52eb4df1d3830f17826ba94fd93f049",
+  "deployedAt": "2026-06-21T14:22:21.850Z",
+  "deployTx": "0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128",
   "abi": [
     {
       "anonymous": false,
