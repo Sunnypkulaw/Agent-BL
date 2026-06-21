@@ -74,6 +74,21 @@ const DICT = {
     lang_btn_title: '切换语言 / Switch language',
     wallet_title: '连接 MetaMask，在 Sepolia 测试网铸造',
 
+	    // category filter
+	    cat_all: '全部',
+	    cat_energy_chemical: '能源化工类',
+	    cat_metal: '金属',
+	    cat_ore: '矿石',
+	    search_ph: '搜索提单或 AI 自然语言筛选…',
+	    ai_search_title: 'AI 解析自然语言偏好，智能筛选提单',
+	    ai_searching: '🤖 AI 解析中…',
+
+	    // search / filter feedback
+	    no_case_match: '没有匹配的提单案例',
+	    ai_empty_query: '请输入筛选条件或自然语言描述',
+	    ai_no_match: 'AI 未找到匹配的提单，请尝试其他描述',
+	    ai_error: 'AI 解析失败: {msg}',
+
     // chain status
     chain_deployed: '● 合约已部署 · 连接钱包铸造真实 Sepolia 交易',
     chain_not_deployed: '○ 合约未部署 · 当前为模拟上链（运行 deploy 脚本后切真实链）',
@@ -237,6 +252,21 @@ const DICT = {
     lang_switch_to: '中文',
     lang_btn_title: '切换语言 / Switch language',
     wallet_title: 'Connect MetaMask to mint on the Sepolia testnet',
+
+	    // category filter
+	    cat_all: 'All',
+	    cat_energy_chemical: 'Energy & Chemical',
+	    cat_metal: 'Metal',
+	    cat_ore: 'Ore',
+	    search_ph: 'Search eBL or AI natural language filter…',
+	    ai_search_title: 'AI parses natural language preferences to intelligently filter eBLs',
+	    ai_searching: '🤖 AI parsing…',
+
+	    // search / filter feedback
+	    no_case_match: 'No matching eBL cases',
+	    ai_empty_query: 'Please enter filter criteria or natural language description',
+	    ai_no_match: 'AI found no matching eBLs, try a different description',
+	    ai_error: 'AI parsing failed: {msg}',
 
     // chain status
     chain_deployed: '● Contract deployed · connect a wallet to mint a real Sepolia tx',

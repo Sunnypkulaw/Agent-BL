@@ -34,11 +34,24 @@
       </div>
     </header>
 
-    <!-- ============ Shared sub-bar: trade-case / eBL selector (both views) ============ -->
+    <!-- ============ Shared sub-bar: category filter · trade-case / eBL selector · search (both views) ============ -->
     <div class="subbar">
       <div class="subbar-inner">
         <label class="control-label" data-i18n="case_label">交易案例 / 电子提单</label>
         <div id="case-select" class="segmented scenario" role="tablist" aria-label="Trade case"></div>
+        <div class="subbar-right">
+          <div class="category-filter" id="category-filter">
+            <button class="cat-btn active" data-cat="all" data-i18n="cat_all">全部</button>
+            <button class="cat-btn" data-cat="energy_chemical" data-i18n="cat_energy_chemical">能源化工类</button>
+            <button class="cat-btn" data-cat="metal" data-i18n="cat_metal">金属</button>
+            <button class="cat-btn" data-cat="ore" data-i18n="cat_ore">矿石</button>
+          </div>
+          <div class="search-box" id="search-box">
+            <span class="search-icon">🔍</span>
+            <input id="search-input" data-i18n-ph="search_ph" placeholder="搜索提单或 AI 自然语言筛选…" />
+            <button id="ai-search-btn" class="btn ai-btn" data-i18n-title="ai_search_title" title="AI 解析自然语言偏好">🤖 AI 解析</button>
+          </div>
+        </div>
         <span id="chain-status" class="chain-status"></span>
       </div>
     </div>

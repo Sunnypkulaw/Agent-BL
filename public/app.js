@@ -15,8 +15,64 @@ import * as web3 from './web3.js';
 import { t, toggleLang, onLangChange, applyStaticI18n } from './i18n.js';
 import { initVoyage, renderVoyage, startVoyageClock, stopVoyageClock } from './voyage.js';
 import { initPopupAssistant } from './popup-assistant.js';
+import { getDeepSeekClient } from './llm-client.js';
 
 const PAUSED_ACTIONS = new Set(['PAUSE_OFFERING', 'FREEZE_POOL', 'TRIGGER_LIQUIDATION']);
+
+// ---- Category filter state ----
+state.categoryFilter = 'all';
+state.searchQuery = '';
+
+/** Map cargo names to category keys. */
+const CATEGORY_MAP = {
+  energy_chemical: ['原油', '成品油', '橡胶', 'crude', 'oil', 'refined', 'rubber', 'petroleum'],
+  metal: ['铜', '铁', '铝', 'copper', 'iron', 'aluminum', 'aluminium', 'steel'],
+  ore: ['矿', 'ore', 'concentrate', '精矿']
+};
+
+function getCaseCategory(caseItem) {
+  const cargo = (caseItem.cargo || caseItem.label || '').toLowerCase();
+  const cats = [];
+  if (CATEGORY_MAP.ore.some(k => cargo.includes(k.toLowerCase()))) cats.push('ore');
+  if (CATEGORY_MAP.metal.some(k => cargo.includes(k.toLowerCase()))) cats.push('metal');
+  if (CATEGORY_MAP.energy_chemical.some(k => cargo.includes(k.toLowerCase()))) cats.push('energy_chemical');
+  return cats.length ? cats : ['all'];
+}
+
+/** Return cases filtered by current category + search query + AI match. */
+function visibleCases() {
+  let cases = state.cases;
+
+  // AI-matched IDs (one-shot, consumed after first render)
+  if (state._aiMatchedIds) {
+    cases = cases.filter(c => state._aiMatchedIds.has(c.case_id));
+    state._aiMatchedIds = null;
+  }
+
+  // Category filter
+  if (state.categoryFilter !== 'all') {
+    cases = cases.filter(c => {
+      const cats = getCaseCategory(c);
+      return cats.includes(state.categoryFilter);
+    });
+  }
+
+  // Keyword search
+  if (state.searchQuery.trim()) {
+    const q = state.searchQuery.trim().toLowerCase();
+    cases = cases.filter(c => {
+      const bl = c.case?.bill_of_lading ?? {};
+      const searchable = [
+        c.label, c.cargo, c.route, c.risk_hint, c.case_id,
+        bl.cargo, bl.port_of_loading, bl.port_of_discharge,
+        bl.bl_id, bl.vessel_name
+      ].filter(Boolean).join(' ').toLowerCase();
+      return searchable.includes(q);
+    });
+  }
+
+  return cases;
+}
 
 // ===========================================================================
 // Boot
@@ -49,6 +105,7 @@ function onLangChanged() {
   refreshLangBtn();
   reflectChainStatus();
   refreshWalletUi();
+  highlightCategoryBtn();
   renderCaseSelector();
   renderSpeedSelector();
   highlightCase();
@@ -127,7 +184,8 @@ function renderViewMint() {
 function renderCaseSelector() {
   const box = $('#case-select');
   clear(box);
-  for (const c of state.cases) {
+  const cases = visibleCases();
+  for (const c of cases) {
     box.append(el('button', {
       class: 'seg-btn', role: 'tab', 'data-case': c.case_id, title: c.label,
       onclick: () => selectCase(c.case_id)
@@ -136,7 +194,12 @@ function renderCaseSelector() {
       c.risk_hint ? el('span', { class: `seg-hint tone-${f.riskTone(c.risk_hint)}`, text: c.risk_hint }) : null
     ));
   }
+  if (cases.length === 0) {
+    box.append(el('span', { class: 'muted', style: 'padding:8px;font-size:12px;', text: t('no_case_match') }));
+  }
+  highlightCase();
 }
+
 function shortLabel(c) {
   return (c.label || c.case_id).split('·')[0].trim();
 }
@@ -160,12 +223,145 @@ function highlightCase() {
   document.querySelectorAll('#case-select .seg-btn').forEach((b) =>
     b.classList.toggle('active', b.dataset.case === state.caseId));
 }
+
 function highlightSpeed() {
   const rec = state.comparison?.recommended_payout_speed;
   document.querySelectorAll('#speed-select .seg-btn').forEach((b) => {
     b.classList.toggle('active', b.dataset.speed === state.speed);
     b.classList.toggle('recommended', b.dataset.speed === rec);
   });
+}
+
+// ===========================================================================
+// Category filter
+// ===========================================================================
+function onCategoryClick(cat) {
+  state.categoryFilter = cat;
+  highlightCategoryBtn();
+  renderCaseSelector();
+  const visible = visibleCases();
+  if (visible.length && !visible.find(c => c.case_id === state.caseId)) {
+    selectCase(visible[0].case_id);
+  }
+}
+
+function highlightCategoryBtn() {
+  document.querySelectorAll('#category-filter .cat-btn').forEach((b) =>
+    b.classList.toggle('active', b.dataset.cat === state.categoryFilter));
+}
+
+// ===========================================================================
+// Search + AI natural language filter
+// ===========================================================================
+let searchDebounce = null;
+function onSearchInput() {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    state.searchQuery = $('#search-input')?.value || '';
+    state._aiMatchedIds = null; // clear AI filter on manual input
+    renderCaseSelector();
+    const visible = visibleCases();
+    if (visible.length && !visible.find(c => c.case_id === state.caseId)) {
+      selectCase(visible[0].case_id);
+    }
+  }, 300);
+}
+
+async function onAiSearch() {
+  const query = ($('#search-input')?.value || '').trim();
+  if (!query) { toast(t('ai_empty_query'), true); return; }
+
+  const btn = $('#ai-search-btn');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('ai_searching');
+
+  try {
+    const caseList = state.cases.map(c => ({
+      id: c.case_id,
+      label: c.label || c.case_id,
+      cargo: c.cargo || '',
+      route: c.route || '',
+      risk: c.risk_hint || ''
+    }));
+
+    const tools = [{
+      name: 'filter_eBLs',
+      description: '根据用户的自然语言偏好，返回匹配的电子提单案例ID列表。根据货物类型、航线、风险等级、或其他偏好进行智能匹配。',
+      parameters: {
+        type: 'object',
+        properties: {
+          matched_ids: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '匹配的案例 ID 列表，按相关度排序'
+          },
+          reasoning: {
+            type: 'string',
+            description: '简要解释为什么这些案例匹配用户的偏好（中文，不超过50字）'
+          }
+        },
+        required: ['matched_ids']
+      }
+    }];
+
+    const client = getDeepSeekClient();
+    const messages = [
+      { role: 'system', content: `你是一个电子提单筛选助手。根据用户的自然语言偏好，从下列案例中选择最匹配的。
+
+可用案例列表：
+${caseList.map(c => `- ID: ${c.id} | 货物: ${c.cargo} | 航线: ${c.route} | 风险: ${c.risk} | 标签: ${c.label}`).join('\n')}
+
+使用 filter_eBLs 工具返回匹配结果。如果用户提到风险偏好（如"高风险"、"安全的"）、货物类型（如"铜"、"原油"）、航线（如"新加坡"、"上海"）、或其他条件，请智能匹配。如果用户的表达比较宽泛，尽量多匹配几个案例。` },
+      { role: 'user', content: query }
+    ];
+
+    const result = await client.chat(messages, tools);
+
+    if (result.tool_calls && result.tool_calls.length > 0) {
+      const args = result.tool_calls[0].arguments;
+      const matchedIds = args.matched_ids || [];
+      const reasoning = args.reasoning || '';
+
+      if (matchedIds.length > 0) {
+        state.searchQuery = query;
+        state._aiMatchedIds = new Set(matchedIds);
+        renderCaseSelector();
+        const visible = visibleCases();
+        if (visible.length > 0) {
+          selectCase(visible[0].case_id);
+        }
+        toast(`🤖 AI: ${reasoning}（匹配 ${matchedIds.length} 个提单）`);
+      } else {
+        toast(t('ai_no_match'), true);
+      }
+    } else if (result.content) {
+      // No tool call — fallback to keyword
+      state.searchQuery = query;
+      renderCaseSelector();
+      const visible = visibleCases();
+      if (visible.length > 0) {
+        selectCase(visible[0].case_id);
+        toast(`🔍 关键词匹配 ${visible.length} 个提单`);
+      } else {
+        toast(t('ai_no_match'), true);
+      }
+    }
+  } catch (e) {
+    // Fallback to keyword search
+    state.searchQuery = query;
+    renderCaseSelector();
+    const visible = visibleCases();
+    if (visible.length > 0) {
+      selectCase(visible[0].case_id);
+      toast(`🔍 关键词匹配 ${visible.length} 个提单（AI 暂不可用）`);
+    } else {
+      toast(t('ai_error', { msg: e.message }), true);
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
 }
 
 // ===========================================================================
@@ -573,6 +769,22 @@ function wireStaticHandlers() {
     const q = selectedQuote();
     if (q && !$('#mint-financing').disabled) renderMintReadout(q);
   });
+
+  // Category filter buttons
+  document.querySelectorAll('#category-filter .cat-btn').forEach((b) =>
+    b.addEventListener('click', () => onCategoryClick(b.dataset.cat)));
+
+  // Search input
+  const searchInput = $('#search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', onSearchInput);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') onAiSearch();
+    });
+  }
+
+  // AI search button
+  $('#ai-search-btn')?.addEventListener('click', onAiSearch);
 }
 
 boot();
