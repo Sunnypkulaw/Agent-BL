@@ -24,10 +24,15 @@ const casesDir = path.join(rootDir, 'data/cases');
 // critical without bundling case JSON. Cases not listed here still load (with a
 // derived label) so adding a *.case.json file is enough to surface it.
 const CASE_META = {
-  'CASE-EBL-2026-CU-SG-SHA': { label: 'Clean copper · Singapore → Shanghai', risk_hint: 'MEDIUM', order: 1 },
-  'CASE-EBL-2026-0001': { label: 'Copper · Shanghai → Hamburg (insurance gap)', risk_hint: 'WARNING', order: 2 },
-  'CASE-EBL-2026-OIL-SG-ULS': { label: 'Crude oil · Singapore → Ulsan', risk_hint: 'MEDIUM', order: 3 },
-  'CASE-EBL-2026-CU-SG-SHA-WARCRISIS': { label: 'Hormuz war crisis · Singapore → Shanghai', risk_hint: 'CRITICAL', order: 4 }
+  'CASE-EBL-2026-CU-SG-SHA': { label: '铜矿 · Singapore → Shanghai', risk_hint: 'MEDIUM', order: 1 },
+  'CASE-EBL-2026-REFINED-SG-JKT': { label: '成品油 · Singapore → Jakarta', risk_hint: 'LOW', order: 2 },
+  'CASE-EBL-2026-RUBBER-BKK-QD': { label: '橡胶 · Bangkok → Qingdao', risk_hint: 'MEDIUM', order: 3 },
+  'CASE-EBL-2026-0001': { label: '铜矿 · Shanghai → Hamburg (保险缺口)', risk_hint: 'WARNING', order: 4 },
+  'CASE-EBL-2026-OIL-SG-ULS': { label: '原油 · Singapore → Ulsan', risk_hint: 'MEDIUM', order: 5 },
+  'CASE-EBL-2026-IRONORE-AU-TJ': { label: '铁矿石 · Port Hedland → Tianjin', risk_hint: 'LOW', order: 6 },
+  'CASE-EBL-2026-ALU-DXB-RTM': { label: '铝 · Dubai → Rotterdam (Hormuz)', risk_hint: 'HIGH', order: 7 },
+  'CASE-EBL-2026-CUCONC-ANF-LYG': { label: '铜精矿 · Antofagasta → Lianyungang', risk_hint: 'MEDIUM', order: 8 },
+  'CASE-EBL-2026-CU-SG-SHA-WARCRISIS': { label: '铜矿 · Hormuz 战争危机 · Singapore → Shanghai', risk_hint: 'CRITICAL', order: 9 }
 };
 
 async function readJsonBody(request) {

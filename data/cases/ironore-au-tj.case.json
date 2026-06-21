@@ -1,0 +1,121 @@
+{
+  "case_id": "CASE-EBL-2026-IRONORE-AU-TJ",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Iron ore (62% Fe fines), Port Hedland → Tianjin. High-volume, low-unit-value bulk commodity. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/ironore-au-tj/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/ironore-au-tj/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-IO-0172",
+    "bl_no": "RIO-IORE-2026-0172",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "essDOCS CargoDocs",
+    "ebl_title_ref": "ED-EBL-IO-0172-F5A9",
+    "shipper": "Rio Tinto Iron Ore (Pilbara Operations), Perth, Australia",
+    "consignee": "TO ORDER",
+    "notify_party": "Tianjin Iron & Steel Group Co., Ltd., Tianjin, China",
+    "carrier": "Capesize Charter (MV Ore Majestic)",
+    "vessel": "MV Ore Majestic",
+    "voyage_no": "V.215",
+    "port_of_loading": "Port Hedland, Western Australia",
+    "port_of_discharge": "Tianjin, China",
+    "incoterms": "CFR Tianjin",
+    "cargo": "Iron Ore Fines (Pilbara Blend, 62% Fe)",
+    "quantity_mt": 170000,
+    "declared_value_usd": 19550000,
+    "issue_date": "2026-06-02",
+    "shipped_on_board": "2026-06-02",
+    "eta": "2026-06-22",
+    "document_hash": "0x7b2d4e81f0a6c5389e1b3c5d7f2a4e1690b2837c4d5e6f7a8b9c0d1e2f3a4b5c6"
+  },
+  "commercial_invoice": {
+    "invoice_no": "RTIO-INV-2026-0172",
+    "invoice_date": "2026-06-02",
+    "sales_contract": "RTIO-TISCO-IORE-2026-05",
+    "incoterms": "CFR Tianjin",
+    "payment_terms": "Irrevocable L/C 90 days from B/L date",
+    "pricing_basis": "Platts IODEX 62% Fe CFR China (QP = month of B/L)",
+    "qp_reference_price_usd_per_dmt": 115,
+    "unit_price_usd_per_dmt": 115,
+    "quantity_dmt": 170000,
+    "total_amount_usd": 19550000,
+    "currency": "USD",
+    "is_provisional": true
+  },
+  "cargo": {
+    "commodity": "Iron Ore",
+    "grade": "Pilbara Blend Fines, 62% Fe, 4.2% SiO2, 2.0% Al2O3",
+    "hs_code": "260111",
+    "quantity": 170000,
+    "unit": "DMT"
+  },
+  "insurance": {
+    "provider": "QBE Marine Insurance (demo)",
+    "policy_type": "Marine cargo all risks (bulk)",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 21505000,
+    "expires_at": "2026-07-20",
+    "policy_hash": "0x4c6b8d20e1a7f5390f2c4d6e8b1a3c5790d2849e5f6a7b8c9d0e1f2a3b4c5d6e"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_dmt": 78,
+    "cost_of_goods_usd": 13260000,
+    "expected_gross_profit_usd": 6290000,
+    "gross_margin_pct": 0.3217,
+    "note": "Capesize freight ~$12/dmt Pilbara→Tianjin. Rio Tinto C1 cash cost ~$22/wmt + royalties + freight. China steel demand recovery driving solid margin."
+  },
+  "financing": {
+    "requested_cash_usd": 7500000,
+    "payout_speed": "SAFE",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.75,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Iron Ore",
+    "benchmark": "Platts IODEX 62% Fe CFR China",
+    "price_unit": "USD/dmt",
+    "reference_price_usd_per_dmt": 115,
+    "as_of": "2026-06-04",
+    "source": "calibrated to Platts IODEX June 2026"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-02",
+      "type": "loaded_on_board",
+      "description": "170,000 DMT Pilbara Blend fines loaded at Port Hedland (Nelson Point) onto MV Ore Majestic.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-08",
+      "type": "no_damage_reported",
+      "description": "Vessel transiting Lombok Strait, on schedule for Tianjin ETA June 22.",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-04",
+      "type": "demand_risk",
+      "region": "China",
+      "severity": "info",
+      "description": "China steel PMI at 52.1 (expansion), infrastructure stimulus announced for H2 2026. Supportive for iron ore demand."
+    },
+    {
+      "date": "2026-06-04",
+      "type": "supply_risk",
+      "region": "Western Australia",
+      "severity": "info",
+      "description": "Pilbara operations normal. BHP and Rio Tinto Q2 shipments on track. No cyclone threats in Indian Ocean."
+    },
+    {
+      "date": "2026-06-04",
+      "type": "fx_volatility",
+      "region": "Australia / China (AUD/USD)",
+      "severity": "info",
+      "description": "AUD/USD at 0.66, supportive for Australian miners' USD-denominated revenue."
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "case_id": "CASE-EBL-2026-ALU-DXB-RTM",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Primary aluminum ingots (P1020), Dubai → Rotterdam. Geopolitical risk via Hormuz transit. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/alu-dxb-rtm/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/alu-dxb-rtm/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-ALU-0056",
+    "bl_no": "EGA-ALU-2026-0056",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "CargoX",
+    "ebl_title_ref": "CX-EBL-ALU-0056-C71D",
+    "shipper": "Emirates Global Aluminium (EGA), Dubai, UAE",
+    "consignee": "TO ORDER OF ING BANK N.V.",
+    "notify_party": "AluMet Europe B.V., Rotterdam, Netherlands",
+    "carrier": "Gulf Container & Bulk Lines (MV Gulf Horizon)",
+    "vessel": "MV Gulf Horizon",
+    "voyage_no": "V.058W",
+    "port_of_loading": "Jebel Ali, Dubai, UAE",
+    "port_of_discharge": "Rotterdam, Netherlands",
+    "incoterms": "CIF Rotterdam",
+    "cargo": "Primary Aluminum Ingots (P1020, LME Grade)",
+    "quantity_mt": 15000,
+    "declared_value_usd": 36000000,
+    "issue_date": "2026-06-04",
+    "shipped_on_board": "2026-06-04",
+    "eta": "2026-07-02",
+    "document_hash": "0x1d8f3c62a4b7e0591c2d4f6a8b0c3e5791d2840f5e6a7b8c9d1e2f3a4b5c6d7e8"
+  },
+  "commercial_invoice": {
+    "invoice_no": "EGA-INV-2026-0056",
+    "invoice_date": "2026-06-04",
+    "sales_contract": "EGA-ALUMET-ALU-2026-02",
+    "incoterms": "CIF Rotterdam",
+    "payment_terms": "Irrevocable L/C at sight",
+    "pricing_basis": "LME Aluminium Cash Settlement + Rotterdam physical premium",
+    "lme_price_usd_per_mt": 2280,
+    "rotterdam_premium_usd_per_mt": 120,
+    "unit_price_usd_per_mt": 2400,
+    "quantity_mt": 15000,
+    "total_amount_usd": 36000000,
+    "currency": "USD",
+    "is_provisional": true
+  },
+  "cargo": {
+    "commodity": "Aluminum",
+    "grade": "Primary Aluminum Ingots P1020, 99.7% Al min, LME Grade",
+    "hs_code": "760110",
+    "quantity": 15000,
+    "unit": "MT"
+  },
+  "insurance": {
+    "provider": "Oman Insurance Company (demo)",
+    "policy_type": "Marine cargo all risks + war risk (Hormuz transit)",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 39600000,
+    "expires_at": "2026-08-01",
+    "policy_hash": "0x6d0e1f32b5c7a8492d3e5f7a9b1c2d4e6f8a0b2c4d6e8f0a1b2c3d4e5f6a7b8c9"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_mt": 1950,
+    "cost_of_goods_usd": 29250000,
+    "expected_gross_profit_usd": 6750000,
+    "gross_margin_pct": 0.1875,
+    "note": "EGA production cost ~$1,950/mt (low-cost gas-fired smelter). Hormuz transit adds ~$1.5/mt war-risk insurance premium."
+  },
+  "financing": {
+    "requested_cash_usd": 9500000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Aluminum",
+    "benchmark": "LME Aluminium Cash Settlement",
+    "price_unit": "USD/MT",
+    "reference_price_usd_per_mt": 2280,
+    "regional_premium_usd_per_mt": 120,
+    "landed_price_usd_per_mt": 2400,
+    "as_of": "2026-06-04",
+    "source": "calibrated to LME June 2026 (Hormuz tension premium + EU CBAM)"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-04",
+      "type": "loaded_on_board",
+      "description": "15,000 MT P1020 aluminum ingots loaded at Jebel Ali Port onto MV Gulf Horizon.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-07",
+      "type": "transit_hormuz",
+      "description": "Vessel entering Strait of Hormuz. Naval escort protocol in effect due to elevated regional tension.",
+      "severity": "warning"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-04",
+      "type": "war_risk",
+      "region": "Strait of Hormuz / Persian Gulf",
+      "severity": "critical",
+      "description": "US-Iran tensions at highest since 2024. Tanker seizure risks remain elevated in the Strait of Hormuz. War-risk insurance premiums up 300% QoQ."
+    },
+    {
+      "date": "2026-06-04",
+      "type": "sanctions_risk",
+      "region": "Middle East",
+      "severity": "warning",
+      "description": "EGA's primary smelter in Jebel Ali (UAE non-sanctioned jurisdiction), but tightening Iran sanctions create adjacent compliance complexity."
+    },
+    {
+      "date": "2026-06-04",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "severity": "medium",
+      "description": "LME aluminium volatile on EU CBAM implementation + Russian metal sanctions. Spread between LME cash and 3M at $18 contango."
+    }
+  ]
+}

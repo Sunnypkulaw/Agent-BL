@@ -1,0 +1,115 @@
+{
+  "case_id": "CASE-EBL-2026-RUBBER-BKK-QD",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Natural rubber (TSR20), Bangkok → Qingdao. Weather-sensitive commodity. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/rubber-bkk-qd/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/rubber-bkk-qd/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-RUB-0148",
+    "bl_no": "THAIRUB-2026-0148",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "WaveBL",
+    "ebl_title_ref": "WAVE-EBL-RUB-0148-D2C3",
+    "shipper": "Siam Rubber Exports Co., Ltd., Bangkok, Thailand",
+    "consignee": "TO ORDER",
+    "notify_party": "Qingdao Rubber Import & Trading Co., Ltd., Qingdao, China",
+    "carrier": "Asia Maritime Lines (MV Emerald Strait)",
+    "vessel": "MV Emerald Strait",
+    "voyage_no": "V.082E",
+    "port_of_loading": "Bangkok (Klong Toey), Thailand",
+    "port_of_discharge": "Qingdao, China",
+    "incoterms": "CIF Qingdao",
+    "cargo": "Natural Rubber (TSR20 / STR20, 1,200 MT)",
+    "quantity_mt": 1200,
+    "declared_value_usd": 2040000,
+    "issue_date": "2026-06-05",
+    "shipped_on_board": "2026-06-05",
+    "eta": "2026-06-19",
+    "document_hash": "0x5a9b3c71e2f8d064b7c4a1d5e9f630b82c1745a0e6f3c9d8123456b7c8d9e0a1"
+  },
+  "commercial_invoice": {
+    "invoice_no": "SRE-INV-2026-0148",
+    "invoice_date": "2026-06-05",
+    "sales_contract": "SRE-QDRUB-TSR20-2026-03",
+    "incoterms": "CIF Qingdao",
+    "payment_terms": "Irrevocable L/C 60 days from B/L date",
+    "pricing_basis": "SICOM TSR20 Futures (SGX) + physical premium",
+    "reference_price_usd_per_mt": 1700,
+    "unit_price_usd_per_mt": 1700,
+    "quantity_mt": 1200,
+    "total_amount_usd": 2040000,
+    "currency": "USD",
+    "is_provisional": false
+  },
+  "cargo": {
+    "commodity": "Natural Rubber",
+    "grade": "TSR20 (Technically Specified Rubber 20) / STR20",
+    "hs_code": "400122",
+    "quantity": 1200,
+    "unit": "MT"
+  },
+  "insurance": {
+    "provider": "Bangkok Marine Insurance Co., Ltd. (demo)",
+    "policy_type": "Marine cargo all risks + weather",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 2244000,
+    "expires_at": "2026-07-15",
+    "policy_hash": "0x9f4e2d71c8a0b5369d7c1e4f2a5b6380d1796450c2e3f8a7b1c2d3e4f5a6b7c8"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_mt": 1420,
+    "cost_of_goods_usd": 1704000,
+    "expected_gross_profit_usd": 336000,
+    "gross_margin_pct": 0.1647,
+    "note": "Thai TSR20 physical premium ~$280/mt over farm-gate. Margin sensitive to weather disruption: flooding in southern Thailand could spike prices."
+  },
+  "financing": {
+    "requested_cash_usd": 400000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.8,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Natural Rubber",
+    "benchmark": "SICOM TSR20 Futures (SGX)",
+    "price_unit": "USD/MT",
+    "reference_price_usd_per_mt": 1700,
+    "landed_price_usd_per_mt": 1700,
+    "as_of": "2026-06-05",
+    "source": "SICOM TSR20 July 2026 contract"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-05",
+      "type": "loaded_on_board",
+      "description": "1,200 MT TSR20 rubber loaded at Klong Toey Port, Bangkok onto MV Emerald Strait.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-10",
+      "type": "weather_warning",
+      "description": "Typhoon Maliksi forming east of Philippines, projected path toward South China Sea. May cause routing delay of 2-3 days.",
+      "severity": "warning"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-05",
+      "type": "weather_risk",
+      "region": "South China Sea / Western Pacific",
+      "severity": "warning",
+      "description": "Active typhoon season with 3 named storms in Western Pacific in past 30 days. Above-average disruption risk for Southeast Asia → China routes."
+    },
+    {
+      "date": "2026-06-05",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "severity": "medium",
+      "description": "TSR20 prices volatile on China EV tire demand uncertainty (EU anti-subsidy probe) + Thai weather premium."
+    }
+  ]
+}

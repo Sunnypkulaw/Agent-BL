@@ -1,0 +1,132 @@
+{
+  "case_id": "CASE-EBL-2026-CUCONC-ANF-LYG",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Copper concentrate (28% Cu), Antofagasta → Lianyungang. Long Pacific route with weather + seismic risks. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/cuconc-anf-lyg/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/cuconc-anf-lyg/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-CC-0023",
+    "bl_no": "AMSA-CUCONC-2026-0023",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "WaveBL",
+    "ebl_title_ref": "WAVE-EBL-CC-0023-A1B2",
+    "shipper": "Antofagasta Minerals S.A., Santiago, Chile",
+    "consignee": "TO ORDER OF BANCO DE CHILE",
+    "notify_party": "Lianyungang Copper Smelter Co., Ltd., Lianyungang, China",
+    "carrier": "Pacific Bulk Lines (MV Andes Carrier)",
+    "vessel": "MV Andes Carrier",
+    "voyage_no": "V.173E",
+    "port_of_loading": "Antofagasta, Chile",
+    "port_of_discharge": "Lianyungang, China",
+    "incoterms": "CFR Lianyungang",
+    "cargo": "Copper Concentrate (28% Cu, 5 g/t Au, 30 g/t Ag)",
+    "quantity_mt": 35000,
+    "declared_value_usd": 23100000,
+    "issue_date": "2026-05-28",
+    "shipped_on_board": "2026-05-28",
+    "eta": "2026-07-08",
+    "document_hash": "0xa3b5c7d9e1f234567890abcdef1234567890abcdef1234567890abcdef12345678"
+  },
+  "commercial_invoice": {
+    "invoice_no": "AMSA-INV-2026-0023",
+    "invoice_date": "2026-05-28",
+    "sales_contract": "AMSA-LYG-CUCONC-2026-01",
+    "incoterms": "CFR Lianyungang",
+    "payment_terms": "Irrevocable L/C 90 days from B/L date",
+    "pricing_basis": "LME Copper Grade A Cash Settlement × payable Cu% (96.5% recovery) + Au/Ag credits, less TC/RC",
+    "lme_copper_price_usd_per_mt": 13680,
+    "payable_cu_pct": 96.5,
+    "concentrate_cu_pct": 28,
+    "tc_usd_per_dmt": 45,
+    "rc_usd_per_lb": 0.045,
+    "estimated_unit_value_usd_per_dmt": 3650,
+    "quantity_dmt": 35000,
+    "total_amount_usd_estimated": 23100000,
+    "currency": "USD",
+    "is_provisional": true,
+    "note": "Final invoice subject to assay at discharge port. Au credit ~$5/g × 5g/t × 35,000t = $875K. Ag credit ~$0.80/oz × 30g/t × 35,000t = $840K."
+  },
+  "cargo": {
+    "commodity": "Copper Concentrate",
+    "grade": "28% Cu, 5 g/t Au, 30 g/t Ag, low As (<0.2%)",
+    "hs_code": "260300",
+    "quantity": 35000,
+    "unit": "DMT"
+  },
+  "insurance": {
+    "provider": "Seguros Chile Marine (demo)",
+    "policy_type": "Marine cargo all risks + earthquake/tsunami (Chile exposure)",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 25410000,
+    "expires_at": "2026-08-01",
+    "policy_hash": "0xb4c6d8e0f123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_dmt": 2800,
+    "cost_of_goods_usd": 98000000,
+    "expected_gross_profit_usd": 35700000,
+    "gross_margin_pct": 0.267,
+    "note": "Antofagasta Minerals C1 cost ~$1.90/lb Cu equivalent after by-product credits. TC/RC at $45/dmt + 4.5¢/lb reflecting tight concentrate market. Profit calculation based on 9,800t payable Cu × $13,680/mt."
+  },
+  "financing": {
+    "requested_cash_usd": 11800000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Copper Concentrate",
+    "benchmark": "LME Copper Grade A Cash Settlement",
+    "price_unit": "USD/MT",
+    "reference_price_usd_per_mt": 13680,
+    "as_of": "2026-06-01",
+    "source": "calibrated to LME June 2026. TC/RC spot at $45/dmt + 4.5¢/lb (tight concentrate market)."
+  },
+  "shipment_events": [
+    {
+      "date": "2026-05-28",
+      "type": "loaded_on_board",
+      "description": "35,000 DMT copper concentrate loaded at Puerto Antofagasta onto MV Andes Carrier.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-08",
+      "type": "transit_update",
+      "description": "Vessel crossing equatorial Pacific, 35% of voyage completed. Weather conditions normal.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-06-12",
+      "type": "seismic_event",
+      "description": "M6.2 earthquake off central Chile coast (1,200km south of loading port). No damage to port infrastructure reported. Tsunami warning cancelled.",
+      "severity": "warning"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-01",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "severity": "warning",
+      "description": "LME copper near record highs (~$13,700/mt) on tight concentrate supply + US tariff arbitrage. Smelter margins compressed by low TC/RCs. Concentrate cargo highly valuable."
+    },
+    {
+      "date": "2026-06-01",
+      "type": "supply_risk",
+      "region": "Chile / Andes",
+      "severity": "medium",
+      "description": "Andean seismic activity elevated in May-June window. Mining operations in Antofagasta region operating normally but earthquake protocols active."
+    },
+    {
+      "date": "2026-06-01",
+      "type": "logistics_risk",
+      "region": "Pacific Ocean",
+      "severity": "medium",
+      "description": "El Niño transition year; elevated risk of Pacific storm activity along South America→Asia shipping lane in Q3."
+    }
+  ]
+}

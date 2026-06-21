@@ -1,0 +1,109 @@
+{
+  "case_id": "CASE-EBL-2026-REFINED-SG-JKT",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "Simulated user upload. Refined oil products (Gasoline 92 RON + Diesel 50ppm), Singapore → Jakarta. All entities fictional.",
+  "uploaded_documents": {
+    "bill_of_lading_file": "data/uploads/refined-sg-jkt/bill-of-lading.md",
+    "commercial_invoice_file": "data/uploads/refined-sg-jkt/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EBL-2026-REF-0332",
+    "bl_no": "SPC-REFINED-2026-0332",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "CargoX",
+    "ebl_title_ref": "CX-EBL-REF-0332-B81F",
+    "shipper": "Singapore Petroleum Trading Co. Pte. Ltd.",
+    "consignee": "TO ORDER",
+    "notify_party": "PT Energi Nusantara, Jakarta, Indonesia",
+    "carrier": "Strait Product Carriers Ltd. (MT Clean Horizon)",
+    "vessel": "MT Clean Horizon",
+    "voyage_no": "V.112",
+    "port_of_loading": "Singapore (Jurong Refinery Terminal)",
+    "port_of_discharge": "Jakarta (Tanjung Priok), Indonesia",
+    "incoterms": "CIF Jakarta",
+    "cargo": "Refined Oil Products (Gasoline 92 RON 30,000 MT + Diesel 50ppm 20,000 MT)",
+    "quantity_mt": 50000,
+    "declared_value_usd": 31250000,
+    "issue_date": "2026-06-08",
+    "shipped_on_board": "2026-06-08",
+    "eta": "2026-06-11",
+    "document_hash": "0x8c2f1a67d4e9b053c8a31f79e6d2b4a8710c5f39e4a8b612d7c3f05a91e7b834"
+  },
+  "commercial_invoice": {
+    "invoice_no": "SPC-INV-2026-0332",
+    "invoice_date": "2026-06-08",
+    "sales_contract": "SPC-PTEN-REF-2026-07",
+    "incoterms": "CIF Jakarta",
+    "payment_terms": "Irrevocable L/C at sight",
+    "pricing_basis": "MOPS 92 RON Gasoline + MOPS 50ppm Gasoil (Platts Singapore)",
+    "gasoline_price_usd_per_mt": 695,
+    "diesel_price_usd_per_mt": 720,
+    "blended_unit_price_usd_per_mt": 705,
+    "quantity_mt": 50000,
+    "total_amount_usd": 31250000,
+    "currency": "USD",
+    "is_provisional": false
+  },
+  "cargo": {
+    "commodity": "Refined Oil Products",
+    "grade": "Gasoline 92 RON (30,000 MT) + Diesel 50ppm (20,000 MT)",
+    "hs_code": "271012",
+    "quantity": 50000,
+    "unit": "MT"
+  },
+  "insurance": {
+    "provider": "Lion City Marine Insurance Pte. Ltd. (demo)",
+    "policy_type": "Marine cargo all risks (clean products)",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 34375000,
+    "expires_at": "2026-07-10",
+    "policy_hash": "0x3e7a1b29c4d5f086e1a23b6f4c8d0e95a1732b4c6d5e8f0123456a7b8c9d0e1f"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_mt": 560,
+    "cost_of_goods_usd": 28000000,
+    "expected_gross_profit_usd": 3250000,
+    "gross_margin_pct": 0.104,
+    "note": "Refinery margin compression: tight Singapore crack spreads, modest profit. Short-haul route limits transit risk."
+  },
+  "financing": {
+    "requested_cash_usd": 1200000,
+    "payout_speed": "FAST",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.85,
+    "currency": "USDC"
+  },
+  "market": {
+    "commodity": "Refined Oil Products",
+    "benchmark": "MOPS 92 RON Gasoline / MOPS 50ppm Gasoil (Platts Singapore)",
+    "price_unit": "USD/MT",
+    "reference_price_usd_per_mt": 705,
+    "as_of": "2026-06-08",
+    "source": "Singapore spot market, June 2026 window"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-06-08",
+      "type": "loaded_on_board",
+      "description": "50,000 MT refined products loaded at Jurong Refinery Terminal onto MT Clean Horizon.",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-06-08",
+      "type": "demand_risk",
+      "region": "Indonesia",
+      "severity": "info",
+      "description": "Indonesia Q3 fuel demand forecast slightly below seasonal average; moderate downside to importer payment timing."
+    },
+    {
+      "date": "2026-06-08",
+      "type": "weather_risk",
+      "region": "South China Sea / Java Sea",
+      "severity": "warning",
+      "description": "Early monsoon season in Java Sea with above-average rainfall forecast; minor risk of discharge delays at Tanjung Priok."
+    }
+  ]
+}
