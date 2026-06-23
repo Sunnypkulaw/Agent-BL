@@ -15,7 +15,14 @@ export const state = {
   speed: 'BALANCED',
 
   // routing
-  view: 'mint', // 'mint' | 'voyage'
+  view: 'market', // 'market' | 'mint' | 'voyage'
+
+  // Marketplace view
+  marketComparisons: {},      // case_id -> { comparison } | { promise } | { error }
+  marketLoading: false,
+  marketSort: 'recommended',
+  marketSubscriptionUsd: null,
+  marketSubscriptionResult: null,
 
   // View ① mint module
   financingUsd: null,        // merchant's requested cash (USD)

@@ -204,7 +204,7 @@ function renderLive(quote) {
   $('#live-yield').innerHTML = `<strong>${f.bpsToPct(quote.implied_gross_yield_bps)}</strong> ${t('live_upside')}`;
 
   const riskEl = $('#live-risk');
-  riskEl.textContent = quote.risk_level;
+  riskEl.textContent = f.riskLabel(quote.risk_level);
   riskEl.className = `badge tone-${f.riskTone(quote.risk_level)}`;
   $('#live-riskbps').textContent = `${f.int(quote.risk_score_bps)} bps`;
 
@@ -313,15 +313,15 @@ function renderCallout() {
   box.hidden = false;
   box.className = `lc-callout tone-${paused ? 'crit' : dropped ? 'warn' : 'info'}`;
   box.textContent = paused
-    ? t('co_paused', { level: finalQ.risk_level, hash: f.shortHash(finalQ.evidence_hash) })
+    ? t('co_paused', { level: f.riskLabel(finalQ.risk_level), hash: f.shortHash(finalQ.evidence_hash) })
     : dropped
       ? t('co_repriced', {
-          level: finalQ.risk_level,
+          level: f.riskLabel(finalQ.risk_level),
           a: f.price(initial.final_issue_price_usd),
           b: f.price(finalQ.final_issue_price_usd),
           y: f.bpsToPct(finalQ.implied_gross_yield_bps)
         })
-      : t('co_held', { level: finalQ.risk_level, p: f.price(finalQ.final_issue_price_usd) });
+      : t('co_held', { level: f.riskLabel(finalQ.risk_level), p: f.price(finalQ.final_issue_price_usd) });
 }
 
 // ===========================================================================
