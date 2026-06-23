@@ -1,0 +1,134 @@
+{
+  "case_id": "CASE-EWR-2025-ALU-FS-WH-00012",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "拟真样例数据（虚构）：南方有色佛山 × 信达金属宁波能源有限公司 铝锭现货采购 2025-FS-AL0-CG-00012。金额按~7.25汇率折算USD。 本批次最大单笔合同，279吨/¥563万。供应商为央企子公司，信用资质极优。",
+  "uploaded_documents": {
+    "warehouse_receipt_file": "data/uploads/alu-fs-wh-00012/warehouse-receipt.md",
+    "commercial_invoice_file": "data/uploads/alu-fs-wh-00012/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EWR-2025-FS-AL0-CG-00012",
+    "bl_no": "FS/WH/AL0/00012",
+    "bl_type": "electronic_warehouse_receipt",
+    "ebl_platform": "TradeShield ENI (数字仓单)",
+    "ebl_title_ref": "ENI-EWR-AL0-00012-2B1C",
+    "shipper": "信达金属宁波能源有限公司 (Xinda Metals Ningbo Energy Co., Ltd.)",
+    "consignee": "南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)",
+    "notify_party": "南方有色金属贸易有限公司，广东省佛山市南海区",
+    "carrier": "佛山南海正源仓储物流有限公司（指定交割库）",
+    "vessel": "N/A（库内交货）",
+    "voyage_no": "N/A",
+    "port_of_loading": "佛山南海指定仓库（入库单号 WH-FS-00012)",
+    "port_of_discharge": "佛山南海指定仓库（出库单号 WH-FS-00012)",
+    "incoterms": "EXW 佛山仓库",
+    "cargo": "AL99.70 / P1020 级别",
+    "quantity_mt": 279.281,
+    "containers": "N/A（散货仓库堆存）",
+    "declared_value_usd": 776209,
+    "issue_date": "2025-01-14",
+    "shipped_on_board": "2025-01-14",
+    "eta": "2025-01-14",
+    "document_hash": "0xdacb6142537e3ade422d4bd433954ca938f3a25098360ab462a34966c09c1a25"
+  },
+  "commercial_invoice": {
+    "invoice_no": "JY-AL0-INV-00012",
+    "invoice_date": "2025-01-14",
+    "sales_contract": "2025-FS-AL0-CG-00012",
+    "incoterms": "EXW 佛山仓库",
+    "payment_terms": "现款现货（T/T 电汇）",
+    "pricing_basis": "SMM 佛山铝锭现货价 + 华南升贴水",
+    "smm_reference_price_cny_per_mt": 20070,
+    "regional_premium_cny_per_mt": 80,
+    "unit_price_cny_per_mt": 20150,
+    "unit_price_usd_per_mt": 2779,
+    "quantity_mt": 279.281,
+    "total_amount_cny": 5627512.15,
+    "total_amount_usd": 776209,
+    "currency": "CNY",
+    "is_provisional": false,
+    "vat_rate_pct": 13,
+    "vat_amount_cny": 731577
+  },
+  "cargo": {
+    "commodity": "Aluminum Ingot（铝锭）",
+    "grade": "AL99.70 / P1020 级别，GB/T 1196-2017",
+    "hs_code": "760110",
+    "quantity": 279.281,
+    "unit": "MT",
+    "brand": "西南铝业 / 锦源铝业（国产主流品牌）",
+    "warehouse": "佛山南海有色金属指定交割仓库"
+  },
+  "insurance": {
+    "provider": "中国人保财险佛山分公司（PICC Foshan）",
+    "policy_type": "国内货运险 + 仓至仓条款",
+    "coverage_ratio": 1,
+    "insured_value_cny": 5627512.15,
+    "insured_value_usd": 776209,
+    "expires_at": "2025-03-31",
+    "policy_hash": "0x91a5fe937df54b3ea33dbf8dd594931c20b162c79b0431089c842d800653047d"
+  },
+  "trade_economics": {
+    "cost_basis_cny_per_mt": 18250,
+    "cost_basis_usd_per_mt": 2517,
+    "cost_of_goods_cny": 5096878,
+    "cost_of_goods_usd": 703018,
+    "expected_gross_profit_cny": 530634,
+    "expected_gross_profit_usd": 73191,
+    "gross_margin_pct": 0.0943,
+    "note": "信达金属宁波能源有限公司生产成本~18,250元/吨，本批次最大单笔合同，279吨/¥563万。供应商为央企子公司，信用资质极优。，售价20,150元/吨，毛利率约9.4%。"
+  },
+  "financing": {
+    "requested_cash_cny": 3939259,
+    "requested_cash_usd": 543346,
+    "payout_speed": "FAST",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.7,
+    "currency": "USDC",
+    "note": "仓单质押融资，初始LTV 70%。现款现货模式，按现货价值融出~394万人民币等值USDC。"
+  },
+  "market": {
+    "commodity": "Aluminum（铝）",
+    "benchmark": "SMM 佛山铝锭现货价 (A00铝)",
+    "price_unit": "CNY/MT",
+    "reference_price_cny_per_mt": 20070,
+    "reference_price_usd_per_mt": 2768,
+    "regional_premium_cny_per_mt": 80,
+    "landed_price_cny_per_mt": 20150,
+    "landed_price_usd_per_mt": 2779,
+    "lme_aluminium_cash_usd_per_mt": 2185,
+    "shfe_aluminium_cny_per_mt": 19950,
+    "as_of": "2025-01-14",
+    "source": "SMM / LME / SHFE 2025年1月行情"
+  },
+  "shipment_events": [
+    {
+      "date": "2025-01-14",
+      "type": "warehouse_receipt_issued",
+      "description": "279.281吨AL99.70 / P1020 级别入库完毕，佛山南海指定仓库签发电子仓单。",
+      "severity": "info"
+    },
+    {
+      "date": "2025-01-14",
+      "type": "ownership_transfer",
+      "description": "买卖双方完成现款现货结算，仓单所有权由信达金属宁波能源有限公司转移至南方有色佛山。",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2025-01-14",
+      "type": "domestic_aluminum_market",
+      "region": "中国 / 华南",
+      "severity": "medium",
+      "description": "2025年1月佛山铝锭社会库存约22万吨，处于年内中性水平。春节前下游备货需求温和，华南现货升水稳定在60-90元/吨。"
+    },
+    {
+      "date": "2025-01-14",
+      "type": "seasonal_demand",
+      "region": "中国",
+      "severity": "low",
+      "description": "临近春节假期，下游加工企业陆续停产放假，现货采购节奏放缓。预计节后复工需求回暖。"
+    }
+  ]
+}

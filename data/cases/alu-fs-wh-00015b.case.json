@@ -1,0 +1,134 @@
+{
+  "case_id": "CASE-EWR-2025-ALU-FS-WH-00015B",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "拟真样例数据（虚构）：南方有色佛山 × 瑞达通金属（广东）有限公司 铝锭现货采购 2025-FS-ALX-CG-00015。金额按~7.25汇率折算USD。 铝合金锭（ADC12），不同于纯铝锭 P1020。用于压铸行业，溢价高于普通铝锭。",
+  "uploaded_documents": {
+    "warehouse_receipt_file": "data/uploads/alu-fs-wh-00015b/warehouse-receipt.md",
+    "commercial_invoice_file": "data/uploads/alu-fs-wh-00015b/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EWR-2025-FS-ALX-CG-00015",
+    "bl_no": "FS/WH/AL0/00015",
+    "bl_type": "electronic_warehouse_receipt",
+    "ebl_platform": "TradeShield ENI (数字仓单)",
+    "ebl_title_ref": "ENI-EWR-AL0-00015-2115",
+    "shipper": "瑞达通金属（广东）有限公司 (Ruidatong Metals (Guangdong) Co., Ltd.)",
+    "consignee": "南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)",
+    "notify_party": "南方有色金属贸易有限公司，广东省佛山市南海区",
+    "carrier": "佛山南海正源仓储物流有限公司（指定交割库）",
+    "vessel": "N/A（库内交货）",
+    "voyage_no": "N/A",
+    "port_of_loading": "佛山南海指定仓库（入库单号 WH-FS-00015)",
+    "port_of_discharge": "佛山南海指定仓库（出库单号 WH-FS-00015)",
+    "incoterms": "EXW 供方仓库（自提）",
+    "cargo": "ADC12 / A380 级别，铝合金锭",
+    "quantity_mt": 66,
+    "containers": "N/A（散货仓库堆存）",
+    "declared_value_usd": 185255,
+    "issue_date": "2025-01-17",
+    "shipped_on_board": "2025-01-17",
+    "eta": "2025-01-17",
+    "document_hash": "0xa2cd2023935ad3b0dd8a6a29f2d2e6ebde19e4d8776612f0d7f14bca940e7e7e"
+  },
+  "commercial_invoice": {
+    "invoice_no": "JY-AL0-INV-00015",
+    "invoice_date": "2025-01-17",
+    "sales_contract": "2025-FS-ALX-CG-00015",
+    "incoterms": "EXW 供方仓库（自提）",
+    "payment_terms": "先货后款（验收后7个工作日内）",
+    "pricing_basis": "SMM 佛山铝锭现货价 + 华南升贴水",
+    "smm_reference_price_cny_per_mt": 20260,
+    "regional_premium_cny_per_mt": 90,
+    "unit_price_cny_per_mt": 20350,
+    "unit_price_usd_per_mt": 2807,
+    "quantity_mt": 66,
+    "total_amount_cny": 1343100,
+    "total_amount_usd": 185255,
+    "currency": "CNY",
+    "is_provisional": false,
+    "vat_rate_pct": 13,
+    "vat_amount_cny": 174603
+  },
+  "cargo": {
+    "commodity": "Aluminum Alloy Ingot（铝合金锭）",
+    "grade": "ADC12 / A380 级别，铝合金锭，GB/T 1196-2017",
+    "hs_code": "760120",
+    "quantity": 66,
+    "unit": "MT",
+    "brand": "西南铝业 / 锦源铝业（国产主流品牌）",
+    "warehouse": "佛山南海有色金属指定交割仓库"
+  },
+  "insurance": {
+    "provider": "中国人保财险佛山分公司（PICC Foshan）",
+    "policy_type": "国内货运险 + 仓至仓条款",
+    "coverage_ratio": 1,
+    "insured_value_cny": 1343100,
+    "insured_value_usd": 185255,
+    "expires_at": "2025-03-31",
+    "policy_hash": "0x50eec8f6387eabe19ea0b7246ad262d79a898599ccb203ca7553386ec1e0da57"
+  },
+  "trade_economics": {
+    "cost_basis_cny_per_mt": 18500,
+    "cost_basis_usd_per_mt": 2552,
+    "cost_of_goods_cny": 1221000,
+    "cost_of_goods_usd": 168414,
+    "expected_gross_profit_cny": 122100,
+    "expected_gross_profit_usd": 16841,
+    "gross_margin_pct": 0.0909,
+    "note": "瑞达通金属（广东）有限公司生产成本~18,500元/吨，铝合金锭（ADC12），不同于纯铝锭 P1020。用于压铸行业，溢价高于普通铝锭。，售价20,350元/吨，毛利率约9.1%。"
+  },
+  "financing": {
+    "requested_cash_cny": 805860,
+    "requested_cash_usd": 111153,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.6,
+    "currency": "USDC",
+    "note": "仓单质押融资，初始LTV 60%。供方先货后款，买方融资压力较小，LTV偏保守。"
+  },
+  "market": {
+    "commodity": "Aluminum Alloy（铝合金）",
+    "benchmark": "SMM 佛山铝锭现货价 (A00铝)",
+    "price_unit": "CNY/MT",
+    "reference_price_cny_per_mt": 20260,
+    "reference_price_usd_per_mt": 2794,
+    "regional_premium_cny_per_mt": 90,
+    "landed_price_cny_per_mt": 20350,
+    "landed_price_usd_per_mt": 2807,
+    "lme_aluminium_cash_usd_per_mt": 2195,
+    "shfe_aluminium_cny_per_mt": 20100,
+    "as_of": "2025-01-17",
+    "source": "SMM / LME / SHFE 2025年1月行情"
+  },
+  "shipment_events": [
+    {
+      "date": "2025-01-17",
+      "type": "warehouse_receipt_issued",
+      "description": "66吨ADC12 / A380 级别，铝合金锭入库完毕，佛山南海指定仓库签发电子仓单。",
+      "severity": "info"
+    },
+    {
+      "date": "2025-01-17",
+      "type": "ownership_transfer",
+      "description": "买卖双方完成先货后款结算，仓单所有权由瑞达通金属（广东）有限公司转移至南方有色佛山。",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2025-01-17",
+      "type": "domestic_aluminum_market",
+      "region": "中国 / 华南",
+      "severity": "medium",
+      "description": "2025年1月佛山铝锭社会库存约22万吨，处于年内中性水平。春节前下游备货需求温和，华南现货升水稳定在60-90元/吨。"
+    },
+    {
+      "date": "2025-01-17",
+      "type": "seasonal_demand",
+      "region": "中国",
+      "severity": "low",
+      "description": "临近春节假期，下游加工企业陆续停产放假，现货采购节奏放缓。预计节后复工需求回暖。"
+    }
+  ]
+}
