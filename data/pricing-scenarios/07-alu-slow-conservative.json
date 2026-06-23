@@ -1,0 +1,14 @@
+{
+  "name": "alu-slow-conservative",
+  "description": "南方有色佛山铝锭仓单 - LOW_COST 保守放款：最大单笔合同（1,014吨/~2,484万元），大额保守审核，最低成本放款。",
+  "base_case": "data/cases/alu-fs-wh-00014.case.json",
+  "overrides": { "financing": { "payout_speed": "LOW_COST" } },
+  "pricing_expectations": {
+    "payout_speed": "LOW_COST",
+    "pricing_action": "OPEN_OFFERING",
+    "binding_constraint": "EXPORTER_PROFIT",
+    "risk_level": "MEDIUM",
+    "min_issue_price": 0.94,
+    "max_issue_price": 0.97
+  }
+}

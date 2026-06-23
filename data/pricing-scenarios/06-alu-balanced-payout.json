@@ -1,0 +1,14 @@
+{
+  "name": "alu-balanced-payout",
+  "description": "南方有色佛山铝锭仓单 - BALANCED 均衡放款：443吨/~1,073万元标准合同，均衡释放资金。",
+  "base_case": "data/cases/alu-fs-wh-00015.case.json",
+  "overrides": { "financing": { "payout_speed": "BALANCED" } },
+  "pricing_expectations": {
+    "payout_speed": "BALANCED",
+    "pricing_action": "OPEN_OFFERING",
+    "binding_constraint": "EXPORTER_PROFIT",
+    "risk_level": "MEDIUM",
+    "min_issue_price": 0.93,
+    "max_issue_price": 0.96
+  }
+}

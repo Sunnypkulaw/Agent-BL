@@ -1,0 +1,14 @@
+{
+  "name": "alu-fast-payout",
+  "description": "南方有色佛山铝锭仓单 - FAST 快速放款：中等规模合同（724吨/~1,771万元），低风险走快速通道。",
+  "base_case": "data/cases/alu-fs-wh-00013.case.json",
+  "overrides": { "financing": { "payout_speed": "FAST" } },
+  "pricing_expectations": {
+    "payout_speed": "FAST",
+    "pricing_action": "OPEN_OFFERING",
+    "binding_constraint": "EXPORTER_PROFIT",
+    "risk_level": "MEDIUM",
+    "min_issue_price": 0.91,
+    "max_issue_price": 0.93
+  }
+}

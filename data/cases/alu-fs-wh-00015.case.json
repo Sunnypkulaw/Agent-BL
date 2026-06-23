@@ -1,0 +1,140 @@
+{
+  "case_id": "CASE-EBL-2026-ALU-FS-WH-00015",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "拟真样例数据（虚构）：南方有色佛山 × 上海锦源 铝锭现货采购合同 2026-FS-AL0-CG-00015。国内现货库内交货，适配为数字仓单/交付凭证场景。金额单位已按~7.25汇率折算USD。",
+  "uploaded_documents": {
+    "warehouse_receipt_file": "data/uploads/alu-fs-wh-00015/warehouse-receipt.md",
+    "commercial_invoice_file": "data/uploads/alu-fs-wh-00015/commercial-invoice.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "EWR-2026-FS-AL0-00015",
+    "bl_no": "FS/WH/AL0/2026/00015",
+    "bl_type": "electronic_warehouse_receipt",
+    "ebl_platform": "TradeShield ENI (数字仓单)",
+    "ebl_title_ref": "ENI-EWR-AL0-00015-8A2F",
+    "shipper": "上海锦源国际贸易有限公司 (Shanghai Jinyuan International Trade Co., Ltd.)",
+    "consignee": "南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)",
+    "notify_party": "南方有色金属贸易有限公司，广东省佛山市南海区",
+    "carrier": "佛山南海正源仓储物流有限公司（指定交割库）",
+    "vessel": "N/A（库内交货）",
+    "voyage_no": "N/A",
+    "port_of_loading": "佛山南海指定仓库（入库单号 WH-FS-2026-05001）",
+    "port_of_discharge": "佛山南海指定仓库（出库单号 WH-FS-2026-05001）",
+    "incoterms": "EXW 佛山仓库（现货库内交货）",
+    "cargo": "铝锭 AL99.70（P1020 级别，国产重熔用铝锭）",
+    "quantity_mt": 443.385,
+    "containers": "N/A（散货仓库堆存）",
+    "declared_value_usd": 1480000,
+    "issue_date": "2026-05-20",
+    "shipped_on_board": "2026-05-20",
+    "eta": "2026-05-22",
+    "document_hash": "0x3c7a1f8e5d2b9406a7c3e1f5d8b2a4c6e8f0a2b4d6e8f0a1b3c5d7e9f1a3b5c7d"
+  },
+  "commercial_invoice": {
+    "invoice_no": "SH-AL0-INV-2026-00015",
+    "invoice_date": "2026-05-20",
+    "sales_contract": "2026-FS-AL0-CG-00015",
+    "incoterms": "EXW 佛山指定仓库（现货库内交货）",
+    "payment_terms": "现汇（T/T 电汇结算）",
+    "pricing_basis": "SMM 佛山铝锭现货价 + 地区升贴水",
+    "smm_reference_price_cny_per_mt": 24150,
+    "regional_premium_cny_per_mt": 60,
+    "unit_price_cny_per_mt": 24210,
+    "unit_price_usd_per_mt": 3338,
+    "quantity_mt": 443.385,
+    "total_amount_cny": 10730000,
+    "total_amount_usd": 1480000,
+    "currency": "CNY",
+    "is_provisional": false,
+    "vat_rate_pct": 13,
+    "vat_amount_cny": 1394900
+  },
+  "cargo": {
+    "commodity": "Aluminum Ingot（铝锭）",
+    "grade": "AL99.70 / P1020 级别，重熔用铝锭，GB/T 1196-2017",
+    "hs_code": "760110",
+    "quantity": 443.385,
+    "unit": "MT",
+    "brand": "云南铝业 / 锦源铝业（国产主流品牌）",
+    "warehouse": "佛山南海有色金属指定交割仓库"
+  },
+  "insurance": {
+    "provider": "中国人保财险佛山分公司（PICC Foshan）",
+    "policy_type": "国内货运险 + 仓至仓条款",
+    "coverage_ratio": 1.0,
+    "insured_value_cny": 10730000,
+    "insured_value_usd": 1480000,
+    "expires_at": "2026-06-30",
+    "policy_hash": "0x7a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b3c"
+  },
+  "trade_economics": {
+    "cost_basis_cny_per_mt": 21900,
+    "cost_basis_usd_per_mt": 3021,
+    "cost_of_goods_cny": 9710100,
+    "cost_of_goods_usd": 1339300,
+    "expected_gross_profit_cny": 1019900,
+    "expected_gross_profit_usd": 140700,
+    "gross_margin_pct": 0.095,
+    "note": "锦源铝锭生产成本~21,900元/吨（含冶炼+运输至佛山），售价24,210元/吨。毛利约102万元。国内铝锭现货贸易，利润率偏薄但周转快。"
+  },
+  "financing": {
+    "requested_cash_cny": 7500000,
+    "requested_cash_usd": 1035000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.7,
+    "currency": "USDC",
+    "note": "仓单质押融资，初始LTV 70%。按现货价值的70%融出~750万人民币等值USDC。"
+  },
+  "market": {
+    "commodity": "Aluminum（铝）",
+    "benchmark": "SMM 佛山铝锭现货价 (A00铝)",
+    "price_unit": "CNY/MT",
+    "reference_price_cny_per_mt": 24150,
+    "reference_price_usd_per_mt": 3331,
+    "regional_premium_cny_per_mt": 60,
+    "landed_price_cny_per_mt": 24210,
+    "landed_price_usd_per_mt": 3338,
+    "lme_aluminium_cash_usd_per_mt": 2390,
+    "shfe_aluminium_cny_per_mt": 23980,
+    "as_of": "2026-05-20",
+    "source": "SMM / LME / SHFE 2026年5月行情"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-05-20",
+      "type": "warehouse_receipt_issued",
+      "description": "443.385吨铝锭入库完毕，佛山南海指定仓库签发电子仓单 EWR-2026-FS-AL0-00015。",
+      "severity": "info"
+    },
+    {
+      "date": "2026-05-21",
+      "type": "ownership_transfer",
+      "description": "买卖双方完成现汇结算，仓单所有权由上海锦源转移至南方有色佛山。",
+      "severity": "info"
+    },
+    {
+      "date": "2026-05-22",
+      "type": "delivery_complete",
+      "description": "南方有色佛山完成提货/过户确认，现货交付完成。",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-05-20",
+      "type": "domestic_aluminum_market",
+      "region": "中国 / 华南",
+      "severity": "medium",
+      "description": "佛山铝锭社会库存约18万吨，处于年内中等偏低水平。云南丰水期电解铝复产进度偏慢，华南现货升水维持在50-80元/吨。"
+    },
+    {
+      "date": "2026-05-20",
+      "type": "policy_risk",
+      "region": "中国",
+      "severity": "low",
+      "description": "电解铝产能天花板（4500万吨）政策持续。云南限电复产节奏不确定，供给端偏紧支撑铝价。"
+    }
+  ]
+}
