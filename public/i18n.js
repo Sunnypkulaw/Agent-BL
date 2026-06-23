@@ -9,13 +9,13 @@
 const STORAGE_KEY = 'ts_lang';
 const SUPPORTED = ['zh', 'en'];
 
-let lang = (() => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (SUPPORTED.includes(saved)) return saved;
-  } catch { /* ignore */ }
-  return 'zh';
-})();
+let lang = 'zh';
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (SUPPORTED.includes(saved)) lang = saved;
+  else if (!navigator.language.toLowerCase().startsWith('zh')) lang = 'en';
+} catch { /* ignore */ }
+try { document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'; } catch { /* ignore */ }
 
 const listeners = new Set();
 
@@ -34,11 +34,11 @@ export function toggleLang() { setLang(lang === 'zh' ? 'en' : 'zh'); }
 /** Register a callback fired whenever the language changes. */
 export function onLangChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 
-/** Translate a key with optional {var} interpolation. Falls back to zh, then the key. */
+/** Translate a key with optional {var} interpolation. Falls back to English, then the key. */
 export function t(key, vars) {
-  const table = DICT[lang] || DICT.zh;
+  const table = DICT[lang] || DICT.en;
   let str = table[key];
-  if (str == null) str = DICT.zh[key];
+  if (str == null) str = DICT.en[key];
   if (str == null) return key;
   if (vars) str = str.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? String(vars[k]) : ''));
   return str;
@@ -52,6 +52,8 @@ export function t(key, vars) {
  *   data-i18n-title   -> title
  */
 export function applyStaticI18n(root = document) {
+  const title = t('document_title');
+  if (title !== 'document_title') document.title = title;
   root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.getAttribute('data-i18n')); });
   root.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
   root.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
@@ -64,14 +66,17 @@ export function applyStaticI18n(root = document) {
 const DICT = {
   zh: {
     // topbar / subbar
+    document_title: 'TradeShield · eBL-backed RWA 投资市场',
     brand_tag: 'AI 为提单背书 RWA 动态定价 · 链上执行',
+    nav_market: '投资市场',
     nav_mint: '① 提单上链 · 铸造 RWA',
     nav_voyage: '② 航运追踪 · 实时定价',
     wallet_connect: '🦊 连接钱包',
     live_tip: '所有数字均由本地 AI 定价引擎实时产生',
-    case_label: '交易案例 / 电子提单',
+    case_label: '当前提单',
+    case_select_aria: '选择交易案例或电子提单',
     lang_switch_to: 'EN',
-    lang_btn_title: '切换语言 / Switch language',
+    lang_btn_title: 'Switch to English',
     wallet_title: '连接 MetaMask，在 {network} 测试网铸造',
 
 	    // category filter
@@ -88,10 +93,91 @@ const DICT = {
 	    ai_empty_query: '请输入筛选条件或自然语言描述',
 	    ai_no_match: 'AI 未找到匹配的提单，请尝试其他描述',
 	    ai_error: 'AI 解析失败: {msg}',
+    ai_match_toast: 'AI: {reasoning}（匹配 {n} 张 eBL）',
+    keyword_match_toast: '关键词匹配 {n} 张 eBL',
+    keyword_ai_unavailable_toast: '关键词匹配 {n} 张 eBL（AI 暂不可用）',
 
     // chain status
     chain_deployed: '● 合约已部署 · 连接钱包铸造真实 {network} 交易',
     chain_not_deployed: '○ 合约未部署 · 当前为模拟上链（运行 deploy 脚本后切真实链）',
+
+    // marketplace
+    market_eyebrow: '投资市场',
+    market_h1: '选择一笔 eBL 支撑的贸易项目。',
+    market_subtitle: '浏览由 AI 实时定价的贸易金融项目。每张卡片都绑定电子提单、航线风险评分、航运进度和认购进度。',
+    market_sort_label: '项目排序',
+    market_sort_recommended: '推荐排序',
+    market_sort_yield: '潜在收益最高',
+    market_sort_risk: '风险最低',
+    market_sort_funding: '认购最多',
+    market_sort_eta: '最早到港',
+    market_board_label: 'eBL 项目卡片',
+    market_board_h: '项目列表',
+    market_count: '{n} 个项目',
+    market_empty: '没有匹配的 eBL 项目。',
+    market_loading: '定价中…',
+    market_stat_deals: '可见项目',
+    market_stat_target: '融资目标',
+    market_stat_yield: '平均潜在收益',
+    market_stat_open: '开放项目',
+    market_summary_visible: '可见',
+    market_summary_selected: '已选',
+    market_summary_price: '发行价',
+    market_issue_price: 'AI 发行价',
+    market_upside: '潜在收益',
+    market_fact_ebl: 'eBL',
+    market_fact_vessel: '船舶',
+    market_fact_qty: '货物',
+    market_fact_target: '目标',
+    market_funding: '认购进度',
+    market_card_subscribe: '认购',
+    market_card_track: '追踪',
+    market_detail_loading: '正在加载所选项目…',
+    market_detail_label: '所选项目',
+    market_detail_upside: '潜在收益',
+    market_detail_risk: '风险',
+    market_detail_collateral: '抵押货值',
+    market_detail_eta: '预计到港',
+    market_subscription_label: '投资金额 (USD)',
+    market_subscribe_btn: '模拟认购',
+    market_paused_btn: '发行已暂停',
+    market_open_pricing: '打开定价页',
+    market_open_voyage: '打开航运页',
+    market_readout_receive: '预计获得',
+    market_readout_target: '目标兑付',
+    market_readout_foot: '目标兑付不保本，取决于进口商付款、货物结算与保险覆盖。',
+    market_need_amount: '请输入大于 0 的投资金额',
+    market_subscribing: '模拟中…',
+    market_subscribed_toast: '已按当前 AI 报价完成模拟认购。',
+    market_subscribe_fail: '模拟认购失败: {msg}',
+    market_subscribe_result: '已模拟发行生命周期 · {n} 个步骤',
+    market_voyage_note: '到 {disch} 已完成 {pct}% · ETA {eta}',
+    market_arrived: '已抵达 {disch}',
+
+    // dynamic labels
+    action_OPEN_OFFERING: '开放',
+    action_OPEN_WITH_WARNING: '开放 · 预警',
+    action_REPRICE_DOWN: '下调定价',
+    action_PAUSE_OFFERING: '已暂停',
+    action_FREEZE_POOL: '已冻结',
+    action_TRIGGER_LIQUIDATION: '清算',
+    risk_LOW: '低',
+    risk_MEDIUM: '中',
+    risk_WARNING: '预警',
+    risk_CRITICAL: '严重',
+    riskdim_war: '战争 / 地缘',
+    riskdim_weather: '天气',
+    riskdim_port: '港口 / 物流',
+    riskdim_insurance: '保险',
+    riskdim_price: '价格波动',
+    riskdim_docs: '单据',
+    risk_clear: '无风险项',
+    speed_FAST_label: '快速',
+    speed_BALANCED_label: '均衡',
+    speed_LOW_COST_label: '低成本',
+    speed_FAST_blurb: '数小时内到账，以更高利润分成换速度。',
+    speed_BALANCED_blurb: '标准结算，融资成本与速度更均衡。',
+    speed_LOW_COST_blurb: '耐心资金，融资成本更低但到账更慢。',
 
     // hero (view 1)
     hero_eyebrow: '提单上链 · RWA 折价发行',
@@ -243,14 +329,17 @@ const DICT = {
 
   en: {
     // topbar / subbar
-    brand_tag: 'AI dynamically prices eBL-backed RWA · enforced on-chain',
-    nav_mint: '① Tokenize · Mint RWA',
-    nav_voyage: '② Voyage · Live Pricing',
-    wallet_connect: '🦊 Connect Wallet',
+    document_title: 'TradeShield · eBL-backed RWA Investment Marketplace',
+    brand_tag: 'AI-priced eBL-backed RWA · enforced on-chain',
+    nav_market: 'Investment Marketplace',
+    nav_mint: 'Pricing & Mint',
+    nav_voyage: 'Voyage Risk',
+    wallet_connect: 'Connect Wallet',
     live_tip: 'Every number is produced live by the local AI pricing engine',
-    case_label: 'Trade case / eBL',
+    case_label: 'Selected case / eBL',
+    case_select_aria: 'Select trade case or eBL',
     lang_switch_to: '中文',
-    lang_btn_title: '切换语言 / Switch language',
+    lang_btn_title: 'Switch to Chinese',
     wallet_title: 'Connect MetaMask to mint on the {network} testnet',
 
 	    // category filter
@@ -259,18 +348,99 @@ const DICT = {
 	    cat_metal: 'Metal',
 	    cat_ore: 'Ore',
 	    search_ph: 'Search eBL or AI natural language filter…',
-	    ai_search_title: 'AI parses natural language preferences to intelligently filter eBLs',
-	    ai_searching: '🤖 AI parsing…',
+	    ai_search_title: 'AI parses natural-language preferences to filter eBLs',
+	    ai_searching: 'AI parsing…',
 
 	    // search / filter feedback
 	    no_case_match: 'No matching eBL cases',
 	    ai_empty_query: 'Please enter filter criteria or natural language description',
 	    ai_no_match: 'AI found no matching eBLs, try a different description',
 	    ai_error: 'AI parsing failed: {msg}',
+    ai_match_toast: 'AI: {reasoning} ({n} eBL matches)',
+    keyword_match_toast: 'Keyword matched {n} eBL deals',
+    keyword_ai_unavailable_toast: 'Keyword matched {n} eBL deals (AI unavailable)',
 
     // chain status
     chain_deployed: '● Contract deployed · connect a wallet to mint a real {network} tx',
     chain_not_deployed: '○ Not deployed · simulated minting (run the deploy script to go live)',
+
+    // marketplace
+    market_eyebrow: 'Investment marketplace',
+    market_h1: 'Choose an eBL-backed trade project.',
+    market_subtitle: 'Browse live AI-priced trade-finance offerings. Each sticker is backed by an electronic bill of lading, route risk scoring, voyage progress, and a funding progress bar.',
+    market_sort_label: 'Sort deals',
+    market_sort_recommended: 'Recommended',
+    market_sort_yield: 'Highest upside',
+    market_sort_risk: 'Lowest risk',
+    market_sort_funding: 'Most funded',
+    market_sort_eta: 'Earliest ETA',
+    market_board_label: 'eBL deal stickers',
+    market_board_h: 'Project shelf',
+    market_count: '{n} deals',
+    market_empty: 'No matching eBL-backed deals.',
+    market_loading: 'Pricing…',
+    market_stat_deals: 'Visible deals',
+    market_stat_target: 'Funding target',
+    market_stat_yield: 'Avg upside',
+    market_stat_open: 'Open deals',
+    market_summary_visible: 'Visible',
+    market_summary_selected: 'Selected',
+    market_summary_price: 'Issue price',
+    market_issue_price: 'AI issue price',
+    market_upside: 'upside',
+    market_fact_ebl: 'eBL',
+    market_fact_vessel: 'Vessel',
+    market_fact_qty: 'Cargo',
+    market_fact_target: 'Target',
+    market_funding: 'Funding progress',
+    market_card_subscribe: 'Subscribe',
+    market_card_track: 'Track',
+    market_detail_loading: 'Loading selected project…',
+    market_detail_label: 'Selected project',
+    market_detail_upside: 'Upside',
+    market_detail_risk: 'Risk',
+    market_detail_collateral: 'Collateral',
+    market_detail_eta: 'ETA',
+    market_subscription_label: 'Investment amount (USD)',
+    market_subscribe_btn: 'Simulate subscription',
+    market_paused_btn: 'Offering paused',
+    market_open_pricing: 'Open pricing page',
+    market_open_voyage: 'Open voyage view',
+    market_readout_receive: 'Estimated allocation',
+    market_readout_target: 'target redemption',
+    market_readout_foot: 'Target redemption is not guaranteed and depends on importer payment, cargo settlement, and insurance coverage.',
+    market_need_amount: 'Enter an investment amount greater than 0',
+    market_subscribing: 'Simulating…',
+    market_subscribed_toast: 'Subscription simulated with the current AI quote.',
+    market_subscribe_fail: 'Subscription simulation failed: {msg}',
+    market_subscribe_result: 'Offering lifecycle simulated · {n} steps',
+    market_voyage_note: '{pct}% to {disch} · ETA {eta}',
+    market_arrived: 'Arrived at {disch}',
+
+    // dynamic labels
+    action_OPEN_OFFERING: 'OPEN',
+    action_OPEN_WITH_WARNING: 'OPEN · WARNING',
+    action_REPRICE_DOWN: 'REPRICE DOWN',
+    action_PAUSE_OFFERING: 'PAUSED',
+    action_FREEZE_POOL: 'FROZEN',
+    action_TRIGGER_LIQUIDATION: 'LIQUIDATION',
+    risk_LOW: 'LOW',
+    risk_MEDIUM: 'MEDIUM',
+    risk_WARNING: 'WARNING',
+    risk_CRITICAL: 'CRITICAL',
+    riskdim_war: 'War / Geopolitics',
+    riskdim_weather: 'Weather',
+    riskdim_port: 'Port / Logistics',
+    riskdim_insurance: 'Insurance',
+    riskdim_price: 'Price volatility',
+    riskdim_docs: 'Documents',
+    risk_clear: 'clear',
+    speed_FAST_label: 'FAST',
+    speed_BALANCED_label: 'BALANCED',
+    speed_LOW_COST_label: 'LOW COST',
+    speed_FAST_blurb: 'Cash in hours — give up more margin for speed.',
+    speed_BALANCED_blurb: 'Standard settlement — a balanced financing cost.',
+    speed_LOW_COST_blurb: 'Patient capital — cheapest financing, slower cash.',
 
     // hero (view 1)
     hero_eyebrow: 'Tokenize eBL · discounted RWA issuance',

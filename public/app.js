@@ -1,10 +1,12 @@
-// TradeShield dashboard — router + shared controller + View ① (Tokenize / Mint).
+// TradeShield dashboard — router + marketplace + View ① (Tokenize / Mint).
 //
-// Two views share one selected trade case + one live PricingQuote (store.js):
-//   View ① "提单上链铸造 RWA" — AI cargo valuation + route risk (with sources &
+// Three views share one selected trade case + one live PricingQuote (store.js):
+//   View ⓪ "Investment Marketplace" — a Taobao-like, investor-facing shelf of
+//           eBL-backed RWA deal stickers with voyage + funding progress.
+//   View ① "Pricing & Mint" — AI cargo valuation + route risk (with sources &
 //           scores), the AI pricing waterfall, and a financing→mint module that
 //           tokenizes the eBL into RWA on real Sepolia (or a simulated fallback).
-//   View ② "航运追踪 & 实时定价" — lives in voyage.js.
+//   View ② "Voyage Risk" — lives in voyage.js.
 // UI chrome is bilingual via i18n.js; the engine's own prose stays as returned.
 
 import { state, selectedQuote } from './store.js';
@@ -18,6 +20,8 @@ import { initPopupAssistant } from './popup-assistant.js';
 import { getDeepSeekClient } from './llm-client.js';
 
 const PAUSED_ACTIONS = new Set(['PAUSE_OFFERING', 'FREEZE_POOL', 'TRIGGER_LIQUIDATION']);
+const MARKET_PLAY_MS = 90000;
+const marketClock = { timer: 0, startedAt: 0 };
 
 /** Resolve the human-readable network name from chain-config. */
 const NETWORK_LABELS = { injective_testnet: 'Injective Testnet', sepolia: 'Sepolia' };
@@ -37,13 +41,14 @@ state.searchQuery = '';
 
 /** Map cargo names to category keys. */
 const CATEGORY_MAP = {
-  energy_chemical: ['原油', '成品油', '橡胶', 'crude', 'oil', 'refined', 'rubber', 'petroleum'],
-  metal: ['铜', '铁', '铝', 'copper', 'iron', 'aluminum', 'aluminium', 'steel'],
-  ore: ['矿', 'ore', 'concentrate', '精矿']
+  energy_chemical: ['crude', 'oil', 'refined', 'rubber', 'petroleum', 'chemical'],
+  metal: ['copper', 'iron', 'aluminum', 'aluminium', 'steel'],
+  ore: ['ore', 'concentrate']
 };
 
 function getCaseCategory(caseItem) {
-  const cargo = (caseItem.cargo || caseItem.label || '').toLowerCase();
+  const bl = caseItem.case?.bill_of_lading ?? {};
+  const cargo = (bl.cargo || caseItem.cargo || '').toLowerCase();
   const cats = [];
   if (CATEGORY_MAP.ore.some(k => cargo.includes(k.toLowerCase()))) cats.push('ore');
   if (CATEGORY_MAP.metal.some(k => cargo.includes(k.toLowerCase()))) cats.push('metal');
@@ -55,10 +60,9 @@ function getCaseCategory(caseItem) {
 function visibleCases() {
   let cases = state.cases;
 
-  // AI-matched IDs (one-shot, consumed after first render)
+  // AI-matched IDs from natural-language filtering.
   if (state._aiMatchedIds) {
     cases = cases.filter(c => state._aiMatchedIds.has(c.case_id));
-    state._aiMatchedIds = null;
   }
 
   // Category filter
@@ -108,7 +112,8 @@ async function boot() {
   renderCaseSelector();
   renderSpeedSelector();
   await selectCase(state.cases[0]?.case_id);
-  setView('mint');
+  setView('market');
+  warmMarketQuotes();
 }
 
 // Re-apply text + re-render the active view when the language changes.
@@ -122,6 +127,7 @@ function onLangChanged() {
   renderSpeedSelector();
   highlightCase();
   highlightSpeed();
+  renderMarket();
   renderViewMint();
   if (state.view === 'voyage') renderVoyage();
 }
@@ -143,12 +149,15 @@ async function selectCase(caseId) {
   highlightCase();
   setBusy(true);
   try {
-    state.comparison = await api.compareSpeeds(entry.case);
+    state.comparison = await getCaseComparison(entry);
     state.speed = state.comparison.recommended_payout_speed
       ?? state.comparison.quotes?.[0]?.payout_speed ?? 'BALANCED';
     highlightSpeed();
     const q = selectedQuote();
     state.financingUsd = Math.round(q?.requested_cash_usd ?? q?.expected_cash_to_exporter_usd ?? 0);
+    state.marketSubscriptionUsd = defaultMarketSubscription(q);
+    state.marketSubscriptionResult = null;
+    renderMarket();
     renderViewMint();
     if (state.view === 'voyage') renderVoyage();
   } catch (e) {
@@ -166,16 +175,22 @@ function selectSpeed(speed) {
   state.voyageOffering = null;
   state.voyageEvents = [];
   renderViewMint();
+  renderMarket();
   if (state.view === 'voyage') renderVoyage();
 }
 
 function setView(name) {
   state.view = name;
   document.querySelectorAll('#nav .nav-tab').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
+  $('#view-market').hidden = name !== 'market';
   $('#view-mint').hidden = name !== 'mint';
   $('#view-voyage').hidden = name !== 'voyage';
-  if (name === 'voyage') { renderVoyage(); startVoyageClock(); }
-  else { stopVoyageClock(); }
+  if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
+  else {
+    stopVoyageClock();
+    if (name === 'market') { renderMarket(); startMarketClock(); }
+    else stopMarketClock();
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -191,29 +206,471 @@ function renderViewMint() {
 }
 
 // ===========================================================================
+// View ⓪ — Investor marketplace
+// ===========================================================================
+async function getCaseComparison(entry) {
+  if (!entry?.case_id) throw new Error('Missing case id');
+  const cached = state.marketComparisons[entry.case_id];
+  if (cached?.comparison) return cached.comparison;
+  if (cached?.promise) return cached.promise;
+
+  const promise = api.compareSpeeds(entry.case)
+    .then((comparison) => {
+      state.marketComparisons[entry.case_id] = { comparison };
+      return comparison;
+    })
+    .catch((error) => {
+      state.marketComparisons[entry.case_id] = { error };
+      throw error;
+    });
+  state.marketComparisons[entry.case_id] = { promise };
+  return promise;
+}
+
+function warmMarketQuotes() {
+  if (!state.cases.length) return;
+  state.marketLoading = true;
+  renderMarket();
+  Promise.allSettled(state.cases.map((entry) => getCaseComparison(entry)))
+    .finally(() => {
+      state.marketLoading = false;
+      renderMarket();
+    });
+}
+
+function cachedComparison(caseId) {
+  return state.marketComparisons[caseId]?.comparison ?? null;
+}
+
+function recommendedQuote(comparison) {
+  const quotes = comparison?.quotes ?? [];
+  const speed = comparison?.recommended_payout_speed;
+  return quotes.find((q) => q.payout_speed === speed) ?? quotes[0] ?? null;
+}
+
+function defaultMarketSubscription(quote) {
+  const target = Number(quote?.expected_cash_to_exporter_usd ?? quote?.requested_cash_usd ?? 0);
+  if (!Number.isFinite(target) || target <= 0) return 100000;
+  return Math.max(50000, Math.round((target * 0.08) / 10000) * 10000);
+}
+
+function renderMarket() {
+  const grid = $('#market-grid');
+  if (!grid) return;
+  const cases = sortMarketCases(visibleCases());
+  renderMarketStats(cases);
+  renderMarketSummary(cases);
+  renderMarketGrid(cases);
+  renderMarketDetail();
+  updateMarketProgressVisuals();
+}
+
+function sortMarketCases(cases) {
+  const riskRank = { LOW: 0, MEDIUM: 1, HIGH: 2, WARNING: 2, CRITICAL: 3 };
+  const etaOf = (c) => +(f.parseDate(c.case?.bill_of_lading?.eta) ?? 0) || Number.MAX_SAFE_INTEGER;
+  const quoteOf = (c) => recommendedQuote(cachedComparison(c.case_id));
+  const fundingOf = (c) => marketFunding(c, quoteOf(c)).fill;
+  const riskOf = (c) => riskRank[quoteOf(c)?.risk_level ?? c.risk_hint] ?? 9;
+  const list = [...cases];
+  list.sort((a, b) => {
+    if (state.marketSort === 'yield_desc') {
+      return (quoteOf(b)?.implied_gross_yield_bps ?? -1) - (quoteOf(a)?.implied_gross_yield_bps ?? -1);
+    }
+    if (state.marketSort === 'risk_asc') return riskOf(a) - riskOf(b) || etaOf(a) - etaOf(b);
+    if (state.marketSort === 'funding_desc') return fundingOf(b) - fundingOf(a);
+    if (state.marketSort === 'eta_asc') return etaOf(a) - etaOf(b);
+    return (a.order ?? 99) - (b.order ?? 99) || a.case_id.localeCompare(b.case_id);
+  });
+  return list;
+}
+
+function renderMarketStats(cases) {
+  const box = $('#market-stats');
+  if (!box) return;
+  clear(box);
+  const quotes = cases.map((c) => recommendedQuote(cachedComparison(c.case_id))).filter(Boolean);
+  const target = quotes.reduce((sum, q) => sum + Number(q.expected_cash_to_exporter_usd ?? q.requested_cash_usd ?? 0), 0);
+  const avgYield = quotes.length
+    ? quotes.reduce((sum, q) => sum + Number(q.implied_gross_yield_bps ?? 0), 0) / quotes.length
+    : null;
+  const open = quotes.filter((q) => !PAUSED_ACTIONS.has(q.pricing_action)).length;
+  box.append(
+    marketStat(t('market_stat_deals'), String(cases.length)),
+    marketStat(t('market_stat_target'), f.usdCompact(target)),
+    marketStat(t('market_stat_yield'), avgYield == null ? '—' : f.bpsToPct(avgYield)),
+    marketStat(t('market_stat_open'), `${open}/${quotes.length || cases.length}`)
+  );
+}
+
+function marketStat(label, value) {
+  return el('div', { class: 'market-stat' },
+    el('span', { text: label }),
+    el('strong', { text: value })
+  );
+}
+
+function renderMarketSummary(cases) {
+  const box = $('#market-summary');
+  if (!box) return;
+  clear(box);
+  const selected = state.cases.find((c) => c.case_id === state.caseId);
+  const quote = selectedQuote();
+  box.append(
+    el('div', { class: 'market-summary-line' },
+      el('span', { text: t('market_summary_visible') }),
+      el('strong', { text: String(cases.length) })
+    ),
+    el('div', { class: 'market-summary-line' },
+      el('span', { text: t('market_summary_selected') }),
+      el('strong', { text: selected ? shortLabel(selected) : '—' })
+    ),
+    el('div', { class: 'market-summary-line' },
+      el('span', { text: t('market_summary_price') }),
+      el('strong', { text: quote ? `$${f.price(quote.final_issue_price_usd)}` : '—' })
+    )
+  );
+}
+
+function renderMarketGrid(cases) {
+  const grid = $('#market-grid');
+  const count = $('#market-count');
+  clear(grid);
+  if (count) count.textContent = t('market_count', { n: cases.length });
+
+  if (!cases.length) {
+    grid.append(el('div', { class: 'market-empty', text: t('market_empty') }));
+    return;
+  }
+
+  for (const entry of cases) {
+    const comparison = cachedComparison(entry.case_id);
+    if (!comparison && !state.marketComparisons[entry.case_id]?.promise) {
+      getCaseComparison(entry)
+        .then(() => { if (state.view === 'market') renderMarket(); })
+        .catch(() => { if (state.view === 'market') renderMarket(); });
+    }
+    grid.append(renderMarketCard(entry, comparison));
+  }
+}
+
+function renderMarketCard(entry, comparison) {
+  const quote = recommendedQuote(comparison);
+  const bl = entry.case?.bill_of_lading ?? {};
+  const active = entry.case_id === state.caseId;
+  const risk = quote?.risk_level ?? entry.risk_hint ?? '—';
+  const tone = f.riskTone(risk);
+  const funding = marketFunding(entry, quote);
+  const progress = marketVoyageProgress(entry.case);
+  const qty = cargoQuantity(bl);
+  const act = quote ? f.actionMeta(quote.pricing_action) : null;
+  const paused = quote && PAUSED_ACTIONS.has(quote.pricing_action);
+
+  return el('article', {
+    class: `market-card tone-${tone}${active ? ' active' : ''}${paused ? ' paused' : ''}`,
+    'data-case': entry.case_id,
+    onclick: (event) => {
+      if (event.target.closest('button, input, select, a')) return;
+      selectMarketCase(entry.case_id);
+    }
+  },
+    el('div', { class: 'market-card-top' },
+      el('span', { class: `badge tone-${tone}`, text: f.riskLabel(risk) }),
+      act ? el('span', { class: `badge sm tone-${act.tone}`, text: act.label }) : el('span', { class: 'badge sm tone-muted', text: t('market_loading') })
+    ),
+    el('h3', { class: 'market-card-title', text: bl.cargo || entry.cargo || shortLabel(entry) }),
+    el('p', { class: 'market-card-route', text: `${bl.port_of_loading || '?'} → ${bl.port_of_discharge || '?'}` }),
+    el('div', { class: 'market-price-row' },
+      el('div', {},
+        el('span', { class: 'metric-label', text: t('market_issue_price') }),
+        el('strong', { class: 'market-price', text: quote ? `$${f.price(quote.final_issue_price_usd)}` : '—' })
+      ),
+      el('div', { class: 'market-yield' },
+        el('strong', { text: quote ? f.bpsToPct(quote.implied_gross_yield_bps) : '—' }),
+        el('span', { text: t('market_upside') })
+      )
+    ),
+    el('div', { class: 'market-card-facts' },
+      fact(t('market_fact_ebl'), bl.bl_id || bl.bl_no || '—'),
+      fact(t('market_fact_vessel'), bl.vessel || '—'),
+      fact(t('market_fact_qty'), qty || '—'),
+      fact(t('market_fact_target'), quote ? f.usdCompact(quote.expected_cash_to_exporter_usd ?? quote.requested_cash_usd) : '—')
+    ),
+    renderMarketVoyage(bl, progress),
+    renderMarketFunding(funding, paused),
+    el('div', { class: 'market-card-actions' },
+      el('button', { class: 'btn sm market-subscribe-shortcut', onclick: () => selectMarketCase(entry.case_id) }, t('market_card_subscribe')),
+      el('button', { class: 'btn ghost sm', onclick: () => { selectMarketCase(entry.case_id).then(() => setView('voyage')); } }, t('market_card_track'))
+    )
+  );
+}
+
+function fact(label, value) {
+  return el('div', { class: 'market-fact' },
+    el('span', { text: label }),
+    el('strong', { text: value })
+  );
+}
+
+function renderMarketVoyage(bl, progress) {
+  return el('div', { class: 'market-voyage' },
+    el('div', { class: 'market-port-row' },
+      el('span', { text: bl.port_of_loading || 'Departure' }),
+      el('span', { text: bl.port_of_discharge || 'Arrival' })
+    ),
+    el('div', { class: 'market-voyage-track' },
+      el('div', { class: 'market-voyage-fill', style: `width:${Math.round(progress * 100)}%` }),
+      el('span', { class: 'market-ship', style: `left:${2 + progress * 96}%`, text: '🚢' })
+    ),
+    el('div', { class: 'market-voyage-note', text: marketVoyageNote(bl, progress) })
+  );
+}
+
+function renderMarketFunding(funding, paused) {
+  return el('div', { class: 'market-funding' },
+    el('div', { class: 'market-funding-head' },
+      el('span', { text: t('market_funding') }),
+      el('strong', { text: `${f.usdCompact(funding.raised)} / ${f.usdCompact(funding.target)} · ${Math.round(funding.fill * 100)}%${paused ? t('fin_paused') : ''}` })
+    ),
+    el('div', { class: 'market-funding-track' },
+      el('div', { class: `market-funding-fill${paused ? ' paused' : ''}`, style: `width:${Math.round(funding.fill * 100)}%` })
+    )
+  );
+}
+
+async function selectMarketCase(caseId) {
+  await selectCase(caseId);
+  renderMarket();
+  $('#market-detail')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function renderMarketDetail() {
+  const box = $('#market-detail');
+  if (!box) return;
+  clear(box);
+  const entry = state.cases.find((c) => c.case_id === state.caseId);
+  const quote = selectedQuote();
+  const bl = state.caseData?.bill_of_lading ?? {};
+  if (!entry || !quote) {
+    box.append(el('div', { class: 'market-detail-empty', text: t('market_detail_loading') }));
+    return;
+  }
+
+  const paused = PAUSED_ACTIONS.has(quote.pricing_action);
+  const act = f.actionMeta(quote.pricing_action);
+  const amount = state.marketSubscriptionUsd ?? defaultMarketSubscription(quote);
+  state.marketSubscriptionUsd = amount;
+
+  box.append(
+    el('div', { class: 'market-detail-head' },
+      el('span', { class: 'metric-label', text: t('market_detail_label') }),
+      el('h2', { text: shortLabel(entry) }),
+      el('p', { text: `${bl.cargo || entry.cargo || 'Trade cargo'} · ${bl.port_of_loading || '?'} → ${bl.port_of_discharge || '?'}` })
+    ),
+    el('div', { class: 'market-detail-price' },
+      el('div', {},
+        el('span', { class: 'metric-label', text: t('market_issue_price') }),
+        el('strong', { text: `$${f.price(quote.final_issue_price_usd)}` })
+      ),
+      el('span', { class: `badge tone-${act.tone}`, text: `${act.icon} ${act.label}` })
+    ),
+    el('div', { class: 'market-detail-kpis' },
+      miniKv(t('market_detail_upside'), f.bpsToPct(quote.implied_gross_yield_bps), 'gain'),
+      miniKv(t('market_detail_risk'), `${f.riskLabel(quote.risk_level)} · ${f.int(quote.risk_score_bps)} bps`),
+      miniKv(t('market_detail_collateral'), f.usdCompact(quote.ai_verified_collateral_value_usd)),
+      miniKv(t('market_detail_eta'), f.fmtDate(bl.eta))
+    ),
+    el('label', { class: 'control-label', for: 'market-subscription', text: t('market_subscription_label') }),
+    el('div', { class: 'market-subscribe-row' },
+      el('input', {
+        id: 'market-subscription', type: 'number', min: '0', step: '10000', inputmode: 'numeric',
+        value: String(amount), disabled: paused,
+        oninput: (event) => {
+          state.marketSubscriptionUsd = Number(event.target.value) || 0;
+          state.marketSubscriptionResult = null;
+          renderMarketSubscribeReadout(quote);
+        }
+      }),
+      el('button', {
+        id: 'market-subscribe-btn',
+        class: 'btn',
+        disabled: paused,
+        onclick: onMarketSubscribe
+      }, paused ? t('market_paused_btn') : t('market_subscribe_btn'))
+    ),
+    el('div', { id: 'market-subscribe-readout', class: 'market-subscribe-readout' }),
+    el('div', { class: 'market-detail-actions' },
+      el('button', { class: 'btn ghost sm', onclick: () => setView('mint') }, t('market_open_pricing')),
+      el('button', { class: 'btn ghost sm', onclick: () => setView('voyage') }, t('market_open_voyage'))
+    )
+  );
+
+  renderMarketSubscribeReadout(quote);
+}
+
+function renderMarketSubscribeReadout(quote) {
+  const box = $('#market-subscribe-readout');
+  if (!box || !quote) return;
+  clear(box);
+  const amount = Number(state.marketSubscriptionUsd) || 0;
+  const tokens = quote.final_issue_price_usd > 0 ? Math.floor(amount / quote.final_issue_price_usd) : 0;
+  const redemption = tokens;
+  box.append(
+    el('div', { class: 'market-readout-line' }, t('market_readout_receive') + ' ',
+      el('strong', { text: f.int(tokens) }),
+      ` RWA · ${t('market_readout_target')} ${f.usd(redemption)}`
+    ),
+    el('div', { class: 'readout-grid market-readout-grid' },
+      miniKv(t('mr_price'), `$${f.price(quote.final_issue_price_usd)}`),
+      miniKv(t('mr_invest'), f.usd(amount)),
+      miniKv(t('mr_redeem'), f.usd(redemption), 'gain'),
+      miniKv(t('mr_upside'), f.usd(Math.max(0, redemption - amount)), 'gain')
+    )
+  );
+  if (state.marketSubscriptionResult) {
+    const result = state.marketSubscriptionResult;
+    box.append(el('div', { class: `market-subscribe-result tone-${f.stateTone(result.final_state)}` },
+      el('span', { class: `badge sm tone-${f.stateTone(result.final_state)}`, text: result.final_state }),
+      el('span', { text: t('market_subscribe_result', { n: result.steps?.length ?? 0 }) })
+    ));
+  } else {
+    box.append(el('p', { class: 'sub-foot muted', text: t('market_readout_foot') }));
+  }
+}
+
+async function onMarketSubscribe() {
+  const quote = selectedQuote();
+  if (!quote || PAUSED_ACTIONS.has(quote.pricing_action)) return;
+  const amount = Number(state.marketSubscriptionUsd) || 0;
+  if (amount <= 0) { toast(t('market_need_amount'), true); return; }
+
+  const btn = $('#market-subscribe-btn');
+  const old = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = t('market_subscribing'); }
+  try {
+    state.marketSubscriptionResult = await api.simulateOffering(state.caseData, {
+      payout_speed: state.speed,
+      subscription_usd: amount
+    });
+    renderMarketDetail();
+    toast(t('market_subscribed_toast'));
+  } catch (e) {
+    toast(t('market_subscribe_fail', { msg: e.message || e }), true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = old || t('market_subscribe_btn'); }
+  }
+}
+
+function cargoQuantity(bl) {
+  if (bl.quantity_mt) return `${f.int(bl.quantity_mt)} MT`;
+  if (bl.quantity_bbl) return `${f.int(bl.quantity_bbl)} bbl`;
+  return bl.containers || '';
+}
+
+function initialMarketProgress(caseData) {
+  const bl = caseData?.bill_of_lading ?? {};
+  const dep = f.parseDate(bl.shipped_on_board || bl.issue_date);
+  const eta = f.parseDate(bl.eta);
+  if (!dep || !eta) return 0.15;
+  const dates = [...(caseData.shipment_events ?? []), ...(caseData.macro_risk_events ?? [])]
+    .map((e) => +f.parseDate(e.date)).filter(Number.isFinite);
+  const now = dates.length ? Math.max(...dates) : (+dep + (+eta - +dep) * 0.18);
+  return Math.max(0.06, Math.min(0.88, f.voyageProgress(dep, eta, now)));
+}
+
+function marketVoyageProgress(caseData) {
+  const started = marketClock.startedAt || performance.now();
+  const extra = Math.max(0, performance.now() - started) / MARKET_PLAY_MS;
+  return Math.max(0.04, Math.min(1, initialMarketProgress(caseData) + extra * 0.52));
+}
+
+function marketVoyageNote(bl, progress) {
+  const pct = Math.round(progress * 100);
+  const disch = bl.port_of_discharge || 'destination';
+  const eta = f.fmtDate(bl.eta);
+  return progress >= 1 ? t('market_arrived', { disch }) : t('market_voyage_note', { pct, disch, eta });
+}
+
+function marketFunding(entry, quote) {
+  const target = Number(quote?.expected_cash_to_exporter_usd ?? quote?.requested_cash_usd ?? entry.case?.financing?.requested_cash_usd ?? 0);
+  const progress = marketVoyageProgress(entry.case);
+  const paused = quote && PAUSED_ACTIONS.has(quote.pricing_action);
+  const fill = Math.min(paused ? 0.72 : 0.97, 0.18 + progress * (paused ? 0.54 : 0.76));
+  return {
+    target,
+    fill,
+    raised: Math.round(target * fill)
+  };
+}
+
+function updateMarketProgressVisuals() {
+  if (state.view !== 'market') return;
+  for (const card of document.querySelectorAll('.market-card[data-case]')) {
+    const entry = state.cases.find((c) => c.case_id === card.dataset.case);
+    if (!entry) continue;
+    const quote = recommendedQuote(cachedComparison(entry.case_id));
+    const bl = entry.case?.bill_of_lading ?? {};
+    const progress = marketVoyageProgress(entry.case);
+    const funding = marketFunding(entry, quote);
+    const paused = quote && PAUSED_ACTIONS.has(quote.pricing_action);
+    $('.market-voyage-fill', card)?.style.setProperty('width', `${Math.round(progress * 100)}%`);
+    $('.market-ship', card)?.style.setProperty('left', `${2 + progress * 96}%`);
+    const note = $('.market-voyage-note', card);
+    if (note) note.textContent = marketVoyageNote(bl, progress);
+    $('.market-funding-fill', card)?.style.setProperty('width', `${Math.round(funding.fill * 100)}%`);
+    const fundingHead = $('.market-funding-head strong', card);
+    if (fundingHead) {
+      fundingHead.textContent = `${f.usdCompact(funding.raised)} / ${f.usdCompact(funding.target)} · ${Math.round(funding.fill * 100)}%${paused ? t('fin_paused') : ''}`;
+    }
+  }
+}
+
+function startMarketClock() {
+  if (marketClock.timer) return;
+  marketClock.startedAt = performance.now();
+  marketClock.timer = setInterval(updateMarketProgressVisuals, 1000);
+}
+
+function stopMarketClock() {
+  clearInterval(marketClock.timer);
+  marketClock.timer = 0;
+}
+
+// ===========================================================================
 // Selectors (case + speed)
 // ===========================================================================
 function renderCaseSelector() {
   const box = $('#case-select');
   clear(box);
   const cases = visibleCases();
-  for (const c of cases) {
-    box.append(el('button', {
-      class: 'seg-btn', role: 'tab', 'data-case': c.case_id, title: c.label,
-      onclick: () => selectCase(c.case_id)
-    },
-      el('span', { class: 'seg-main', text: shortLabel(c) }),
-      c.risk_hint ? el('span', { class: `seg-hint tone-${f.riskTone(c.risk_hint)}`, text: c.risk_hint }) : null
-    ));
-  }
   if (cases.length === 0) {
-    box.append(el('span', { class: 'muted', style: 'padding:8px;font-size:12px;', text: t('no_case_match') }));
+    box.append(el('span', { class: 'case-empty', text: t('no_case_match') }));
+    return;
   }
+
+  const select = el('select', {
+    class: 'case-dropdown',
+    'aria-label': t('case_select_aria'),
+    onchange: (event) => selectCase(event.target.value)
+  });
+  for (const c of cases) {
+    const risk = c.risk_hint ? ` · ${f.riskLabel(c.risk_hint)}` : '';
+    select.append(el('option', { value: c.case_id, text: shortLabel(c) + risk }));
+  }
+  box.append(select);
   highlightCase();
 }
 
 function shortLabel(c) {
-  return (c.label || c.case_id).split('·')[0].trim();
+  const bl = c.case?.bill_of_lading ?? {};
+  const cargo = shortCargoName(bl.cargo || c.cargo || c.case_id);
+  const load = bl.port_of_loading;
+  const disch = bl.port_of_discharge;
+  return load && disch ? `${cargo} · ${load} → ${disch}` : cargo;
+}
+
+function shortCargoName(value) {
+  const text = String(value || 'Trade case').replace(/\s*\([^)]*\)/g, '').trim();
+  return text.length > 34 ? text.slice(0, 31).trimEnd() + '…' : text;
 }
 
 function renderSpeedSelector() {
@@ -232,6 +689,8 @@ function renderSpeedSelector() {
 }
 
 function highlightCase() {
+  const select = $('#case-select .case-dropdown');
+  if (select && state.caseId) select.value = state.caseId;
   document.querySelectorAll('#case-select .seg-btn').forEach((b) =>
     b.classList.toggle('active', b.dataset.case === state.caseId));
 }
@@ -251,6 +710,7 @@ function onCategoryClick(cat) {
   state.categoryFilter = cat;
   highlightCategoryBtn();
   renderCaseSelector();
+  renderMarket();
   const visible = visibleCases();
   if (visible.length && !visible.find(c => c.case_id === state.caseId)) {
     selectCase(visible[0].case_id);
@@ -272,6 +732,7 @@ function onSearchInput() {
     state.searchQuery = $('#search-input')?.value || '';
     state._aiMatchedIds = null; // clear AI filter on manual input
     renderCaseSelector();
+    renderMarket();
     const visible = visibleCases();
     if (visible.length && !visible.find(c => c.case_id === state.caseId)) {
       selectCase(visible[0].case_id);
@@ -299,18 +760,18 @@ async function onAiSearch() {
 
     const tools = [{
       name: 'filter_eBLs',
-      description: '根据用户的自然语言偏好，返回匹配的电子提单案例ID列表。根据货物类型、航线、风险等级、或其他偏好进行智能匹配。',
+      description: 'Return matching electronic bill-of-lading case IDs based on the investor natural-language preference.',
       parameters: {
         type: 'object',
         properties: {
           matched_ids: {
             type: 'array',
             items: { type: 'string' },
-            description: '匹配的案例 ID 列表，按相关度排序'
+            description: 'Matched case IDs sorted by relevance'
           },
           reasoning: {
             type: 'string',
-            description: '简要解释为什么这些案例匹配用户的偏好（中文，不超过50字）'
+            description: 'Brief English explanation of why these cases match, under 20 words'
           }
         },
         required: ['matched_ids']
@@ -319,12 +780,12 @@ async function onAiSearch() {
 
     const client = getDeepSeekClient();
     const messages = [
-      { role: 'system', content: `你是一个电子提单筛选助手。根据用户的自然语言偏好，从下列案例中选择最匹配的。
+      { role: 'system', content: `You are an eBL investment-filter assistant. Select the best matching cases from the list below based on the user's natural-language preference.
 
-可用案例列表：
-${caseList.map(c => `- ID: ${c.id} | 货物: ${c.cargo} | 航线: ${c.route} | 风险: ${c.risk} | 标签: ${c.label}`).join('\n')}
+Available cases:
+${caseList.map(c => `- ID: ${c.id} | Cargo: ${c.cargo} | Route: ${c.route} | Risk: ${c.risk} | Label: ${c.label}`).join('\n')}
 
-使用 filter_eBLs 工具返回匹配结果。如果用户提到风险偏好（如"高风险"、"安全的"）、货物类型（如"铜"、"原油"）、航线（如"新加坡"、"上海"）、或其他条件，请智能匹配。如果用户的表达比较宽泛，尽量多匹配几个案例。` },
+Use the filter_eBLs tool. Match risk appetite, cargo type, route, ports, speed, or other preferences. If the request is broad, return several good matches. Keep reasoning in English.` },
       { role: 'user', content: query }
     ];
 
@@ -339,11 +800,12 @@ ${caseList.map(c => `- ID: ${c.id} | 货物: ${c.cargo} | 航线: ${c.route} | �
         state.searchQuery = query;
         state._aiMatchedIds = new Set(matchedIds);
         renderCaseSelector();
+        renderMarket();
         const visible = visibleCases();
         if (visible.length > 0) {
           selectCase(visible[0].case_id);
         }
-        toast(`🤖 AI: ${reasoning}（匹配 ${matchedIds.length} 个提单）`);
+        toast(t('ai_match_toast', { reasoning, n: matchedIds.length }));
       } else {
         toast(t('ai_no_match'), true);
       }
@@ -351,10 +813,11 @@ ${caseList.map(c => `- ID: ${c.id} | 货物: ${c.cargo} | 航线: ${c.route} | �
       // No tool call — fallback to keyword
       state.searchQuery = query;
       renderCaseSelector();
+      renderMarket();
       const visible = visibleCases();
       if (visible.length > 0) {
         selectCase(visible[0].case_id);
-        toast(`🔍 关键词匹配 ${visible.length} 个提单`);
+        toast(t('keyword_match_toast', { n: visible.length }));
       } else {
         toast(t('ai_no_match'), true);
       }
@@ -363,10 +826,11 @@ ${caseList.map(c => `- ID: ${c.id} | 货物: ${c.cargo} | 航线: ${c.route} | �
     // Fallback to keyword search
     state.searchQuery = query;
     renderCaseSelector();
+    renderMarket();
     const visible = visibleCases();
     if (visible.length > 0) {
       selectCase(visible[0].case_id);
-      toast(`🔍 关键词匹配 ${visible.length} 个提单（AI 暂不可用）`);
+      toast(t('keyword_ai_unavailable_toast', { n: visible.length }));
     } else {
       toast(t('ai_error', { msg: e.message }), true);
     }
@@ -447,12 +911,12 @@ function renderValuation(quote) {
       el('span', { class: 'risk-dim-icon', text: d.icon }),
       el('div', { class: 'risk-dim-body' },
         el('span', { class: 'risk-dim-label', text: d.label }),
-        el('span', { class: 'risk-dim-bps', text: !d.active ? 'clear' : d.bps > 0 ? `+${d.bps} bps` : 'flagged' })
+        el('span', { class: 'risk-dim-bps', text: !d.active ? t('risk_clear') : d.bps > 0 ? `+${d.bps} bps` : 'flagged' })
       )
     ));
   }
   const total = $('#risk-total');
-  total.textContent = `${f.int(quote.risk_score_bps)} bps · ${quote.risk_level}`;
+  total.textContent = `${f.int(quote.risk_score_bps)} bps · ${f.riskLabel(quote.risk_level)}`;
   total.className = `risk-total tone-${f.riskTone(quote.risk_level)}`;
 
   const citeBox = $('#intel-cites');
@@ -495,7 +959,7 @@ function renderWaterfall(quote) {
     { kind: 'target', label: t('wf_target'), value: 1.0, top: 1.0, bottom: lo, note: t('wf_note_redemption') },
     { kind: 'base', label: t('wf_base'), value: base, top: base, bottom: lo, note: t('wf_note_anchor') },
     { kind: 'down', label: t('wf_urgency'), value: -urg, top: base, bottom: speedPrice, note: `${f.SPEED_META[quote.payout_speed].label} · −${quote.urgency_discount_bps} bps` },
-    { kind: 'down', label: t('wf_risk'), value: -risk, top: speedPrice, bottom: indicative, note: `${quote.risk_level} · −${quote.risk_discount_bps} bps` },
+    { kind: 'down', label: t('wf_risk'), value: -risk, top: speedPrice, bottom: indicative, note: `${f.riskLabel(quote.risk_level)} · −${quote.risk_discount_bps} bps` },
     { kind: 'mid', label: t('wf_indicative'), value: indicative, top: indicative, bottom: lo, note: t('wf_note_profit') }
   ];
   if (lifted) {
@@ -799,6 +1263,11 @@ function wireStaticHandlers() {
 
   // AI search button
   $('#ai-search-btn')?.addEventListener('click', onAiSearch);
+
+  $('#market-sort')?.addEventListener('change', (e) => {
+    state.marketSort = e.target.value || 'recommended';
+    renderMarket();
+  });
 }
 
 boot();

@@ -2,6 +2,8 @@
 // No DOM, no network — just turn PricingQuote numbers into demo-ready strings
 // and classify the AI's risk factors into the five investor-facing dimensions.
 
+import { t } from './i18n.js';
+
 /** USD with thousands separators, no decimals. 5600000 -> "$5,600,000". */
 export function usd(value) {
   if (!Number.isFinite(Number(value))) return '—';
@@ -52,20 +54,31 @@ export function shortHash(hash, head = 10, tail = 6) {
 
 // --- pricing-action presentation -------------------------------------------
 const ACTION_META = {
-  OPEN_OFFERING: { label: 'OPEN', tone: 'ok', icon: '✓' },
-  OPEN_WITH_WARNING: { label: 'OPEN · WARNING', tone: 'warn', icon: '!' },
-  REPRICE_DOWN: { label: 'REPRICE DOWN', tone: 'warn', icon: '↓' },
-  PAUSE_OFFERING: { label: 'PAUSED', tone: 'crit', icon: '⏸' },
-  FREEZE_POOL: { label: 'FROZEN', tone: 'crit', icon: '✕' },
-  TRIGGER_LIQUIDATION: { label: 'LIQUIDATION', tone: 'crit', icon: '⚠' }
+  OPEN_OFFERING: { tone: 'ok', icon: '✓' },
+  OPEN_WITH_WARNING: { tone: 'warn', icon: '!' },
+  REPRICE_DOWN: { tone: 'warn', icon: '↓' },
+  PAUSE_OFFERING: { tone: 'crit', icon: '⏸' },
+  FREEZE_POOL: { tone: 'crit', icon: '✕' },
+  TRIGGER_LIQUIDATION: { tone: 'crit', icon: '⚠' }
 };
 export function actionMeta(action) {
-  return ACTION_META[action] ?? { label: action ?? '—', tone: 'muted', icon: '·' };
+  const meta = ACTION_META[action] ?? { tone: 'muted', icon: '·' };
+  if (!action) return { ...meta, label: '—' };
+  const key = `action_${action}`;
+  const label = t(key);
+  return { ...meta, label: label === key ? action : label };
 }
 
 const RISK_TONE = { LOW: 'ok', MEDIUM: 'info', WARNING: 'warn', CRITICAL: 'crit' };
 export function riskTone(level) {
   return RISK_TONE[level] ?? 'muted';
+}
+
+export function riskLabel(level) {
+  if (!level) return '—';
+  const key = `risk_${level}`;
+  const label = t(key);
+  return label === key ? level : label;
 }
 
 // --- offering state presentation -------------------------------------------
@@ -86,9 +99,21 @@ export function stateTone(state) {
 
 // --- speed presentation -----------------------------------------------------
 export const SPEED_META = {
-  FAST: { label: 'FAST', sub: '很快到账', blurb: 'Cash in hours — give up more margin for speed.' },
-  BALANCED: { label: 'BALANCED', sub: '正常到账', blurb: 'Standard settlement — a balanced financing cost.' },
-  LOW_COST: { label: 'LOW COST', sub: '耐心资本', blurb: 'Patient capital — cheapest financing, slower cash.' }
+  FAST: {
+    get label() { return t('speed_FAST_label'); },
+    get sub() { return t('speed_FAST_sub'); },
+    get blurb() { return t('speed_FAST_blurb'); }
+  },
+  BALANCED: {
+    get label() { return t('speed_BALANCED_label'); },
+    get sub() { return t('speed_BALANCED_sub'); },
+    get blurb() { return t('speed_BALANCED_blurb'); }
+  },
+  LOW_COST: {
+    get label() { return t('speed_LOW_COST_label'); },
+    get sub() { return t('speed_LOW_COST_sub'); },
+    get blurb() { return t('speed_LOW_COST_blurb'); }
+  }
 };
 
 // --- risk-factor parsing & dimension mapping (FE-4) -------------------------
@@ -111,12 +136,12 @@ export function parseFactor(factor) {
 
 // Each dimension: which factor keys feed it + display metadata.
 export const RISK_DIMENSIONS = [
-  { id: 'war', label: 'War / Geopolitics', icon: '⚔', keys: ['war_risk', 'sanction_risk'] },
-  { id: 'weather', label: 'Weather', icon: '🌪', keys: ['severe_weather', 'bad_weather'] },
-  { id: 'port', label: 'Port / Logistics', icon: '⚓', keys: ['port_congestion', 'port_strike', 'delay', 'route_deviation', 'cargo_damage', 'partial_loss'] },
-  { id: 'insurance', label: 'Insurance', icon: '🛡', keys: ['insurance_expiry_risk', 'insurance_invalid'] },
-  { id: 'price', label: 'Price volatility', icon: '📉', keys: ['commodity_price_drop', 'commodity_volatility', 'fx_volatility'] },
-  { id: 'docs', label: 'Documents', icon: '📄', keys: ['doc'] }
+  { id: 'war', labelKey: 'riskdim_war', icon: '⚔', keys: ['war_risk', 'sanction_risk'] },
+  { id: 'weather', labelKey: 'riskdim_weather', icon: '🌪', keys: ['severe_weather', 'bad_weather'] },
+  { id: 'port', labelKey: 'riskdim_port', icon: '⚓', keys: ['port_congestion', 'port_strike', 'delay', 'route_deviation', 'cargo_damage', 'partial_loss'] },
+  { id: 'insurance', labelKey: 'riskdim_insurance', icon: '🛡', keys: ['insurance_expiry_risk', 'insurance_invalid'] },
+  { id: 'price', labelKey: 'riskdim_price', icon: '📉', keys: ['commodity_price_drop', 'commodity_volatility', 'fx_volatility'] },
+  { id: 'docs', labelKey: 'riskdim_docs', icon: '📄', keys: ['doc'] }
 ];
 
 const KEY_TO_DIM = (() => {
@@ -142,7 +167,10 @@ function dimensionFor(key, text) {
  * @returns {Array<{id,label,icon,bps,active,factors:string[]}>}
  */
 export function rollupRiskDimensions(riskFactors = []) {
-  const acc = Object.fromEntries(RISK_DIMENSIONS.map((d) => [d.id, { ...d, bps: 0, active: false, factors: [] }]));
+  const acc = Object.fromEntries(RISK_DIMENSIONS.map((d) => [
+    d.id,
+    { ...d, label: t(d.labelKey), bps: 0, active: false, factors: [] }
+  ]));
   for (const raw of riskFactors) {
     const { key, bps, text } = parseFactor(raw);
     const dim = acc[dimensionFor(key, text)];
