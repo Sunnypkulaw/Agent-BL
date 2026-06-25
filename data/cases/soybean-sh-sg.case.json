@@ -1,0 +1,170 @@
+{
+  "case_id": "CASE-EBL-2026-SOY-SH-SG",
+  "model": "ai-dynamic-pricing-rwa-v0.2",
+  "note": "拟真样例数据：北京农业贸易 × 新加坡食品加工 非转基因大豆 CIF 新加坡。完整单据链：合同→发票→箱单→订舱→eBL(TradeGo)→保险→融资(HSBC)。所有公司、人名、船名、单号均为虚构。",
+  "uploaded_documents": {
+    "sales_contract_file": "data/uploads/soybean-sh-sg/sales-contract.md",
+    "commercial_invoice_file": "data/uploads/soybean-sh-sg/commercial-invoice.md",
+    "packing_list_file": "data/uploads/soybean-sh-sg/packing-list.md",
+    "booking_note_file": "data/uploads/soybean-sh-sg/booking-note.md",
+    "ebl_file": "data/uploads/soybean-sh-sg/e-bill-of-lading.md",
+    "insurance_policy_file": "data/uploads/soybean-sh-sg/insurance-policy.md",
+    "trade_finance_file": "data/uploads/soybean-sh-sg/trade-finance-agreement.md"
+  },
+  "bill_of_lading": {
+    "bl_id": "TG-EBL-2026-0001",
+    "bl_no": "TG-EBL-2026-0001",
+    "bl_type": "negotiable_to_order",
+    "ebl_platform": "TradeGo",
+    "ebl_title_ref": "TG-EBL-2026-0001",
+    "shipper": "Beijing Agricultural Trading Co., Ltd.",
+    "consignee": "TO ORDER OF HSBC HONG KONG",
+    "notify_party": "Singapore Food Processing Pte. Ltd., 80 Robinson Road, Singapore",
+    "carrier": "Ocean Star Shipping Ltd.",
+    "vessel": "MV Pacific Horizon",
+    "voyage_no": "PH2605",
+    "port_of_loading": "Shanghai, China",
+    "port_of_discharge": "Singapore",
+    "place_of_receipt": "Shanghai",
+    "place_of_delivery": "Singapore",
+    "incoterms": "CIF Singapore",
+    "cargo": "Non-GMO Soybeans (非转基因大豆), Bulk",
+    "quantity_mt": 5000,
+    "containers": "N/A (Bulk Vessel, 4 Holds)",
+    "gross_weight_mt": 5050,
+    "declared_value_usd": 2600000,
+    "freight": "PREPAID",
+    "freight_amount_usd": 95000,
+    "issue_date": "2026-05-18",
+    "shipped_on_board": "2026-05-18",
+    "eta": "2026-05-24",
+    "current_controller": "HSBC Hong Kong",
+    "transfer_history": [
+      { "date": "2026-05-18", "from": "Ocean Star Shipping Ltd.", "to": "Beijing Agricultural Trading Co., Ltd." },
+      { "date": "2026-05-19", "from": "Beijing Agricultural Trading Co., Ltd.", "to": "HSBC Hong Kong" }
+    ],
+    "document_hash": "0x7A34B98F6C91E2A5B4D71EAA3298C1F"
+  },
+  "commercial_invoice": {
+    "invoice_no": "INV-2026-001",
+    "invoice_date": "2026-05-15",
+    "sales_contract": "SC-2026-001",
+    "incoterms": "CIF Singapore",
+    "payment_terms": "Irrevocable Letter of Credit at Sight",
+    "pricing_basis": "CBOT Soybean Futures (July 2026 contract) + CIF Singapore premium",
+    "cbot_reference_price_usd_per_mt": 480,
+    "cif_premium_usd_per_mt": 40,
+    "unit_price_usd_per_mt": 520,
+    "quantity_mt": 5000,
+    "total_amount_usd": 2600000,
+    "currency": "USD",
+    "is_provisional": false,
+    "lc_no": "HSBC-LC-2026-08921",
+    "country_of_origin": "China"
+  },
+  "cargo": {
+    "commodity": "Soybean（大豆）",
+    "grade": "Non-GMO Soybeans, Grade No.1, Protein ≥ 38%, Moisture ≤ 13.5%",
+    "hs_code": "120190",
+    "quantity": 5000,
+    "unit": "MT",
+    "packaging": "Bulk Cargo",
+    "number_of_holds": 4,
+    "gross_weight_mt": 5050,
+    "net_weight_mt": 5000
+  },
+  "insurance": {
+    "provider": "Ping An Insurance (China)",
+    "policy_no": "MCI-2026-001",
+    "policy_type": "Institute Cargo Clauses (A) — All Risks, General Average, Theft, Fire, Collision, Total Loss",
+    "coverage_ratio": 1.1,
+    "insured_value_usd": 2860000,
+    "deductible_usd": 10000,
+    "effective_date": "2026-05-18",
+    "expires_at": "2026-06-15",
+    "policy_hash": "0x5E8F1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F"
+  },
+  "trade_economics": {
+    "cost_basis_usd_per_mt": 440,
+    "cost_of_goods_usd": 2200000,
+    "expected_gross_profit_usd": 400000,
+    "gross_margin_pct": 0.154,
+    "note": "Exporter sourced Non-GMO soybeans from Heilongjiang at ~USD 440/MT (farm-gate + inland logistics to Shanghai). CIF Singapore invoice at USD 520/MT yields ~15.4% gross margin. Verified profit (= invoice 2,600,000 - COGS 2,200,000 = 400,000) funds the RWA discount. Non-GMO premium over conventional soybeans is ~USD 30-40/MT."
+  },
+  "financing": {
+    "facility_no": "TF-2026-001",
+    "lender": "HSBC Hong Kong",
+    "borrower": "Beijing Agricultural Trading Co., Ltd.",
+    "collateral": ["Electronic Bill of Lading (TradeGo)", "Marine Cargo Insurance Policy", "Letter of Credit Proceeds"],
+    "cargo_value_usd": 2600000,
+    "advance_ratio": 0.80,
+    "requested_cash_usd": 2080000,
+    "payout_speed": "BALANCED",
+    "target_redemption_value_usd": 1,
+    "redemption_coverage_limit": 0.9,
+    "max_ltv": 0.80,
+    "interest_rate": "SOFR + 3%",
+    "financing_period_days": 45,
+    "currency": "USDC",
+    "repayment_source": "Importer Payment under L/C at Sight",
+    "security_enforcement": "Bank may exercise control over eBL and dispose of cargo upon default event.",
+    "default_events": ["Cargo Loss", "Buyer Default", "Fraudulent Documents"],
+    "note": "HSBC Hong Kong provides 80% advance against eBL + Insurance + L/C proceeds. SOFR + 3% for 45 days. Non-GMO premium-grade soybeans with strong buyer (Singapore Food Processing) and bank-intermediated L/C payment — high-quality collateral."
+  },
+  "market": {
+    "commodity": "Soybean（大豆）",
+    "benchmark": "CBOT Soybean Futures (July 2026 Contract)",
+    "price_unit": "USD/MT",
+    "cbot_futures_usd_per_mt": 480,
+    "cif_premium_usd_per_mt": 40,
+    "landed_price_usd_per_mt": 520,
+    "non_gmo_premium_usd_per_mt": 35,
+    "initial_price_usd_per_mt": 520,
+    "current_price_usd_per_mt": 515,
+    "as_of": "2026-05-18",
+    "source": "CBOT / CME Group, May 2026 settlement"
+  },
+  "shipment_events": [
+    {
+      "date": "2026-05-18",
+      "type": "loaded_on_board",
+      "description": "5,000 MT Non-GMO soybeans loaded on board MV Pacific Horizon at Shanghai Port. 4 holds filled, bulk carrier.",
+      "severity": "info"
+    },
+    {
+      "date": "2026-05-19",
+      "type": "ebl_transferred",
+      "description": "eBL TG-EBL-2026-0001 transferred from Beijing Agricultural Trading → HSBC Hong Kong (pledged as collateral under TF-2026-001).",
+      "severity": "info"
+    },
+    {
+      "date": "2026-05-20",
+      "type": "underway",
+      "description": "MV Pacific Horizon underway in East China Sea, ETA Singapore May 24. Weather forecast clear.",
+      "severity": "info"
+    }
+  ],
+  "macro_risk_events": [
+    {
+      "date": "2026-05-18",
+      "type": "commodity_volatility",
+      "region": "Global",
+      "severity": "medium",
+      "description": "CBOT soybean futures near USD 480/MT on South American crop downgrades (Brazil drought reduced safrinha output). US-China Phase One trade deal in focus as 2026 planting season begins. Non-GMO premium stable at ~USD 35/MT."
+    },
+    {
+      "date": "2026-05-18",
+      "type": "weather_risk",
+      "region": "South China Sea / Singapore Strait",
+      "severity": "low",
+      "description": "May is pre-monsoon season for the South China Sea route. Sea state calm, no typhoon activity forecast. Shanghai-Singapore is a 6-day transit — minimal voyage risk."
+    },
+    {
+      "date": "2026-05-18",
+      "type": "counterparty_credit",
+      "region": "Singapore",
+      "severity": "low",
+      "description": "Buyer Singapore Food Processing is a well-established ASEAN agri-processor with confirmed L/C from HSBC. Seller Beijing Agricultural Trading is a major PRC grain exporter — both counterparties are investment-grade."
+    }
+  ]
+}
