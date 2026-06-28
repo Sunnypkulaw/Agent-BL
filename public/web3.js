@@ -33,6 +33,23 @@ const CHAIN_PRESETS = {
 let _ethers = null;
 let _config = null;
 let _session = null; // { provider, signer, address }
+let _cachedProvider = null; // detected EIP-1193 provider
+
+/** Auto-detect the active EIP-1193 provider. Supports MetaMask, OKX, Trust, Bitget, Rabby, etc. */
+function getEthereumProvider() {
+  if (_cachedProvider) return _cachedProvider;
+  if (typeof window === 'undefined') return null;
+  // Prefer wallet-specific namespaces (e.g. OKX → window.okxwallet), fall back to window.ethereum.
+  _cachedProvider = window.okxwallet?.request ? window.okxwallet
+    : window.trustwallet?.request ? window.trustwallet
+    : window.bitkeep?.request ? window.bitkeep
+    : window.bitget?.request ? window.bitget
+    : window.rabby?.request ? window.rabby
+    : window.tokenpocket?.request ? window.tokenpocket
+    : window.ethereum?.request ? window.ethereum
+    : null;
+  return _cachedProvider;
+}
 
 /** Lazy-load ethers v6 from a CDN (cached). */
 export async function loadEthers() {
@@ -73,7 +90,7 @@ export async function isRealChainConfigured() {
 }
 
 export function hasInjectedWallet() {
-  return typeof window !== 'undefined' && !!window.ethereum;
+  return !!getEthereumProvider();
 }
 
 export function isWalletConnected() {
@@ -96,7 +113,7 @@ async function ensureTargetChain() {
   const preset = getPreset(cfg);
   const targetHex = cfg?.chainId || '0x59F'; // default: Injective Testnet
 
-  const eth = window.ethereum;
+  const eth = getEthereumProvider();
   const current = await eth.request({ method: 'eth_chainId' });
   if (current === targetHex) return;
 
@@ -121,14 +138,14 @@ async function ensureTargetChain() {
 }
 
 /**
- * Connect wallet (MetaMask / any EIP-1193 provider), ensure target chain, cache signer.
+ * Connect wallet (MetaMask / OKX / any EIP-1193 provider), ensure target chain, cache signer.
  * @returns {Promise<{address:string}>}
  * @throws {Error} with .code: NO_WALLET | REJECTED | NETWORK
  */
 export async function connectWallet() {
-  if (!hasInjectedWallet()) throw err('NO_WALLET', '未检测到浏览器钱包（请安装 MetaMask）');
+  const eth = getEthereumProvider();
+  if (!eth) throw err('NO_WALLET', '未检测到浏览器钱包（请安装 MetaMask 或 OKX 钱包）');
   const ethers = await loadEthers();
-  const eth = window.ethereum;
   try {
     await eth.request({ method: 'eth_requestAccounts' });
   } catch (e) {

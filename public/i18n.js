@@ -77,7 +77,7 @@ const DICT = {
     case_select_aria: '选择交易案例或电子提单',
     lang_switch_to: 'EN',
     lang_btn_title: 'Switch to English',
-    wallet_title: '连接 MetaMask，在 {network} 测试网铸造',
+    wallet_title: '连接钱包，在 {network} 测试网铸造',
 
 	    // category filter
 	    cat_all: '全部',
@@ -252,7 +252,7 @@ const DICT = {
     t_minted_chain: '✅ 已在 {network} 铸造 {n} RWA',
     t_minted_sim: '已生成模拟铸造交易（{n} RWA）',
     t_mint_fail: '铸造失败: {msg}',
-    t_no_wallet_sim: '未检测到 MetaMask —— 铸造将走模拟交易',
+    t_no_wallet_sim: '未检测到钱包 —— 铸造将走模拟交易',
     t_connect_cancel: '已取消连接',
     t_connect_fail: '连接失败: {msg}',
     t_wallet_connected: '钱包已连接 · {network}',
@@ -340,7 +340,7 @@ const DICT = {
     case_select_aria: 'Select trade case or eBL',
     lang_switch_to: '中文',
     lang_btn_title: 'Switch to Chinese',
-    wallet_title: 'Connect MetaMask to mint on the {network} testnet',
+    wallet_title: 'Connect wallet to mint on the {network} testnet',
 
 	    // category filter
 	    cat_all: 'All',
@@ -515,7 +515,7 @@ const DICT = {
     t_minted_chain: '✅ Minted {n} RWA on {network}',
     t_minted_sim: 'Generated a simulated mint tx ({n} RWA)',
     t_mint_fail: 'Mint failed: {msg}',
-    t_no_wallet_sim: 'No MetaMask detected — minting will use a simulated tx',
+    t_no_wallet_sim: 'No wallet detected — minting will use a simulated tx',
     t_connect_cancel: 'Connection cancelled',
     t_connect_fail: 'Connection failed: {msg}',
     t_wallet_connected: 'Wallet connected · {network}',

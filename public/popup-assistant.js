@@ -445,7 +445,7 @@ ${factors ? `\n风险因素：\n${factors}` : ''}`;
         const { address } = await web3.connectWallet();
         state.wallet = { address };
       } catch (e) {
-        if (e.code === 'NO_WALLET') return '未检测到 MetaMask 钱包。请先安装 MetaMask 浏览器扩展。';
+        if (e.code === 'NO_WALLET') return '未检测到钱包。请先安装 MetaMask 或 OKX 浏览器扩展。';
         if (e.code === 'REJECTED') return '用户拒绝了钱包连接请求。请重新尝试。';
         return `钱包连接失败：${e.message}`;
       }
@@ -504,8 +504,8 @@ ${result.explorerUrl ? `- 浏览器链接：${result.explorerUrl}` : ''}`;
 ${isReal ? '- 可执行真实链上铸造' : '- 将使用模拟交易（合约未部署或未连接）'}`;
     }
     return `钱包未连接 ❌
-- 需要安装 MetaMask 浏览器扩展
-- 点击 MetaMask 图标连接后可执行链上 RWA 铸造`;
+- 需要安装浏览器钱包扩展（MetaMask / OKX 等）
+- 连接后可执行链上 RWA 铸造`;
   },
 
   // ======================== 新增：投资者视角工具 ========================
@@ -713,7 +713,7 @@ ${isReal ? '- 可执行真实链上铸造' : '- 将使用模拟交易（合约�
         const { address } = await web3.connectWallet();
         state.wallet = { address };
       } catch (e) {
-        if (e.code === 'NO_WALLET') return '未检测到 MetaMask 钱包。请先安装 MetaMask 浏览器扩展。';
+        if (e.code === 'NO_WALLET') return '未检测到钱包。请先安装 MetaMask 或 OKX 浏览器扩展。';
         if (e.code === 'REJECTED') return '用户拒绝了钱包连接请求。请重新尝试。';
         return `钱包连接失败：${e.message}`;
       }
