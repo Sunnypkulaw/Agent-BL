@@ -2,9 +2,10 @@
   "network": "injective_testnet",
   "chainId": "0x59F",
   "chainIdDecimal": 1439,
-  "explorerBase": "https://testnet.explorer.injective.network",
+  "explorerBase": "https://testnet.blockscout.injective.network",
   "contracts": {
-    "AgentBLRWA": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94"
+    "AgentBLRWA": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",
+    "PaymentOracle": "0x96E58247E1bcfA70A4ce5340E0A486969bEAf3Cd"
   },
   "deployedAt": "2026-06-21T14:22:21.850Z",
   "deployTx": "0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128",
@@ -12,14 +13,54 @@
     {
       "anonymous": false,
       "inputs": [
-        { "indexed": true, "internalType": "uint256", "name": "poolId", "type": "uint256" },
-        { "indexed": false, "internalType": "uint256", "name": "oldIssuePriceE6", "type": "uint256" },
-        { "indexed": false, "internalType": "uint256", "name": "newIssuePriceE6", "type": "uint256" },
-        { "indexed": false, "internalType": "uint8", "name": "action", "type": "uint8" },
-        { "indexed": false, "internalType": "uint32", "name": "newRiskScoreBps", "type": "uint32" },
-        { "indexed": false, "internalType": "uint8", "name": "newRiskLevel", "type": "uint8" },
-        { "indexed": false, "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" },
-        { "indexed": false, "internalType": "string", "name": "reason", "type": "string" }
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "poolId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "oldIssuePriceE6",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newIssuePriceE6",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "action",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "newRiskScoreBps",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "newRiskLevel",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "evidenceHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
       ],
       "name": "Repriced",
       "type": "event"
@@ -27,90 +68,295 @@
     {
       "anonymous": false,
       "inputs": [
-        { "indexed": true, "internalType": "uint256", "name": "poolId", "type": "uint256" },
-        { "indexed": true, "internalType": "address", "name": "creator", "type": "address" },
-        { "indexed": false, "internalType": "string", "name": "blId", "type": "string" },
-        { "indexed": false, "internalType": "uint256", "name": "issuePriceE6", "type": "uint256" },
-        { "indexed": false, "internalType": "uint256", "name": "tokenSupply", "type": "uint256" },
-        { "indexed": false, "internalType": "uint256", "name": "mintedAmount", "type": "uint256" },
-        { "indexed": false, "internalType": "uint256", "name": "collateralValueUsd", "type": "uint256" },
-        { "indexed": false, "internalType": "uint32", "name": "riskScoreBps", "type": "uint32" },
-        { "indexed": false, "internalType": "uint8", "name": "riskLevel", "type": "uint8" },
-        { "indexed": false, "internalType": "bytes32", "name": "quoteHash", "type": "bytes32" },
-        { "indexed": false, "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" }
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "poolId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "blId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "issuePriceE6",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokenSupply",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "mintedAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "collateralValueUsd",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "riskScoreBps",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "riskLevel",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "quoteHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "evidenceHash",
+          "type": "bytes32"
+        }
       ],
       "name": "Tokenized",
       "type": "event"
     },
     {
       "inputs": [
-        { "internalType": "uint256", "name": "poolId", "type": "uint256" },
-        { "internalType": "address", "name": "who", "type": "address" }
+        {
+          "internalType": "uint256",
+          "name": "poolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "who",
+          "type": "address"
+        }
       ],
       "name": "balanceOf",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [],
       "name": "nextPoolId",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [{ "internalType": "uint256", "name": "poolId", "type": "uint256" }],
-      "name": "offeringOf",
-      "outputs": [{
-        "components": [
-          { "internalType": "address", "name": "creator", "type": "address" },
-          { "internalType": "string", "name": "blId", "type": "string" },
-          { "internalType": "uint256", "name": "issuePriceE6", "type": "uint256" },
-          { "internalType": "uint256", "name": "tokenSupply", "type": "uint256" },
-          { "internalType": "uint256", "name": "minted", "type": "uint256" },
-          { "internalType": "uint256", "name": "collateralValueUsd", "type": "uint256" },
-          { "internalType": "uint32", "name": "riskScoreBps", "type": "uint32" },
-          { "internalType": "uint8", "name": "riskLevel", "type": "uint8" },
-          { "internalType": "bytes32", "name": "quoteHash", "type": "bytes32" },
-          { "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" },
-          { "internalType": "bool", "name": "exists", "type": "bool" }
-        ],
-        "internalType": "struct AgentBLRWA.Offering",
-        "name": "",
-        "type": "tuple"
-      }],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-      "name": "offerings",
       "outputs": [
-        { "internalType": "address", "name": "creator", "type": "address" },
-        { "internalType": "string", "name": "blId", "type": "string" },
-        { "internalType": "uint256", "name": "issuePriceE6", "type": "uint256" },
-        { "internalType": "uint256", "name": "tokenSupply", "type": "uint256" },
-        { "internalType": "uint256", "name": "minted", "type": "uint256" },
-        { "internalType": "uint256", "name": "collateralValueUsd", "type": "uint256" },
-        { "internalType": "uint32", "name": "riskScoreBps", "type": "uint32" },
-        { "internalType": "uint8", "name": "riskLevel", "type": "uint8" },
-        { "internalType": "bytes32", "name": "quoteHash", "type": "bytes32" },
-        { "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" },
-        { "internalType": "bool", "name": "exists", "type": "bool" }
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
       ],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [
-        { "internalType": "uint256", "name": "poolId", "type": "uint256" },
-        { "internalType": "uint256", "name": "newIssuePriceE6", "type": "uint256" },
-        { "internalType": "uint8", "name": "action", "type": "uint8" },
-        { "internalType": "uint32", "name": "newRiskScoreBps", "type": "uint32" },
-        { "internalType": "uint8", "name": "newRiskLevel", "type": "uint8" },
-        { "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" },
-        { "internalType": "string", "name": "reason", "type": "string" }
+        {
+          "internalType": "uint256",
+          "name": "poolId",
+          "type": "uint256"
+        }
+      ],
+      "name": "offeringOf",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "blId",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "issuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minted",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "collateralValueUsd",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint32",
+              "name": "riskScoreBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "riskLevel",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bool",
+              "name": "exists",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct AgentBLRWA.Offering",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "offerings",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "blId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "issuePriceE6",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenSupply",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minted",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "collateralValueUsd",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "riskScoreBps",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint8",
+          "name": "riskLevel",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "quoteHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "evidenceHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bool",
+          "name": "exists",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "poolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newIssuePriceE6",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "action",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint32",
+          "name": "newRiskScoreBps",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint8",
+          "name": "newRiskLevel",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "evidenceHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
       ],
       "name": "reprice",
       "outputs": [],
@@ -119,33 +365,468 @@
     },
     {
       "inputs": [
-        { "internalType": "uint256", "name": "", "type": "uint256" },
-        { "internalType": "address", "name": "", "type": "address" }
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
       ],
       "name": "rwaBalance",
-      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [
-        { "internalType": "string", "name": "blId", "type": "string" },
-        { "internalType": "uint256", "name": "issuePriceE6", "type": "uint256" },
-        { "internalType": "uint256", "name": "tokenSupply", "type": "uint256" },
-        { "internalType": "uint256", "name": "financingUsd", "type": "uint256" },
-        { "internalType": "uint256", "name": "collateralValueUsd", "type": "uint256" },
-        { "internalType": "uint32", "name": "riskScoreBps", "type": "uint32" },
-        { "internalType": "uint8", "name": "riskLevel", "type": "uint8" },
-        { "internalType": "bytes32", "name": "quoteHash", "type": "bytes32" },
-        { "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" }
+        {
+          "internalType": "string",
+          "name": "blId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "issuePriceE6",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenSupply",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "financingUsd",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "collateralValueUsd",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "riskScoreBps",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint8",
+          "name": "riskLevel",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "quoteHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "evidenceHash",
+          "type": "bytes32"
+        }
       ],
       "name": "tokenize",
       "outputs": [
-        { "internalType": "uint256", "name": "poolId", "type": "uint256" },
-        { "internalType": "uint256", "name": "mintedAmount", "type": "uint256" }
+        {
+          "internalType": "uint256",
+          "name": "poolId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "mintedAmount",
+          "type": "uint256"
+        }
       ],
       "stateMutability": "nonpayable",
       "type": "function"
     }
-  ]
+  ],
+  "paymentOracle": {
+    "address": "0x96E58247E1bcfA70A4ce5340E0A486969bEAf3Cd",
+    "deployTx": "0x0fabc6dc51619546430df249cbf273f668e47da2ebc832e0242a4c7312b6d538",
+    "deployedAt": "2026-06-28T16:04:11.735Z",
+    "abi": [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "fromRequestId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "count",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "totalMicrousd",
+            "type": "uint256"
+          }
+        ],
+        "name": "BatchPaymentEvidenceLogged",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "requestId",
+            "type": "uint256"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "payer",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "serviceId",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amountMicrousd",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "paymentRef",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "responseHash",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "quoteHash",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "pricingAction",
+            "type": "string"
+          }
+        ],
+        "name": "PaymentEvidenceLogged",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "requestId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getPayment",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "payer",
+                "type": "address"
+              },
+              {
+                "internalType": "string",
+                "name": "serviceId",
+                "type": "string"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amountMicrousd",
+                "type": "uint256"
+              },
+              {
+                "internalType": "string",
+                "name": "paymentRef",
+                "type": "string"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "responseHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "quoteHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "evidenceHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "string",
+                "name": "pricingAction",
+                "type": "string"
+              },
+              {
+                "internalType": "uint256",
+                "name": "timestamp",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct PaymentOracle.PaymentRecord",
+            "name": "",
+            "type": "tuple"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "serviceId",
+            "type": "string"
+          }
+        ],
+        "name": "getServiceSpend",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "payer",
+            "type": "address"
+          },
+          {
+            "internalType": "string[]",
+            "name": "serviceIds",
+            "type": "string[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "amountsMicrousd",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "paymentRefs",
+            "type": "string[]"
+          },
+          {
+            "internalType": "bytes32[]",
+            "name": "responseHashes",
+            "type": "bytes32[]"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "quoteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "string",
+            "name": "pricingAction",
+            "type": "string"
+          }
+        ],
+        "name": "logBatchPaymentEvidence",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "fromRequestId",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "payer",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "serviceId",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountMicrousd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "paymentRef",
+            "type": "string"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "responseHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "quoteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "string",
+            "name": "pricingAction",
+            "type": "string"
+          }
+        ],
+        "name": "logPaymentEvidence",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "requestId",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "payments",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "payer",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "serviceId",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountMicrousd",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "paymentRef",
+            "type": "string"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "responseHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "quoteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "string",
+            "name": "pricingAction",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "requestCount",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "name": "serviceSpend",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+  }
 }

@@ -130,6 +130,7 @@ function onLangChanged() {
   renderMarket();
   renderViewMint();
   if (state.view === 'voyage') renderVoyage();
+  if (state.view === 'intel') renderIntelMarket();
 }
 
 // ===========================================================================
@@ -185,7 +186,9 @@ function setView(name) {
   $('#view-market').hidden = name !== 'market';
   $('#view-mint').hidden = name !== 'mint';
   $('#view-voyage').hidden = name !== 'voyage';
-  if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
+  $('#view-intel').hidden = name !== 'intel';
+  if (name === 'intel') { stopMarketClock(); stopVoyageClock(); renderIntelMarket(); }
+  else if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
   else {
     stopVoyageClock();
     if (name === 'market') { renderMarket(); startMarketClock(); }
@@ -1123,7 +1126,13 @@ async function onMint() {
       }
       if (!res) {
         try {
-          res = await web3.mintOnChain(quote, financing);
+          // Fire: tx sent → pending UI. Confirm: background poll → update UI.
+          res = await web3.mintOnChain(quote, financing, (confirmed) => {
+            state.mint = confirmed;
+            state.poolId = confirmed.poolId && confirmed.poolId !== 'sim' ? confirmed.poolId : state.poolId;
+            renderMintResult(confirmed, quote);
+            console.log('[mint] UI updated — block:', confirmed.blockNumber);
+          });
         } catch (e) {
           if (e.code === 'REJECTED') { toast(t('t_cancel_mint'), true); return; }
           res = await fallbackSim(quote, financing, t('t_chain_call_failed', { msg: e.message || '' }));
@@ -1137,6 +1146,7 @@ async function onMint() {
     state.poolId = res.poolId && res.poolId !== 'sim' ? res.poolId : state.poolId;
     renderMintResult(res, quote);
     if (res.mode === 'chain') toast(t('t_minted_chain', { n: f.int(res.mintedAmount), network: await networkName() }));
+    else if (res.mode === 'chain_pending') toast('⛓ 交易已提交，等待链上确认…');
     else toast(t('t_minted_sim', { n: f.int(res.mintedAmount) }));
   } catch (e) {
     toast(t('t_mint_fail', { msg: e.message || e }), true);
@@ -1154,25 +1164,28 @@ async function fallbackSim(quote, financing, note) {
 function renderMintResult(res, quote) {
   const box = $('#mint-result');
   clear(box);
-  const chain = res.mode === 'chain';
+  const chain = res.mode === 'chain' || res.mode === 'chain_pending';
+  const pending = res.mode === 'chain_pending';
   box.append(
     el('div', { class: 'mint-result-head' },
-      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim') }),
+      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: pending ? '⛓ 已提交 · 确认中' : chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim') }),
       el('span', { class: 'mint-minted' }, t('res_minted_pre') + ' ', el('strong', { text: f.int(res.mintedAmount) }), ' ' + t('res_unit_rwa'))
     ),
     el('div', { class: 'mint-result-rows' },
       mintRow(t('res_price'), `$${f.price(quote.final_issue_price_usd)} ${t('unit_per_token')}`),
       mintRow('tx_hash', f.shortHash(res.txHash, 12, 10), chain && res.explorerUrl ? res.explorerUrl : null),
       res.poolId ? mintRow('poolId', String(res.poolId)) : null,
-      res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : null
+      res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : (pending ? mintRow('block', '⏳ 确认中…') : null)
     )
   );
-  if (chain) {
+  if (chain && res.poolId) {
     const balRow = mintRow(t('res_balance'), t('res_reading'));
     box.append(balRow);
     web3.readBalance(res.poolId, res.address)
       .then((bal) => { balRow.querySelector('.mint-row-v').textContent = f.int(bal); })
       .catch(() => { balRow.querySelector('.mint-row-v').textContent = '—'; });
+  } else if (pending) {
+    box.append(el('p', { class: 'sub-foot', style: 'color:#D29922', text: '⏳ 交易已广播，正在后台轮询链上确认（每 3 秒）…' }));
   } else {
     box.append(el('p', { class: 'sub-foot muted', text: t('res_sim_foot') }));
   }
@@ -1232,6 +1245,341 @@ async function onWalletClick() {
     else if (e.code === 'REJECTED') toast(t('t_connect_cancel'), true);
     else toast(t('t_connect_fail', { msg: e.message || e }), true);
   }
+}
+
+// ===========================================================================
+// VIEW ③ — x402 Intel Market rendering
+// ===========================================================================
+
+let x402Services = [];
+let x402Configured = false;
+let x402Network = 'eip155:1439';
+
+async function loadX402Config() {
+  try {
+    const res = await fetch('/api/x402/config');
+    const data = await res.json();
+    if (data.ok) {
+      x402Services = data.services;
+      x402Configured = data.configured;
+      x402Network = data.network;
+    }
+  } catch {
+    x402Services = [];
+    x402Configured = false;
+  }
+}
+
+function renderIntelMarket() {
+  loadX402Config().then(() => {
+    // Re-apply static i18n to the x402 view after it's shown
+    applyStaticI18n(document.getElementById('view-intel'));
+    renderX402StatusBar();
+    renderX402ServiceList();
+    renderX402FlowReset();
+    wireX402Handlers();
+  });
+}
+
+function renderX402StatusBar() {
+  const el = $('#x402-status-bar');
+  if (!el) return;
+  const badgeClass = x402Configured ? 'badge green' : 'badge';
+  const badgeText = x402Configured ? t('x402_ready') : t('x402_demo_mode');
+  el.innerHTML = [
+    `<div class="stat"><span class="stat-val">${x402Services.length}</span><span class="stat-label">${t('x402_paid_services')}</span></div>`,
+    `<div class="stat"><span class="stat-val ${x402Configured ? 'green' : ''}">${badgeText}</span><span class="stat-label">${t('x402_network_label', { network: x402Network })}</span></div>`,
+    `<div class="stat"><span class="stat-val">0.001–0.002</span><span class="stat-label">${t('x402_price_range')}</span></div>`
+  ].join('');
+}
+
+function renderX402ServiceList() {
+  const el = $('#x402-service-list');
+  if (!el) return;
+  if (!x402Services.length) {
+    el.innerHTML = `<p class="muted">${t('x402_loading')}</p>`;
+    return;
+  }
+  el.innerHTML = x402Services.map((s, i) => [
+    `<div class="x402-service-item" style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;" data-idx="${i}">`,
+    `<div style="display:flex;justify-content:space-between;align-items:center;">`,
+    `<strong style="font-size:14px;">${s.title}</strong>`,
+    `<span class="badge" style="background:#1F6FEB22;color:#1F6FEB;font-size:11px;">${s.priceUSDC} USDC</span>`,
+    `</div>`,
+    `<p class="muted" style="font-size:12px;margin:4px 0 0;">${s.description}</p>`,
+    `<span class="badge" style="font-size:10px;margin-top:4px;display:inline-block;">${s.status}</span>`,
+    `</div>`
+  ].join(''));
+}
+
+function renderX402FlowReset() {
+  const steps = ['challenge', 'pay', 'settle', 'unlock'];
+  for (const s of steps) {
+    const el = $(`#status-${s}`);
+    if (el) { el.textContent = '—'; el.className = 'x402-step-status'; }
+  }
+  const card = $('#x402-payment-card');
+  if (card) card.hidden = true;
+  const impact = $('#x402-pricing-impact');
+  if (impact) impact.hidden = true;
+  const log = $('#x402-log');
+  if (log) log.innerHTML = '';
+}
+
+function setX402Step(stepId, status, text) {
+  const el = $(`#status-${stepId}`);
+  if (!el) return;
+  el.textContent = text || status;
+  el.className = `x402-step-status x402-step-${status}`;
+}
+
+function updateX402PaymentCard(data) {
+  const card = $('#x402-payment-card');
+  if (!card) return;
+  card.hidden = false;
+  const tx = $('#x402-txhash');
+  if (tx && data.payment?.txHash) tx.textContent = data.payment.txHash.slice(0, 42) + '…';
+  const svc = $('#x402-service');
+  if (svc && data.payment?.receipt?.serviceId) svc.textContent = data.payment.receipt.serviceId;
+  const amt = $('#x402-amount');
+  if (amt && data.payment?.receipt?.amountUSDC !== undefined) amt.textContent = data.payment.receipt.amountUSDC + ' USDC';
+  const rh = $('#x402-resphash');
+  if (rh && data.payment?.evidence?.responseHash) rh.textContent = data.payment.evidence.responseHash.slice(0, 42) + '…';
+}
+
+function updateX402PricingImpact(data) {
+  const impact = $('#x402-pricing-impact');
+  if (!impact || !data.intel_preview) return;
+  impact.hidden = false;
+  const before = data.intel_preview.before_price;
+  const after = data.intel_preview.after_price;
+  const delta = data.intel_preview.price_delta;
+  if (before !== undefined) $('#x402-price-before').textContent = '$' + before.toFixed(3);
+  if (after !== undefined) $('#x402-price-after').textContent = '$' + after.toFixed(3);
+  if (delta !== undefined) {
+    const deltaNote = $('#x402-delta-note');
+    if (deltaNote) {
+      const dir = delta < 0 ? t('x402_price_drop') : delta > 0 ? t('x402_price_rise') : t('x402_price_nochange');
+      deltaNote.innerHTML = `<span class="${delta !== 0 ? 'badge red' : 'badge'}">${dir} — ${t('x402_delta', { delta: (delta >= 0 ? '+' : '') + '$' + delta.toFixed(3) })}</span>`;
+    }
+  }
+}
+
+async function runX402Smoke() {
+  // Legacy: no-wallet demo mode — calls /api/x402/smoke directly
+  const log = $('#x402-log');
+  if (!log) return;
+  log.innerHTML = `<p class="muted">${t('x402_running')}</p>`;
+  renderX402FlowReset();
+
+  try {
+    setX402Step('challenge', 'active', t('x402_challenge_status'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_challenge_log')}</span></p>`;
+
+    setTimeout(() => setX402Step('pay', 'active', t('x402_signing_status')), 500);
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_signing_log')}</span></p>`;
+
+    setTimeout(() => setX402Step('settle', 'active', t('x402_settling_status')), 1000);
+    log.innerHTML += `<p>• <span style="color:#1F6FEB;">${t('x402_settlement_log')}</span></p>`;
+
+    const res = await fetch('/api/x402/smoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ locale: 'en' })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      setX402Step('pay', 'done', t('x402_signed'));
+      setX402Step('settle', 'done', t('x402_settled'));
+      setX402Step('unlock', 'done', t('x402_unlocked'));
+      updateX402PaymentCard(data);
+      updateX402PricingImpact(data);
+      log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.intel_preview?.events_count || 0, intel: data.intel_preview?.deep_intel_count || 0 })}</span></p>`;
+      if (data.payment?.txHash) {
+        const isLive = data.payment.live;
+        const liveLabel = isLive ? '⛓️ On-chain' : '🔬 Mock hash (not on chain)';
+        const liveColor = isLive ? '#2EA043' : '#D29922';
+        log.innerHTML += `<p>• <span style="color:${liveColor};">${t('x402_tx_log', { tx: data.payment.txHash.slice(0, 42) + '…' })}</span> <span style="font-size:0.8em;color:${liveColor};">[${liveLabel}]</span></p>`;
+      }
+      log.innerHTML += `<p style="margin-top:8px;color:#2EA043;"><strong>${t('x402_pass')}</strong></p>`;
+    } else {
+      setX402Step('unlock', 'error', t('x402_failed'));
+      log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_fail_log', { msg: data.error || t('x402_error') })}</span></p>`;
+    }
+  } catch (e) {
+    setX402Step('settle', 'error', t('x402_failed'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_fail_log', { msg: e.message })}</span></p>`;
+  }
+}
+
+/**
+ * Real x402 wallet flow — user's wallet directly calls PaymentOracle on-chain:
+ *   1. GET endpoint → HTTP 402 + challenge
+ *   2. User signs challenge via personal_sign
+ *   3. User's wallet calls PaymentOracle.logPaymentEvidence() (user pays gas)
+ *   4. POST signed tx hash to server → intel report unlocked
+ */
+async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
+  const log = $('#x402-log');
+  if (!log) return;
+  log.innerHTML = `<p class="muted">${t('x402_initiating')}</p>`;
+  renderX402FlowReset();
+
+  // ── Get wallet ──
+  const eth = web3.getEthereumProvider();
+  if (!eth) {
+    log.innerHTML += `<p>• <span style="color:#D6336C;">❌ No wallet detected. Please install MetaMask or OKX wallet, or use the 🔥 Run Demo button.</span></p>`;
+    setX402Step('pay', 'error', 'No wallet');
+    return;
+  }
+
+  try {
+    // ── Step 1: GET without payment → HTTP 402 ──
+    setX402Step('challenge', 'active', t('x402_challenge_status'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_challenge_log')}</span></p>`;
+
+    const unpaidRes = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+    if (unpaidRes.status !== 402) {
+      throw new Error(`Expected HTTP 402, got ${unpaidRes.status}`);
+    }
+    const unpaidBody = await unpaidRes.json();
+    const challenge = unpaidBody.challenge;
+    const nonce = unpaidBody.nonce;
+    if (!challenge) throw new Error('No challenge message in 402 response');
+
+    log.innerHTML += `<p>• <span style="color:#D6336C;">📝 Challenge received: "${challenge.slice(0, 60)}…"</span></p>`;
+
+    // ── Step 2: Wallet personal_sign ──
+    setX402Step('pay', 'active', t('x402_signing_status'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">🦊 Opening wallet — please sign the payment authorization…</span></p>`;
+
+    // Ensure connected
+    if (!web3.isWalletConnected()) {
+      try {
+        const { address } = await web3.connectWallet();
+        state.wallet = { address };
+      } catch (e) {
+        if (e.code === 'NO_WALLET') throw e;
+        if (e.code === 'REJECTED') { const err = new Error('User rejected wallet connection'); err.code = 'REJECTED'; throw err; }
+        throw e;
+      }
+    }
+
+    const accounts = await eth.request({ method: 'eth_requestAccounts' });
+    const signerAddr = accounts[0];
+    const signature = await eth.request({
+      method: 'personal_sign',
+      params: [challenge, signerAddr]
+    });
+
+    log.innerHTML += `<p>• <span style="color:#2EA043;">✓ Signed by ${signerAddr.slice(0, 8)}…${signerAddr.slice(-4)}</span></p>`;
+
+    // ── Step 3: User's wallet calls PaymentOracle.logPaymentEvidence() on-chain ──
+    setX402Step('settle', 'active', t('x402_settling_status'));
+
+    // Compute evidence hashes via Web Crypto
+    const responsePayload = JSON.stringify({ serviceId, priceUSDC, payer: signerAddr, nonce });
+    const respBuf = new TextEncoder().encode(responsePayload);
+    const respDigest = await crypto.subtle.digest('SHA-256', respBuf);
+    const responseHash = '0x' + [...new Uint8Array(respDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const paymentRef = `x402:${serviceId}:${nonce}`;
+    const amountMicrousd = Math.floor(priceUSDC * 1_000_000);
+
+    let paymentResult;
+    let useDirectChain = false;
+    try {
+      paymentResult = await web3.logX402PaymentOnChain({
+        payer: signerAddr,
+        serviceId,
+        amountMicrousd,
+        paymentRef,
+        responseHash,
+        quoteHash: responseHash,
+        evidenceHash: responseHash,
+        pricingAction: 'OPEN'
+      });
+      useDirectChain = true;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">⛓️ On-chain tx sent from your wallet: ${paymentResult.txHash.slice(0, 18)}…</span></p>`;
+    } catch (chainErr) {
+      // Fallback: server relay if PaymentOracle not deployed or user rejected
+      if (chainErr.code === 'REJECTED') throw chainErr;
+      log.innerHTML += `<p>• <span style="color:#D29922;">⚠ Direct on-chain call unavailable (${chainErr.message}) — using server relay fallback.</span></p>`;
+    }
+
+    // ── Step 4: POST to server to get the unlocked intel report ──
+    const paidRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X402-Signature': signature,
+        'X402-Signer': signerAddr,
+        ...(useDirectChain ? {
+          'X402-TxHash': paymentResult.txHash,
+          'X402-BlockNumber': String(paymentResult.blockNumber)
+        } : {})
+      },
+      body: JSON.stringify({ nonce, txHash: useDirectChain ? paymentResult.txHash : undefined })
+    });
+
+    if (!paidRes.ok) {
+      const errBody = await paidRes.json().catch(() => ({}));
+      throw new Error(errBody.error || `Server returned ${paidRes.status}`);
+    }
+
+    const data = await paidRes.json();
+
+    // ── Done ──
+    setX402Step('pay', 'done', t('x402_signed'));
+    setX402Step('settle', 'done', useDirectChain ? '⛓️ Settled (your wallet)' : t('x402_settled'));
+    setX402Step('unlock', 'done', t('x402_unlocked'));
+    updateX402PaymentCard(data);
+    updateX402PricingImpact(data);
+
+    log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.events?.length || 0, intel: data.deepIntel?.length || 0 })}</span></p>`;
+
+    // Show the ACTUAL on-chain tx hash from user's wallet
+    const displayTx = useDirectChain ? paymentResult : data.payment;
+    if (displayTx?.txHash) {
+      const explorerUrl = displayTx.explorerUrl
+        || `https://testnet.blockscout.injective.network/tx/${displayTx.txHash}`;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">⛓️ <a href="${explorerUrl}" target="_blank" style="color:#1F6FEB;">View on Injective Explorer ↗</a></span></p>`;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">💳 Payer (tx from YOUR wallet): ${signerAddr.slice(0, 10)}…${signerAddr.slice(-6)}</span></p>`;
+    }
+
+    log.innerHTML += `<p style="margin-top:8px;color:#2EA043;"><strong>💰 x402 Payment Complete ✓ — Report Unlocked</strong></p>`;
+  } catch (e) {
+    setX402Step('settle', 'error', t('x402_failed'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">✗ ${t('x402_fail_log', { msg: e.message })}</span></p>`;
+    if (e.code === 4001 || e.code === 'REJECTED') {
+      log.innerHTML += `<p>• <span style="color:#D29922;">⚠ User rejected in wallet</span></p>`;
+    }
+  }
+}
+
+function wireX402Handlers() {
+  const smokeBtn = $('#x402-smoke-btn');
+  if (smokeBtn) {
+    smokeBtn.addEventListener('click', runX402Smoke);
+  }
+
+  const purchaseBtn = $('#x402-purchase-btn');
+  if (purchaseBtn) {
+    purchaseBtn.addEventListener('click', () => {
+      purchaseWithWallet('premium-risk', 0.001, '/api/x402/intel/premium-risk');
+    });
+  }
+
+  document.querySelectorAll('#x402-service-list .x402-service-item').forEach((item) => {
+    item.addEventListener('click', function () {
+      document.querySelectorAll('#x402-service-list .x402-service-item').forEach((i) => {
+        i.style.borderColor = 'var(--border)';
+      });
+      this.style.borderColor = '#D6336C';
+    });
+  });
 }
 
 // ===========================================================================

@@ -510,7 +510,7 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | 19 | case/cargo/payment/report ID 无重复 | 46 | reduced-motion 模式无强闪烁动效 |
 | 20 | README 覆盖当前全部环境变量 | 47 | Demo reset 后状态完全可重放 |
 | 21 | `npm run check` | 48 | 1 分钟主流程计时 ≤65 秒 |
-| 22 | `npm test` 且不少于当前 200 tests | 49 | 30 秒/1 分钟/3 分钟数字与角色一致 |
+| 22 | `npm test` 且不少于当前 226 tests | 49 | 30 秒/1 分钟/3 分钟数字与角色一致 |
 | 23 | `npm run smoke` | 50 | README/UI/视频中的 explorer 链接可打开 |
 | 24 | `npm run scenarios` | 51 | Live 模式无 `mock/random/demo tx` |
 | 25 | `npm run demo` | 52 | 日志与 telemetry 隐私/secret 扫描 |

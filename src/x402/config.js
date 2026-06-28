@@ -251,3 +251,62 @@ export async function validateFacilitatorSupport(config, options = {}) {
   return { ok: true, skipped: false, kind, signer: body.signers?.[config.network]?.[0] ?? null };
 }
 
+// Compatibility surface used by the paid-report UI, CLI and Node HTTP routes
+// added on origin/main. These helpers delegate to the strict configuration
+// above so there is still one source of truth for network, asset and payee.
+export function x402Network() {
+  return loadX402Config(process.env).network;
+}
+
+export function x402FacilitatorUrl() {
+  return loadX402Config(process.env).facilitatorUrl
+    ?? 'https://x402-facilitator.molandak.org';
+}
+
+export function x402Usdc() {
+  return loadX402Config(process.env).asset;
+}
+
+export function x402PayTo() {
+  return loadX402Config(process.env).payTo;
+}
+
+export function x402RpcUrl() {
+  const network = x402Network();
+  return process.env.X402_RPC_URL
+    ?? process.env.INJECTIVE_RPC_URL
+    ?? (network === 'eip155:1776'
+      ? 'https://sentry.evm-rpc.injective.network'
+      : 'https://k8s.testnet.json-rpc.injective.network');
+}
+
+export function isX402Configured() {
+  try {
+    const config = loadX402Config(process.env);
+    return config.mode === 'live' && Boolean(config.facilitatorUrl && config.payTo);
+  } catch {
+    return false;
+  }
+}
+
+export const DEFAULT_X402_BUDGET_USDC = 0.005;
+
+export const X402_SERVICES = Object.freeze([
+  Object.freeze({
+    serviceId: 'premium-risk',
+    endpoint: '/api/x402/intel/premium-risk',
+    priceUSDC: 0.001,
+    title: 'Premium Risk Intelligence',
+    description: 'Live xAPI world-risk signals + RAG deep analysis with full source citations',
+    status: 'available'
+  }),
+  Object.freeze({
+    serviceId: 'premium-valuation',
+    endpoint: '/api/x402/valuation/premium',
+    priceUSDC: 0.002,
+    title: 'Premium Cargo Valuation',
+    description: 'Real-time commodity prices + historical comparables + volatility forecast',
+    status: 'available'
+  })
+]);
+

@@ -6,12 +6,16 @@
 
 **The AI prices the risk. The chain enforces it. · AI 定价风险，链上强制执行。**
 
+**🏆 你的货在海上漂，钱还要等 45 天。谁来替你盯风险？AgentBL 的 AI 风控 Agent。**
+
 [![ETH Beijing](https://img.shields.io/badge/ETH_Beijing-2026-635BFF)](https://ethbeijing.xyz)
 [![Track](https://img.shields.io/badge/Track-AI_Agent_x_Blockchain-5A45FF)](#)
 [![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
-[![tests](https://img.shields.io/badge/tests-200_passing-2EA043)](#)
+[![tests](https://img.shields.io/badge/tests-226_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
-[![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
+[![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
+[![MCP](https://img.shields.io/badge/MCP-Server-1F6FEB)](#)
+[![x402](https://img.shields.io/badge/x402-Enabled-D6336C)](#)
 [![deps](https://img.shields.io/badge/deps-x402_pinned-1F6FEB)](#)
 [![offline](https://img.shields.io/badge/demo-offline_ready-1F6FEB)](#)
 [![license](https://img.shields.io/badge/license-MIT-3FB950)](./LICENSE)
@@ -54,7 +58,8 @@ puts an AI agent in charge of the dangerous part: **pricing real-world risk befo
 | 🔭 | **It sees through deceptive signals** | When war spikes the copper price, a price oracle thinks the collateral is *safer*. The agent knows war premium is a **correlated double-edge** (default ↑, insurance void, recovery ↓) and does the opposite: haircut + **PAUSE**. |
 | 🔗 | **Grounded, tool-using, retrieval-backed** | Tool calls for live LME price, regional premium and UN Comtrade historical comparables; a RAG retriever cites macro-risk intel with sources → an auditable **evidence graph**. |
 | 🌐 | **Live real-world risk via xAPI** | Pulls X/Twitter, Google News and prediction-market (Polymarket-style) signals through [xAPI](https://xapi.to), maps them to structured risk events, and folds them into the price — *the AI prices live world events on this cargo*. No key? Offline fixtures keep the demo running. |
-| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **200 + 11 tests** guard the invariants. |
+| 💰 | **x402 Paid Intel Market — users buy premium AI analysis** | Investors pay through the **x402 protocol** (HTTP 402 + EIP-3009) to unlock premium risk reports. Every payment is signed, settled on-chain, and recorded in `PaymentOracle`; the report then feeds directly into RWA pricing. `npm run smoke:x402` proves the full flow. |
+| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **226 + 11 tests** guard the invariants. |
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
 
@@ -156,8 +161,8 @@ The permissionless demo contract `AgentBLRWA` is **already deployed and verifiab
 | | |
 |---|---|
 | **Network** | Injective Testnet (chainId `1439`) |
-| **Contract** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
-| **Deploy tx** | [`0xf1cb0a86…3ef128`](https://testnet.explorer.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
+| **Contract** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
+| **Deploy tx** | [`0xf1cb0a86…3ef128`](https://testnet.blockscout.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
 
 Connect MetaMask (Injective Testnet) in **View ①** and click **Mint** to produce a real, signed on-chain
 transaction. No wallet / not deployed? The demo falls back to a high-fidelity simulated transaction —
@@ -276,8 +281,10 @@ All commands run **offline** (deterministic fallback when no API key is set).
 | `npm run mcp` | Demo the MCP tool chain (get_trade_case → search → price → simulate → push oracle) |
 | `npm run agent:value` | Run the AI cargo-valuation tools (live price / historical comparables / valuation; offline fallback) |
 | `npm run intel` | **Live world-risk via xAPI**: X/Twitter + news + prediction-market signals → risk events → re-priced quote (offline fixtures with no key) |
+| `npm run smoke:x402` | **x402 end-to-end**: HTTP 402 challenge → EIP-3009 payment → settlement → premium intel unlocked |
+| `npm run x402:intel` | CLI paid intel query — pay for and display premium risk/valuation data |
 | `npm run check` | Low-cost self-check: files, scripts, seed data, engine integrity |
-| `npm run test` | Full unit / integration suite (`node --test`, **200 passing**) |
+| `npm run test` | Full unit / integration suite (`node --test`, **226 passing**) |
 | `npm run smoke` | Spin up a temp server and smoke-test the key APIs |
 
 > One-shot pre-demo verification:
@@ -384,7 +391,7 @@ AgentBL-AI/
 │   ├── mcp/  ·  rag/  ·  skill/
 ├── hardhat/               # Solidity contracts + tests
 ├── scripts/               # check / demo / smoke / scenarios / price / qa / mcp / agent-valuation
-├── tests/                 # node --test (200 passing)
+├── tests/                 # node --test (226 passing)
 └── docs/                  # PRD · background · contracts · tasks · acceptance · award-roadmap
 ```
 
@@ -393,8 +400,9 @@ AgentBL-AI/
 | Command | Verifies | Status |
 |---|---|---|
 | `npm run check` | files / scripts / seed / engine integrity | ✅ |
-| `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 200 passing |
+| `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 226 passing |
 | `npm run smoke` | key APIs end-to-end | ✅ |
+| `npm run smoke:x402` | x402 paid-intel flow (HTTP 402 → payment → settlement → intel) | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause regression | ✅ |
 | `cd hardhat && npx hardhat test` | Solidity contract suite | ✅ 11 passing |
 
@@ -448,7 +456,8 @@ AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent
 | 🔭 | **能看穿欺骗性信号** | 战争推高铜价时，价格预言机以为抵押*更安全*；Agent 知道战争溢价是**相关性双刃剑**（违约↑、保险失效、回收↓），于是反向操作：haircut + **暂停**。 |
 | 🔗 | **有据可查：工具调用 + RAG 检索** | 调用实时 LME 铜价、区域升水、UN Comtrade 历史同类成交价；RAG 检索器带来源引用宏观风险情报 → 一张可审计的**证据图**。 |
 | 🌐 | **xAPI 实时世界风险** | 通过 [xAPI](https://xapi.to) 拉取 X/Twitter、Google 新闻、预测市场（Polymarket 类）信号，映射成结构化风险事件并入定价——*AI 为这批货实时给真实世界事件定价*。无密钥时走离线兜底，demo 永远能跑。 |
-| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**200 + 11 个测试**守护不变量。 |
+| 💰 | **x402 付费情报市场 — 用户为 AI 分析付费** | 投资者通过 **x402 协议**（HTTP 402 + EIP-3009）支付解锁高级 AI 风险报告。每次支付都签名结算并记录在 `PaymentOracle` 中，报告结果再直接注入 RWA 定价。`npm run smoke:x402` 验证全链路。 |
+| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**226 + 11 个测试**守护不变量。 |
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
 
@@ -549,8 +558,8 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
 | | |
 |---|---|
 | **网络** | Injective Testnet（chainId `1439`） |
-| **合约地址** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
-| **部署交易** | [`0xf1cb0a86…3ef128`](https://testnet.explorer.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
+| **合约地址** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
+| **部署交易** | [`0xf1cb0a86…3ef128`](https://testnet.blockscout.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
 
 在**界面①**连接 MetaMask（Injective Testnet）点「铸造」即可产生真实、已签名的链上交易。未连钱包 / 未部署时，
 demo 走高保真**模拟交易**——**离线永不中断**。
@@ -667,7 +676,7 @@ x402 支付层精确锁定 `@injectivelabs/x402@0.0.1` 与 `express@5.2.1`。由
 | `npm run agent:value` | 跑 AI 货值估值工具（实时价 / 历史成交价 / 估值，离线有 fallback） |
 | `npm run intel` | **xAPI 实时世界风险**：X/Twitter + 新闻 + 预测市场信号 → 风险事件 → 重新定价（无密钥走离线兜底） |
 | `npm run check` | 最低成本自检：文件、脚本、seed 数据、引擎完好 |
-| `npm run test` | 全部单元 / 集成测试（`node --test`，**200 passing**） |
+| `npm run test` | 全部单元 / 集成测试（`node --test`，**226 passing**） |
 | `npm run smoke` | 启动临时 server，冒烟测试关键 API |
 
 > 演示前一键全验证：
@@ -771,7 +780,7 @@ AgentBL-AI/
 │   ├── mcp/  ·  rag/  ·  skill/
 ├── hardhat/               # Solidity 合约 + 测试
 ├── scripts/               # check / demo / smoke / scenarios / price / qa / mcp / agent-valuation
-├── tests/                 # node --test（200 passing）
+├── tests/                 # node --test（226 passing）
 └── docs/                  # PRD · background · contracts · tasks · acceptance · award-roadmap
 ```
 
@@ -780,7 +789,7 @@ AgentBL-AI/
 | 命令 | 验证什么 | 现状 |
 |---|---|---|
 | `npm run check` | 文件 / 脚本 / seed / 引擎完好 | ✅ |
-| `npm run test` | 单元 + 集成（定价不变量、自主 Agent、schema、MCP、合约 mock…） | ✅ 200 passing |
+| `npm run test` | 单元 + 集成（定价不变量、自主 Agent、schema、MCP、合约 mock…） | ✅ 226 passing |
 | `npm run smoke` | 关键 API 端到端 | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause 场景回归 | ✅ |
 | `cd hardhat && npx hardhat test` | Solidity 合约测试 | ✅ 11 passing |

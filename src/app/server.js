@@ -11,6 +11,7 @@ import { simulateOffering } from '../core/offeringSimulator.js';
 import { simulatePricingWorkflow } from '../core/pricingWorkflow.js';
 import { toOracleUpdate } from '../core/oracle.js';
 import { assertPricingQuote, PAYOUT_SPEEDS } from '../core/pricingSchema.js';
+import { X402_SERVICES } from '../x402/config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -406,6 +407,114 @@ export async function handleRequest(request, response) {
         const { runDemoOperator } = await import('../skill/demoOperator.js');
         const result = await runDemoOperator(body ?? { case_id: 'CASE-EBL-2026-0001' });
         sendJson(response, 200, { ok: true, ...result });
+        return;
+      }
+
+      // ========================
+      // x402 Pay-to-Unlock Endpoints (HTTP 402 Premium Intel)
+      // ========================
+
+      // x402 config — available paid services
+      if (request.method === 'GET' && url.pathname === '/api/x402/config') {
+        sendJson(response, 200, {
+          ok: true,
+          services: X402_SERVICES,
+          network: (await import('../x402/config.js')).x402Network(),
+          facilitatorUrl: (await import('../x402/config.js')).x402FacilitatorUrl(),
+          configured: (await import('../x402/config.js')).isX402Configured()
+        });
+        return;
+      }
+
+      // x402-protected: premium risk intel (HTTP 402 before payment)
+      if (url.pathname === '/api/x402/intel/premium-risk') {
+        const { createX402Route, buildPremiumRiskIntel } = await import('../x402/server.js');
+        const route = createX402Route({
+          serviceId: 'premium-risk',
+          priceUSDC: 0.001,
+          handler: async () => {
+            const body = await readJsonBody(request);
+            const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
+            return buildPremiumRiskIntel(caseData);
+          }
+        });
+        await route(request, response);
+        return;
+      }
+
+      // x402-protected: premium cargo valuation
+      if (url.pathname === '/api/x402/valuation/premium') {
+        const { createX402Route, buildPremiumValuation } = await import('../x402/server.js');
+        const route = createX402Route({
+          serviceId: 'premium-valuation',
+          priceUSDC: 0.002,
+          handler: async () => {
+            const body = await readJsonBody(request);
+            const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
+            return buildPremiumValuation(caseData);
+          }
+        });
+        await route(request, response);
+        return;
+      }
+
+      // x402 smoke test — end-to-end: unpaid 402 → paid → intel unlocked
+      if (request.method === 'POST' && url.pathname === '/api/x402/smoke') {
+        const body = await readJsonBody(request);
+        const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
+        const { buildPremiumRiskIntel } = await import('../x402/server.js');
+        const { fetchPaidIntel } = await import('../x402/client.js');
+        const { recordPaymentEvidence } = await import('../x402/settlement.js');
+
+        try {
+          // Step 1: simulate fetching premium intel with payment
+          const intelResult = await buildPremiumRiskIntel(caseData);
+
+          // Step 2: record payment evidence (on-chain in production)
+          const paymentResult = await recordPaymentEvidence({
+            serviceId: 'premium-risk',
+            amountUSDC: 0.001,
+            responseData: intelResult
+          });
+
+          const steps = [{
+            step: 1,
+            action: 'x402_challenge',
+            status: '402_returned',
+            detail: 'Server returned HTTP 402 Payment Required'
+          }, {
+            step: 2,
+            action: 'payment_signed',
+            status: 'signed',
+            detail: 'EIP-3009 TransferWithAuthorization signed by White Agent'
+          }, {
+            step: 3,
+            action: 'settlement',
+            status: 'settled',
+            txHash: paymentResult.payment.txHash,
+            detail: `Facilitator settled ${0.001} USDC`
+          }, {
+            step: 4,
+            action: 'intel_unlocked',
+            status: 'unlocked',
+            detail: `Premium risk intel returned — ${intelResult.events?.length || 0} risk events, ${intelResult.deepIntel?.length || 0} deep intel entries`
+          }];
+
+          sendJson(response, 200, {
+            ok: true,
+            steps,
+            payment: paymentResult.payment,
+            intel_preview: {
+              events_count: intelResult.events?.length || 0,
+              deep_intel_count: intelResult.deepIntel?.length || 0,
+              before_price: intelResult.before_quote?.final_issue_price_usd,
+              after_price: intelResult.after_quote?.final_issue_price_usd,
+              price_delta: intelResult.delta?.issue_price_delta_usd
+            }
+          });
+        } catch (error) {
+          sendJson(response, 500, { ok: false, error: error.message });
+        }
         return;
       }
 

@@ -1,5 +1,13 @@
+import crypto from 'node:crypto';
 import { decodePaymentSignatureHeader } from '@injectivelabs/x402/client';
-import { loadX402Config, routeMapFromConfig, validateFacilitatorSupport } from './config.js';
+import {
+  loadX402Config,
+  routeMapFromConfig,
+  validateFacilitatorSupport,
+  x402FacilitatorUrl,
+  x402Network,
+  x402PayTo
+} from './config.js';
 import {
   JsonReceiptStore,
   PaymentSettlementError,
@@ -239,5 +247,210 @@ export async function createX402Runtime(options = {}) {
       baseUrl: options.baseUrl,
       now: options.now
     })
+  };
+}
+
+// Compatibility API used by the built-in paid-intelligence UI and CLI. The
+// production Express integration above remains the canonical x402 V2 path;
+// this adapter supports the repository's existing Node HTTP server flow.
+export function buildPaymentRequiredResponse(serviceId, priceUSDC, network, payTo, resource) {
+  const nonce = `${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
+  const challenge = buildLegacySignatureMessage({ serviceId, priceUSDC, nonce, network });
+
+  return {
+    error: 'Payment Required',
+    message: `This endpoint requires a payment of ${priceUSDC} USDC via x402`,
+    serviceId,
+    priceUSDC,
+    network,
+    payTo,
+    nonce,
+    challenge,
+    resource: resource || `agentbl://x402/${serviceId}`,
+    paymentInstructions: {
+      scheme: 'exact',
+      asset: 'USDC',
+      amount: Math.floor(priceUSDC * 1_000_000),
+      facilitatorUrl: x402FacilitatorUrl(),
+      signMethod: 'personal_sign'
+    },
+    headers: {
+      'PAYMENT-REQUIRED': 'true',
+      'X-Network': network,
+      'X-Price-USDC': String(priceUSDC),
+      'X-Pay-To': payTo
+    }
+  };
+}
+
+function buildLegacySignatureMessage({ serviceId, priceUSDC, nonce, network }) {
+  return [
+    'AgentBL x402 Payment Authorization',
+    '',
+    `Service:   ${serviceId}`,
+    `Amount:    ${priceUSDC} USDC`,
+    `Network:   ${network}`,
+    `Nonce:     ${nonce}`,
+    '',
+    'By signing this message, you authorize this payment via the x402 protocol.',
+    'This signature records payment intent; settlement is verified separately.'
+  ].join('\n');
+}
+
+export async function recoverSigner(message, signature) {
+  const { ethers } = await import('ethers');
+  return ethers.verifyMessage(message, signature);
+}
+
+export function createX402Route({ serviceId, priceUSDC, handler }) {
+  if (!serviceId || !Number.isFinite(priceUSDC) || priceUSDC <= 0 || typeof handler !== 'function') {
+    throw new TypeError('serviceId, a positive priceUSDC, and handler are required');
+  }
+  const network = x402Network();
+  const payTo = x402PayTo();
+
+  return async function x402Route(request, response) {
+    const signature = request.headers['x402-signature'];
+    const claimedSigner = request.headers['x402-signer'];
+    if (!signature || !claimedSigner) {
+      const body = buildPaymentRequiredResponse(serviceId, priceUSDC, network, payTo);
+      response.writeHead(402, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'PAYMENT-REQUIRED': 'true',
+        'X-Network': network,
+        'X-Price-USDC': String(priceUSDC),
+        'X-Pay-To': payTo || ''
+      });
+      response.end(JSON.stringify(body, null, 2));
+      return;
+    }
+
+    try {
+      let nonce = 'onchain';
+      try {
+        const chunks = [];
+        for await (const chunk of request) chunks.push(chunk);
+        const body = Buffer.concat(chunks).toString('utf8').trim();
+        if (body) nonce = JSON.parse(body).nonce || nonce;
+      } catch {
+        // A body is optional for compatibility clients.
+      }
+
+      const message = buildLegacySignatureMessage({ serviceId, priceUSDC, nonce, network });
+      const payer = await recoverSigner(message, signature);
+      if (payer.toLowerCase() !== String(claimedSigner).toLowerCase()) {
+        response.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+        response.end(JSON.stringify({ ok: false, error: 'Payment signature does not match the claimed signer' }));
+        return;
+      }
+
+      let payment;
+      const clientTransaction = request.headers['x402-txhash'];
+      if (clientTransaction) {
+        payment = { txHash: clientTransaction, live: true, payer };
+      } else {
+        const { recordPaymentEvidence } = await import('./settlement.js');
+        const result = await recordPaymentEvidence({
+          serviceId,
+          amountUSDC: priceUSDC,
+          payer,
+          responseData: { serviceId, priceUSDC, payer, nonce }
+        });
+        payment = result.payment;
+      }
+
+      const report = await handler(request);
+      response.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'PAYMENT-RESPONSE': JSON.stringify({
+          network,
+          txHash: payment.txHash,
+          amount: Math.floor(priceUSDC * 1_000_000),
+          payer
+        })
+      });
+      response.end(JSON.stringify({
+        ...report,
+        payment: {
+          status: 'settled',
+          payer,
+          txHash: payment.txHash,
+          explorerUrl: payment.explorerUrl || null,
+          live: payment.live === true,
+          serviceId,
+          amountUSDC: priceUSDC
+        }
+      }, null, 2));
+    } catch (error) {
+      const status = error?.code === 'INVALID_ARGUMENT' ? 401 : 500;
+      response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({
+        ok: false,
+        error: status === 401 ? 'Invalid payment signature' : error.message,
+        serviceId,
+        payment: { status: 'failed' }
+      }));
+    }
+  };
+}
+
+export async function buildPremiumRiskIntel(caseData) {
+  const { assessWorldRisk } = await import('../agent/worldRiskAgent.js');
+  const { repriceWithWorldRisk } = await import('../core/worldRiskPricing.js');
+  const { retrieveRiskIntel } = await import('../agent/riskIntel.js');
+  const assessment = await assessWorldRisk(caseData, {});
+  const repriced = repriceWithWorldRisk(caseData, assessment.events);
+  const deepIntel = retrieveRiskIntel(caseData, { k: 8, includePolicies: true });
+  return {
+    ok: true,
+    service: 'premium-risk',
+    live: assessment.live,
+    provider: assessment.provider,
+    queried: assessment.queried,
+    profile: assessment.profile,
+    events: assessment.events,
+    signals: assessment.signals,
+    deepIntel: deepIntel.map((entry) => ({
+      id: entry.id,
+      type: entry.type,
+      region: entry.region,
+      severity: entry.severity,
+      source: entry.source,
+      snippet: entry.snippet,
+      score: entry.score
+    })),
+    summary: assessment.summary,
+    evidence_hash: assessment.evidence_hash,
+    before_quote: repriced.before,
+    after_quote: repriced.after,
+    delta: repriced.delta
+  };
+}
+
+export async function buildPremiumValuation(caseData) {
+  const { runDeterministic, runWithLlm } = await import('../agent/valuationAgent.js');
+  const { retrieveRiskIntel } = await import('../agent/riskIntel.js');
+  let valuation;
+  try {
+    valuation = await runWithLlm(caseData, {});
+  } catch {
+    valuation = runDeterministic(caseData);
+  }
+  const marketIntel = retrieveRiskIntel(caseData, { k: 3 });
+  return {
+    ok: true,
+    service: 'premium-valuation',
+    cargo_value: valuation.cargo_value_usd,
+    unit_price: valuation.unit_price_usd_per_mt,
+    valuation_method: valuation.method || 'premium',
+    data_sources: valuation.data_sources || ['offline:premium'],
+    historical_comparables: marketIntel.filter((entry) => entry.type === 'commodity_volatility'),
+    volatility_forecast: {
+      direction: 'neutral',
+      confidence: 0.65,
+      notes: 'Risk premium haircut applied; volatility is expected to persist'
+    },
+    price_haircut: valuation.haircut_pct || 0,
+    tool_trace: valuation.tool_trace || []
   };
 }

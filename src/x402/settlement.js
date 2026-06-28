@@ -1,8 +1,11 @@
 import crypto from 'node:crypto';
+import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createFacilitatorRequest } from '@injectivelabs/x402/protocol';
 import { SettleResponseSchema, VerifyResponseSchema } from '@injectivelabs/x402/schemas';
+import { x402Network, x402PayTo, x402RpcUrl, x402Usdc } from './config.js';
 
 export const SETTLEMENT_STATES = Object.freeze({
   CHALLENGED: 'CHALLENGED',
@@ -444,4 +447,136 @@ export class X402SettlementService {
     await this.init();
     return this.store.get(paymentId);
   }
+}
+
+// PaymentOracle compatibility layer used by the paid-report UI and smoke CLI.
+// It supplements the facilitator-backed state machine above with an immutable
+// audit record after a report payment has settled.
+const compatibilityRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+let compatibilityProvider;
+let compatibilityWallet;
+let compatibilityOracle;
+
+function loadPaymentOracleConfig() {
+  try {
+    return JSON.parse(fsSync.readFileSync(path.join(compatibilityRoot, 'public', 'chain-config.json'), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+async function getPaymentOracleContract() {
+  if (compatibilityOracle) return compatibilityOracle;
+  const config = loadPaymentOracleConfig();
+  const address = config?.contracts?.PaymentOracle ?? config?.paymentOracle?.address;
+  const abi = config?.paymentOracle?.abi;
+  const privateKey = process.env.DEPLOYER_PRIVATE_KEY?.trim();
+  if (!address || !abi || !privateKey) return null;
+
+  const { ethers } = await import('ethers');
+  compatibilityProvider ??= new ethers.JsonRpcProvider(x402RpcUrl());
+  compatibilityWallet ??= new ethers.Wallet(privateKey, compatibilityProvider);
+  compatibilityOracle ??= new ethers.Contract(address, abi, compatibilityWallet);
+  return compatibilityOracle;
+}
+
+function compatibilityReceipt({ serviceId, amountUSDC, paymentRef, timestamp }) {
+  return {
+    network: x402Network(),
+    token: x402Usdc(),
+    payTo: x402PayTo(),
+    amountUSDC,
+    amountMicrousd: Math.floor(amountUSDC * 1_000_000),
+    serviceId,
+    paymentRef,
+    timestamp
+  };
+}
+
+export function generatePaymentReceipt({ serviceId, amountUSDC, paymentRef }) {
+  const timestamp = new Date().toISOString();
+  const nonce = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  const payload = stableStringify({ serviceId, amountUSDC, paymentRef, timestamp, nonce });
+  const txHash = `0x${crypto.createHash('sha256').update(payload).digest('hex')}`;
+  return {
+    txHash,
+    receipt: compatibilityReceipt({
+      serviceId,
+      amountUSDC,
+      paymentRef: paymentRef || txHash,
+      timestamp
+    })
+  };
+}
+
+export function buildPaymentEvidence({ requestId, payer, serviceId, amountUSDC, paymentRef, responseData }) {
+  const responseHash = responseData
+    ? `0x${crypto.createHash('sha256').update(stableStringify(responseData)).digest('hex')}`
+    : `0x${'00'.repeat(32)}`;
+  return {
+    requestId: requestId || (Math.floor(Date.now() / 1000) % 1_000_000),
+    payer: payer || '0x0000000000000000000000000000000000000000',
+    serviceId,
+    amountMicrousd: Math.floor(amountUSDC * 1_000_000),
+    paymentRef: paymentRef || `x402:${serviceId}:${Date.now()}`,
+    responseHash
+  };
+}
+
+export async function recordPaymentEvidence({ serviceId, amountUSDC, responseData, payer }) {
+  const evidence = buildPaymentEvidence({ serviceId, amountUSDC, responseData, payer });
+  try {
+    const oracle = await getPaymentOracleContract();
+    if (oracle) {
+      const resolvedPayer = payer || await compatibilityWallet.getAddress();
+      const transaction = await oracle.logPaymentEvidence(
+        resolvedPayer,
+        serviceId,
+        evidence.amountMicrousd,
+        evidence.paymentRef,
+        evidence.responseHash,
+        evidence.responseHash,
+        evidence.responseHash,
+        'OPEN'
+      );
+      const mined = await transaction.wait();
+      const config = loadPaymentOracleConfig();
+      const explorerBase = config?.explorerBase ?? 'https://testnet.blockscout.injective.network';
+      const timestamp = new Date().toISOString();
+      return {
+        ok: true,
+        payment: {
+          txHash: mined.hash,
+          blockNumber: mined.blockNumber,
+          explorerUrl: `${explorerBase}/tx/${mined.hash}`,
+          receipt: compatibilityReceipt({
+            serviceId,
+            amountUSDC,
+            paymentRef: evidence.paymentRef,
+            timestamp
+          }),
+          evidence,
+          onChainEvent: 'PaymentEvidenceLogged',
+          live: true,
+          onchain: true
+        }
+      };
+    }
+  } catch (error) {
+    console.warn(`[PaymentOracle] audit transaction unavailable; using demo receipt: ${error.message}`);
+  }
+
+  const generated = generatePaymentReceipt({ serviceId, amountUSDC, paymentRef: evidence.paymentRef });
+  return {
+    ok: true,
+    payment: {
+      txHash: generated.txHash,
+      receipt: generated.receipt,
+      evidence,
+      onChainEvent: 'PaymentEvidenceLogged',
+      live: false,
+      onchain: false,
+      mode: 'demo'
+    }
+  };
 }

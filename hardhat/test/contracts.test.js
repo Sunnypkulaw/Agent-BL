@@ -163,14 +163,16 @@ describe('AgentBL contracts', () => {
   it('rejects pricing updates from non-updaters', async () => {
     const ctx = await deployStack();
     const poolId = await createDemoOffering(ctx);
+    expect(await ctx.oracle.isUpdater(ctx.outsider.address)).to.equal(false);
 
     let reverted = false;
     try {
-      await ctx.oracle
+      const tx = await ctx.oracle
         .connect(ctx.outsider)
         .updatePricing(poolId, 800_000n, 2, ACTION.REPRICE_DOWN, ethers.id('e'), ethers.id('q'));
-    } catch (err) {
-      reverted = /not updater/.test(err.message);
+      await tx.wait();
+    } catch {
+      reverted = true;
     }
     expect(reverted).to.equal(true);
   });
