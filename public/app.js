@@ -1261,6 +1261,8 @@ async function loadX402Config() {
 
 function renderIntelMarket() {
   loadX402Config().then(() => {
+    // Re-apply static i18n to the x402 view after it's shown
+    applyStaticI18n(document.getElementById('view-intel'));
     renderX402StatusBar();
     renderX402ServiceList();
     renderX402FlowReset();
@@ -1272,11 +1274,11 @@ function renderX402StatusBar() {
   const el = $('#x402-status-bar');
   if (!el) return;
   const badgeClass = x402Configured ? 'badge green' : 'badge';
-  const badgeText = x402Configured ? '● x402 Ready' : '○ x402 Demo Mode';
+  const badgeText = x402Configured ? t('x402_ready') : t('x402_demo_mode');
   el.innerHTML = [
-    `<div class="stat"><span class="stat-val">${x402Services.length}</span><span class="stat-label">Paid Services</span></div>`,
-    `<div class="stat"><span class="stat-val ${x402Configured ? 'green' : ''}">${badgeText}</span><span class="stat-label">Network: ${x402Network}</span></div>`,
-    `<div class="stat"><span class="stat-val">0.001–0.002</span><span class="stat-label">Price Range (USDC)</span></div>`
+    `<div class="stat"><span class="stat-val">${x402Services.length}</span><span class="stat-label">${t('x402_paid_services')}</span></div>`,
+    `<div class="stat"><span class="stat-val ${x402Configured ? 'green' : ''}">${badgeText}</span><span class="stat-label">${t('x402_network_label', { network: x402Network })}</span></div>`,
+    `<div class="stat"><span class="stat-val">0.001–0.002</span><span class="stat-label">${t('x402_price_range')}</span></div>`
   ].join('');
 }
 
@@ -1284,7 +1286,7 @@ function renderX402ServiceList() {
   const el = $('#x402-service-list');
   if (!el) return;
   if (!x402Services.length) {
-    el.innerHTML = '<p class="muted">Loading services…</p>';
+    el.innerHTML = `<p class="muted">${t('x402_loading')}</p>`;
     return;
   }
   el.innerHTML = x402Services.map((s, i) => [
@@ -1346,8 +1348,8 @@ function updateX402PricingImpact(data) {
   if (delta !== undefined) {
     const deltaNote = $('#x402-delta-note');
     if (deltaNote) {
-      const dir = delta < 0 ? '↓ price drop (higher risk detected)' : delta > 0 ? '↑ price rise' : '→ no change';
-      deltaNote.innerHTML = `<span class="${delta !== 0 ? 'badge red' : 'badge'}">${dir} — delta: ${delta >= 0 ? '+' : ''}$${delta.toFixed(3)}</span>`;
+      const dir = delta < 0 ? t('x402_price_drop') : delta > 0 ? t('x402_price_rise') : t('x402_price_nochange');
+      deltaNote.innerHTML = `<span class="${delta !== 0 ? 'badge red' : 'badge'}">${dir} — ${t('x402_delta', { delta: (delta >= 0 ? '+' : '') + '$' + delta.toFixed(3) })}</span>`;
     }
   }
 }
@@ -1355,18 +1357,18 @@ function updateX402PricingImpact(data) {
 async function runX402Smoke() {
   const log = $('#x402-log');
   if (!log) return;
-  log.innerHTML = '<p class="muted">Running x402 smoke test…</p>';
+  log.innerHTML = `<p class="muted">${t('x402_running')}</p>`;
   renderX402FlowReset();
 
   try {
-    setX402Step('challenge', 'active', '402 Returned');
-    log.innerHTML += '<p>• <span style="color:#D6336C;">HTTP 402</span> — Payment Required challenge returned</p>';
+    setX402Step('challenge', 'active', t('x402_challenge_status'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_challenge_log')}</span></p>`;
 
-    setTimeout(() => setX402Step('pay', 'active', 'Signing…'), 500);
-    log.innerHTML += '<p>• <span style="color:#D6336C;">EIP-3009</span> — White Agent signing TransferWithAuthorization</p>';
+    setTimeout(() => setX402Step('pay', 'active', t('x402_signing_status')), 500);
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_signing_log')}</span></p>`;
 
-    setTimeout(() => setX402Step('settle', 'active', 'Settling…'), 1000);
-    log.innerHTML += '<p>• <span style="color:#1F6FEB;">Facilitator</span> — Settlement in progress</p>';
+    setTimeout(() => setX402Step('settle', 'active', t('x402_settling_status')), 1000);
+    log.innerHTML += `<p>• <span style="color:#1F6FEB;">${t('x402_settlement_log')}</span></p>`;
 
     const res = await fetch('/api/x402/smoke', {
       method: 'POST',
@@ -1376,23 +1378,23 @@ async function runX402Smoke() {
     const data = await res.json();
 
     if (data.ok) {
-      setX402Step('pay', 'done', '✓ Signed');
-      setX402Step('settle', 'done', '✓ Settled');
-      setX402Step('unlock', 'done', '✓ Intel Unlocked');
+      setX402Step('pay', 'done', t('x402_signed'));
+      setX402Step('settle', 'done', t('x402_settled'));
+      setX402Step('unlock', 'done', t('x402_unlocked'));
       updateX402PaymentCard(data);
       updateX402PricingImpact(data);
-      log.innerHTML += `<p>• <span style="color:#2EA043;">✓</span> Intel unlocked — ${data.intel_preview?.events_count || 0} risk events, ${data.intel_preview?.deep_intel_count || 0} deep intel entries</p>`;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.intel_preview?.events_count || 0, intel: data.intel_preview?.deep_intel_count || 0 })}</span></p>`;
       if (data.payment?.txHash) {
-        log.innerHTML += `<p>• <span style="color:#2EA043;">✓</span> Settlement tx: <code style="font-size:11px;">${data.payment.txHash.slice(0, 42)}…</code></p>`;
+        log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_tx_log', { tx: data.payment.txHash.slice(0, 42) + '…' })}</span></p>`;
       }
-      log.innerHTML += '<p style="margin-top:8px;color:#2EA043;"><strong>x402 smoke test passed ✓</strong></p>';
+      log.innerHTML += `<p style="margin-top:8px;color:#2EA043;"><strong>${t('x402_pass')}</strong></p>`;
     } else {
-      setX402Step('unlock', 'error', '✗ Failed');
-      log.innerHTML += `<p>• <span style="color:#D6336C;">✗</span> x402 smoke test failed: ${data.error || 'Unknown error'}</p>`;
+      setX402Step('unlock', 'error', t('x402_failed'));
+      log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_fail_log', { msg: data.error || t('x402_error') })}</span></p>`;
     }
   } catch (e) {
-    setX402Step('settle', 'error', '✗ Error');
-    log.innerHTML += `<p>• <span style="color:#D6336C;">✗</span> Error: ${e.message}</p>`;
+    setX402Step('settle', 'error', t('x402_failed'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_fail_log', { msg: e.message })}</span></p>`;
   }
 }
 
@@ -1407,8 +1409,8 @@ function wireX402Handlers() {
     purchaseBtn.addEventListener('click', () => {
       const log = $('#x402-log');
       if (log) {
-        log.innerHTML = '<p class="muted">Initiating x402 purchase flow…</p>';
-        log.innerHTML += '<p>• <span style="color:#D6336C;">Step 1:</span> Calling premium-risk endpoint without payment…</p>';
+        log.innerHTML = `<p class="muted">${t('x402_initiating')}</p>`;
+        log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_step1_call')}</span></p>`;
       }
       runX402Smoke();
     });

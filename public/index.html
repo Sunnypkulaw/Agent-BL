@@ -309,9 +309,9 @@
       <section class="view" id="view-intel" hidden>
         <section class="market-hero" aria-labelledby="intel-title">
           <div class="market-hero-copy">
-            <p class="eyebrow">x402 Paid Intel Market</p>
-            <h1 id="intel-title">AI pays for premium intelligence — on-chain audit trail.</h1>
-            <p class="market-subtitle">
+            <p class="eyebrow" data-i18n="x402_hero_eyebrow">x402 Paid Intel Market</p>
+            <h1 id="intel-title" data-i18n="x402_hero_h1">AI pays for premium intelligence — on-chain audit trail.</h1>
+            <p class="market-subtitle" data-i18n-html="x402_hero_sub">
               When free intel isn't enough, the AI Agent pays through the <strong>x402 protocol</strong>
               (HTTP 402) to unlock premium risk data. Every payment is signed (EIP-3009), settled
               via the x402 facilitator, and recorded on-chain — giving the pricing engine an
@@ -324,8 +324,8 @@
         <section class="market-shell">
           <aside class="market-rail" aria-label="x402 service catalog">
             <div class="market-rail-head">
-              <span class="metric-label">Available services</span>
-              <h2>Paid intel catalog</h2>
+              <span class="metric-label" data-i18n="x402_services_heading">Available services</span>
+              <h2 data-i18n="x402_catalog_heading">Paid intel catalog</h2>
             </div>
             <div id="x402-service-list" class="market-summary">
               <!-- Populated by JS -->
@@ -335,8 +335,8 @@
           <section class="market-board" aria-label="x402 payment flow">
             <div class="market-board-head">
               <div>
-                <span class="metric-label">Live payment flow</span>
-                <h2>x402 Settlement Pipeline</h2>
+                <span class="metric-label" data-i18n="x402_flow_heading">Live payment flow</span>
+                <h2 data-i18n="x402_pipeline_heading">x402 Settlement Pipeline</h2>
               </div>
             </div>
 
@@ -345,8 +345,8 @@
               <div class="x402-step" id="step-challenge">
                 <div class="x402-step-num">1</div>
                 <div class="x402-step-body">
-                  <strong>HTTP 402 Challenge</strong>
-                  <p class="muted">Server returns 402 Payment Required with payment instructions</p>
+                  <strong data-i18n="x402_step1_title">HTTP 402 Challenge</strong>
+                  <p class="muted" data-i18n="x402_step1_desc">Server returns 402 Payment Required with payment instructions</p>
                 </div>
                 <span class="x402-step-status" id="status-challenge">—</span>
               </div>
@@ -354,8 +354,8 @@
               <div class="x402-step" id="step-pay">
                 <div class="x402-step-num">2</div>
                 <div class="x402-step-body">
-                  <strong>Sign & Pay</strong>
-                  <p class="muted">White Agent signs EIP-3009 TransferWithAuthorization</p>
+                  <strong data-i18n="x402_step2_title">Sign & Pay</strong>
+                  <p class="muted" data-i18n="x402_step2_desc">White Agent signs EIP-3009 TransferWithAuthorization</p>
                 </div>
                 <span class="x402-step-status" id="status-pay">—</span>
               </div>
@@ -363,8 +363,8 @@
               <div class="x402-step" id="step-settle">
                 <div class="x402-step-num">3</div>
                 <div class="x402-step-body">
-                  <strong>Facilitator Settlement</strong>
-                  <p class="muted">x402 facilitator settles USDC payment on-chain</p>
+                  <strong data-i18n="x402_step3_title">Facilitator Settlement</strong>
+                  <p class="muted" data-i18n="x402_step3_desc">x402 facilitator settles USDC payment on-chain</p>
                 </div>
                 <span class="x402-step-status" id="status-settle">—</span>
               </div>
@@ -372,8 +372,8 @@
               <div class="x402-step" id="step-unlock">
                 <div class="x402-step-num">4</div>
                 <div class="x402-step-body">
-                  <strong>Intel Unlocked</strong>
-                  <p class="muted">Premium risk intel flows into the AI pricing engine</p>
+                  <strong data-i18n="x402_step4_title">Intel Unlocked</strong>
+                  <p class="muted" data-i18n="x402_step4_desc">Premium risk intel flows into the AI pricing engine</p>
                 </div>
                 <span class="x402-step-status" id="status-unlock">—</span>
               </div>
@@ -382,24 +382,24 @@
             <!-- Payment evidence card -->
             <div id="x402-payment-card" class="card" hidden>
               <div class="card-head">
-                <span class="metric-label">On-chain payment evidence</span>
-                <strong>PaymentOracle • Injective Testnet</strong>
+                <span class="metric-label" data-i18n="x402_evidence_heading">On-chain payment evidence</span>
+                <strong data-i18n="x402_evidence_contract">PaymentOracle • Injective Testnet</strong>
               </div>
               <div class="x402-payment-detail">
                 <div class="x402-payment-kv">
-                  <span class="metric-label">Transaction hash</span>
+                  <span class="metric-label" data-i18n="x402_tx_hash">Transaction hash</span>
                   <code id="x402-txhash" class="x402-hash">—</code>
                 </div>
                 <div class="x402-payment-kv">
-                  <span class="metric-label">Service</span>
+                  <span class="metric-label" data-i18n="x402_service_label">Service</span>
                   <span id="x402-service">—</span>
                 </div>
                 <div class="x402-payment-kv">
-                  <span class="metric-label">Amount</span>
+                  <span class="metric-label" data-i18n="x402_amount_label">Amount</span>
                   <span id="x402-amount">—</span>
                 </div>
                 <div class="x402-payment-kv">
-                  <span class="metric-label">Response hash</span>
+                  <span class="metric-label" data-i18n="x402_response_hash">Response hash</span>
                   <code id="x402-resphash" class="x402-hash">—</code>
                 </div>
               </div>
@@ -408,18 +408,18 @@
             <!-- Pricing impact: before vs after x402 paid intel -->
             <div id="x402-pricing-impact" class="card" hidden>
               <div class="card-head">
-                <span class="metric-label">Pricing Impact</span>
-                <strong>Paid intel changes the AI's risk assessment</strong>
+                <span class="metric-label" data-i18n="x402_hero_eyebrow">x402 Paid Intel Market</span>
+                <strong data-i18n="x402_pricing_impact">Paid intel changes the AI's risk assessment</strong>
               </div>
               <div class="x402-impact-grid">
                 <div class="x402-impact-cell">
-                  <span class="metric-label">Before (free intel)</span>
+                  <span class="metric-label" data-i18n="x402_before_label">Before (free intel)</span>
                   <div class="live-price"><span id="x402-price-before">$—</span></div>
                   <span class="badge" id="x402-risk-before">—</span>
                 </div>
                 <div class="x402-impact-arrow">→</div>
                 <div class="x402-impact-cell">
-                  <span class="metric-label">After (paid intel)</span>
+                  <span class="metric-label" data-i18n="x402_after_label">After (paid intel)</span>
                   <div class="live-price"><span id="x402-price-after">$—</span></div>
                   <span class="badge" id="x402-risk-after">—</span>
                 </div>
@@ -429,10 +429,10 @@
 
             <!-- Action buttons -->
             <div class="x402-actions">
-              <button id="x402-smoke-btn" class="btn" data-i18n-title="x402_smoke_title">
+              <button id="x402-smoke-btn" class="btn" data-i18n="x402_smoke_btn">
                 🔥 Run x402 Smoke Test
               </button>
-              <button id="x402-purchase-btn" class="btn primary" data-i18n-title="x402_purchase_title">
+              <button id="x402-purchase-btn" class="btn primary" data-i18n="x402_purchase_btn">
                 💰 Purchase Premium Intel (0.001 USDC)
               </button>
             </div>
