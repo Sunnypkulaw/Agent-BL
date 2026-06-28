@@ -12,6 +12,7 @@ import { simulatePricingWorkflow } from '../core/pricingWorkflow.js';
 import { toOracleUpdate } from '../core/oracle.js';
 import { assertPricingQuote, PAYOUT_SPEEDS } from '../core/pricingSchema.js';
 import { X402_SERVICES } from '../x402/config.js';
+import { demoModeController, LiveModeUnavailableError } from '../demo/mode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -206,9 +207,38 @@ export async function handleRequest(request, response) {
 
   try {
     if (request.method === 'GET' && url.pathname === '/api/health') {
-      sendJson(response, 200, { ok: true, service: 'agentbl-agent-harness' });
+      sendJson(response, 200, { ok: true, service: 'agentbl-agent-harness', ...demoModeController.snapshot() });
       return;
     }
+
+      if (request.method === 'GET' && url.pathname === '/api/demo/mode') {
+        sendJson(response, 200, { ok: true, ...demoModeController.snapshot() });
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/demo/mode') {
+        const body = await readJsonBody(request);
+        try {
+          sendJson(response, 200, { ok: true, ...demoModeController.setMode(body?.mode) });
+        } catch (error) {
+          sendJson(response, error instanceof LiveModeUnavailableError ? 409 : 400, {
+            ok: false,
+            code: error.code ?? 'invalid_mode',
+            error: error.message,
+            missing: error.missing
+          });
+        }
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/demo/reset') {
+        try {
+          sendJson(response, 200, { ok: true, ...demoModeController.reset() });
+        } catch (error) {
+          sendJson(response, 409, { ok: false, code: error.code, error: error.message });
+        }
+        return;
+      }
 
       if (request.method === 'GET' && url.pathname === '/api/demo-data') {
         sendJson(response, 200, await loadDemoCase());
@@ -421,7 +451,8 @@ export async function handleRequest(request, response) {
           services: X402_SERVICES,
           network: (await import('../x402/config.js')).x402Network(),
           facilitatorUrl: (await import('../x402/config.js')).x402FacilitatorUrl(),
-          configured: (await import('../x402/config.js')).isX402Configured()
+          configured: (await import('../x402/config.js')).isX402Configured(),
+          appMode: demoModeController.snapshot()
         });
         return;
       }
@@ -433,7 +464,7 @@ export async function handleRequest(request, response) {
           serviceId: 'premium-risk',
           priceUSDC: 0.001,
           handler: async () => {
-            const body = await readJsonBody(request);
+            const body = request.x402Body ?? await readJsonBody(request);
             const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
             return buildPremiumRiskIntel(caseData);
           }
@@ -449,7 +480,7 @@ export async function handleRequest(request, response) {
           serviceId: 'premium-valuation',
           priceUSDC: 0.002,
           handler: async () => {
-            const body = await readJsonBody(request);
+            const body = request.x402Body ?? await readJsonBody(request);
             const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
             return buildPremiumValuation(caseData);
           }
@@ -458,8 +489,32 @@ export async function handleRequest(request, response) {
         return;
       }
 
+      // x402-protected: anti-fraud cross-document review
+      if (url.pathname === '/api/x402/documents/fraud-review') {
+        const { createX402Route, buildPremiumFraudReview } = await import('../x402/server.js');
+        const route = createX402Route({
+          serviceId: 'fraud-review',
+          priceUSDC: 0.0015,
+          handler: async () => {
+            const body = request.x402Body ?? await readJsonBody(request);
+            const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
+            return buildPremiumFraudReview(caseData);
+          }
+        });
+        await route(request, response);
+        return;
+      }
+
       // x402 smoke test — end-to-end: unpaid 402 → paid → intel unlocked
       if (request.method === 'POST' && url.pathname === '/api/x402/smoke') {
+        if (!demoModeController.snapshot().demoMode) {
+          sendJson(response, 409, {
+            ok: false,
+            code: 'demo_smoke_disabled_in_live_mode',
+            error: 'The simulated x402 smoke endpoint is disabled in live mode'
+          });
+          return;
+        }
         const body = await readJsonBody(request);
         const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
         const { buildPremiumRiskIntel } = await import('../x402/server.js');

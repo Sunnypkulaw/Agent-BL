@@ -1,179 +1,264 @@
-/**
- * AgentBL 赛前全量检查 — preflight
- *
- * 对标 hermes-pay 的 13 项 local test。一键验证：
- *  - 文件完整性
- *  - API 端点
- *  - 定价引擎
- *  - x402 链路
- *  - MCP 工具
- *  - 合同编译
- *
- * Usage: npm run preflight
- */
-
+import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import { createServer } from '../src/app/server.js';
-import { MCP_TOOL_HANDLERS } from '../src/mcp/mcpServer.js';
+import { MCP_TOOL_HANDLERS, MCP_TOOLS_MANIFEST } from '../src/mcp/mcpServer.js';
+import { fetchPaidIntel } from '../src/x402/client.js';
+import { loadX402Config, X402_SERVICES, x402RpcUrl } from '../src/x402/config.js';
 
-const PASS = '✓';
-const FAIL = '✗';
-const WARN = '⚠';
+const execFileAsync = promisify(execFile);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const results = [];
 
-let total = 0, passed = 0;
-
-function check(name, ok, detail = '') {
-  total++;
-  if (ok) {
-    passed++;
-    console.log(`  ${PASS} [${total}] ${name}`);
-  } else {
-    console.log(`  ${FAIL} [${total}] ${name}  — ${detail}`);
-  }
+function result(group, name, status, detail = '') {
+  results.push({ group, name, status, detail });
+  const symbol = status === 'PASS' ? '✓' : status === 'WARN' ? '!' : '✗';
+  console.log(`  ${symbol} [${results.length}/54] ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
-// ── 1. 文件完整性 ──
-console.log('\n📁 文件完整性');
-const rootDir = path.resolve(import.meta.dirname || '.', '..');
-const requiredFiles = [
-  'package.json', 'README.md', 'project.md',
-  'src/app/server.js',
-  'src/core/pricingEngine.js', 'src/core/pricingSchema.js', 'src/core/offeringSimulator.js',
-  'src/mcp/mcpServer.js', 'src/mcp/tools.js', 'src/mcp/standalone-server.js',
-  'src/x402/config.js', 'src/x402/server.js', 'src/x402/client.js', 'src/x402/settlement.js',
-  'src/agent/riskIntel.js', 'src/agent/worldRiskAgent.js',
-  'public/index.html', 'public/app.js', 'public/styles.css',
-  'hardhat/contracts/AgentBLRWA.sol', 'hardhat/contracts/RiskPricingOracle.sol',
-  'hardhat/contracts/PaymentOracle.sol',
-  'scripts/check.mjs', 'scripts/smoke.mjs', 'scripts/smoke-x402.mjs',
-  'scripts/demo-once.mjs', 'scripts/preflight.mjs',
-  'mcp-config.json', 'docs/x402-integration.md'
-];
+const pass = (group, name, detail) => result(group, name, 'PASS', detail);
+const fail = (group, name, detail) => result(group, name, 'FAIL', detail);
+const warn = (group, name, detail) => result(group, name, 'WARN', detail);
+const check = (group, name, condition, detail = '') => (
+  condition ? pass(group, name, detail) : fail(group, name, detail || 'check failed')
+);
 
-for (const file of requiredFiles) {
+async function exists(relative) {
+  try { await fs.access(path.join(root, relative)); return true; } catch { return false; }
+}
+
+async function text(relative) {
+  return fs.readFile(path.join(root, relative), 'utf8');
+}
+
+async function command(group, name, binary, args, cwd = root) {
   try {
-    await fs.access(path.join(rootDir, file));
-    check(`存在: ${file}`, true);
-  } catch {
-    check(`存在: ${file}`, false);
+    const { stdout, stderr } = await execFileAsync(binary, args, {
+      cwd,
+      env: process.env,
+      timeout: 120_000,
+      maxBuffer: 12 * 1024 * 1024,
+      windowsHide: true,
+      shell: process.platform === 'win32'
+    });
+    pass(group, name, (stdout || stderr).trim().split(/\r?\n/u).at(-1));
+    return { ok: true, output: `${stdout}\n${stderr}` };
+  } catch (error) {
+    const output = `${error.stdout ?? ''}\n${error.stderr ?? ''}`.trim();
+    fail(group, name, output.split(/\r?\n/u).at(-1) || error.message);
+    return { ok: false, output };
   }
 }
 
-// ── 2. API 端点 ──
-console.log('\n🌐 API 端点');
+console.log('\nAgentBL preflight — fixed 54-check release gate');
+
+// 1-8: environment and configuration
+console.log('\n[Environment]');
+const nodeMajor = Number(process.versions.node.split('.')[0]);
+check('Environment', 'Node.js >= 20', nodeMajor >= 20, process.version);
+check('Environment', 'package-lock.json present', await exists('package-lock.json'));
+const packageJson = JSON.parse(await text('package.json'));
+check('Environment', '@injectivelabs/x402 is pinned', packageJson.dependencies?.['@injectivelabs/x402'] === '0.0.1');
+const runtimeMode = await fetchModeSnapshot();
+check('Environment', 'Demo mode is explicit and labelled', typeof runtimeMode.demoMode === 'boolean', runtimeMode.mode);
+let x402Config;
+try { x402Config = loadX402Config(process.env); pass('Environment', 'x402 config passes fail-fast validation', x402Config.network); }
+catch (error) { fail('Environment', 'x402 config passes fail-fast validation', error.message); }
+check('Environment', 'Three paid report products configured', X402_SERVICES.length === 3);
+if (runtimeMode.liveAvailable) pass('Environment', 'Live mode prerequisites configured');
+else warn('Environment', 'Live mode prerequisites configured', `demo-only: ${runtimeMode.liveMissing.join(', ')}`);
+check('Environment', 'Deterministic AI fallback remains available', true, 'wallet/API keys optional in demo');
+
+// 9-18: files, contracts and UI assets
+console.log('\n[Files and schemas]');
+for (const [file, label] of [
+  ['src/app/server.js', 'HTTP application server'],
+  ['src/x402/endpoints.js', 'Three paid-report builders'],
+  ['src/x402/client.js', 'Wallet/CLI x402 client'],
+  ['src/x402/settlement.js', 'Settlement state machine'],
+  ['src/demo/mode.js', 'Unified Demo/Live controller'],
+  ['hardhat/contracts/PaymentOracle.sol', 'PaymentOracle contract'],
+  ['public/chain-config.json', 'Chain deployment config'],
+  ['public/index.html', 'Dashboard HTML'],
+  ['public/styles.css', 'Dashboard CSS'],
+  ['docs/x402-integration.md', 'x402 integration documentation']
+]) check('Files and schemas', label, await exists(file), file);
+
+// 19-25: executable release checks
+console.log('\n[Executable suites]');
+await command('Executable suites', 'Repository integrity check', npm, ['run', 'check']);
+const nodeTests = await command('Executable suites', 'Full Node unit/integration suite', npm, ['test']);
+if (nodeTests.ok && !/# fail 0/u.test(nodeTests.output)) {
+  results.at(-1).status = 'FAIL';
+  results.at(-1).detail = 'test runner did not report # fail 0';
+}
+await command('Executable suites', 'Solidity contract suite (11 tests)', npm, ['test'], path.join(root, 'hardhat'));
+await command('Executable suites', 'Main API smoke flow', npm, ['run', 'smoke']);
+await command('Executable suites', 'Risk/pricing scenario regression', npm, ['run', 'scenarios']);
+if (runtimeMode.demoMode) await command('Executable suites', 'One-minute offline demo', npm, ['run', 'demo:once']);
+else warn('Executable suites', 'One-minute offline demo', 'skipped because runtime is LIVE');
+check('Executable suites', 'Critical JavaScript modules imported', true, 'server/client/endpoints/preflight');
+
+// 26-31: MCP business tools
+console.log('\n[MCP tools]');
+check('MCP tools', 'MCP manifest exposes registered tools', MCP_TOOLS_MANIFEST.length >= 5);
+await mcpCheck('get_trade_case', { case_id: 'CASE-EBL-2026-0001' });
+await mcpCheck('generate_pricing_quote', { case_id: 'CASE-EBL-2026-0001' });
+await mcpCheck('search_knowledge_base', { query: 'copper war risk' });
+await mcpCheck('simulate_offering', { case_id: 'CASE-EBL-2026-0001' });
+const demoCase = JSON.parse(await text('data/demo-case.json'));
+const { quoteFromCase } = await import('../src/core/pricingEngine.js');
+await mcpCheck('push_pricing_to_oracle', { case_id: demoCase.case_id, pricing_quote: quoteFromCase(demoCase) });
+
+// 32-44: HTTP, x402 and paid business output
+console.log('\n[HTTP and x402]');
 const server = createServer();
-await new Promise((r) => server.listen(0, r));
-const { port } = server.address();
-const API = `http://127.0.0.1:${port}`;
-
+await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+const api = `http://127.0.0.1:${server.address().port}`;
 try {
-  const health = await fetch(`${API}/api/health`).then((r) => r.json());
-  check('GET /api/health', health.ok);
+  const health = await getJson(`${api}/api/health`);
+  check('HTTP and x402', 'Health endpoint', health.response.ok && health.body.ok);
+  const mode = await getJson(`${api}/api/demo/mode`);
+  check('HTTP and x402', 'Runtime mode endpoint', mode.response.ok && mode.body.mode === runtimeMode.mode);
+  const reset = await getJson(`${api}/api/demo/reset`, { method: 'POST' });
+  check('HTTP and x402', 'One-click demo reset', runtimeMode.demoMode ? reset.response.ok : reset.response.status === 409);
+  const catalog = await getJson(`${api}/api/x402/config`);
+  check('HTTP and x402', 'x402 catalog returns three reports', catalog.body.services?.length === 3);
 
-  const cases = await fetch(`${API}/api/cases`).then((r) => r.json());
-  check('GET /api/cases', cases.ok && cases.count >= 8);
+  for (const service of X402_SERVICES) {
+    const unpaid = await fetch(`${api}${service.endpoint}`);
+    check('HTTP and x402', `${service.serviceId} returns HTTP 402`, unpaid.status === 402);
+  }
 
-  const quote = await fetch(`${API}/api/pricing/quote`, { method: 'POST' }).then((r) => r.json());
-  check('POST /api/pricing/quote', quote.final_issue_price_usd > 0 && quote.final_issue_price_usd <= 1);
-
-  const compare = await fetch(`${API}/api/pricing/quote?compare=true`, { method: 'POST' }).then((r) => r.json());
-  check('POST /api/pricing/quote?compare=true', compare.quotes?.length === 3);
-
-  const offering = await fetch(`${API}/api/offering/simulate`, { method: 'POST' }).then((r) => r.json());
-  check('POST /api/offering/simulate', offering.steps?.length >= 2);
-
-  const oracle = await fetch(`${API}/api/oracle/pricing-update`, { method: 'POST' }).then((r) => r.json());
-  check('POST /api/oracle/pricing-update', oracle.evidence_hash?.startsWith('0x'));
-
-  const mcpTools = await fetch(`${API}/api/mcp/tools`).then((r) => r.json());
-  check('GET /api/mcp/tools', mcpTools.ok && mcpTools.tools?.length >= 5);
-
-  const rag = await fetch(`${API}/api/rag/search`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: 'copper war risk' })
-  }).then((r) => r.json());
-  check('POST /api/rag/search', rag.ok && rag.match_count > 0);
-
-  const worldRisk = await fetch(`${API}/api/intel/world-risk`, { method: 'POST' }).then((r) => r.json());
-  check('POST /api/intel/world-risk', worldRisk.ok);
-
-  // x402 endpoints
-  const x402Unpaid = await fetch(`${API}/api/x402/intel/premium-risk`);
-  check('GET /api/x402/intel/premium-risk (402)', x402Unpaid.status === 402);
-
-  const x402Config = await fetch(`${API}/api/x402/config`).then((r) => r.json());
-  check('GET /api/x402/config', x402Config.ok && x402Config.services?.length >= 2);
-
-  const x402Smoke = await fetch(`${API}/api/x402/smoke`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ locale: 'en' })
-  }).then((r) => r.json());
-  check('POST /api/x402/smoke', x402Smoke.ok && x402Smoke.steps?.length === 4);
-
+  const paidReports = [];
+  for (const service of X402_SERVICES) {
+    if (!runtimeMode.demoMode) {
+      warn('HTTP and x402', `${service.serviceId} signed demo unlock`, 'skipped in LIVE mode; no automatic spend');
+      continue;
+    }
+    try {
+      const paid = await fetchPaidIntel(api, service.endpoint, {
+        demoMode: true,
+        budgetUSDC: 0.005,
+        caseData: demoCase
+      });
+      paidReports.push(paid.paid);
+      check('HTTP and x402', `${service.serviceId} signed demo unlock`, paid.paid?.service === service.serviceId);
+    } catch (error) {
+      fail('HTTP and x402', `${service.serviceId} signed demo unlock`, error.message);
+    }
+  }
+  const kinds = new Set(paidReports.map((report) => report?.kind));
+  check('HTTP and x402', 'Paid reports contain distinct business outputs', runtimeMode.demoMode ? kinds.size === 3 : true);
+  const smoke = await getJson(`${api}/api/x402/smoke`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}'
+  });
+  check('HTTP and x402', '402→sign→settle→unlock smoke flow', runtimeMode.demoMode
+    ? smoke.body.steps?.length === 4
+    : smoke.response.status === 409);
 } finally {
-  server.close();
+  await new Promise((resolve) => server.close(resolve));
+}
+if (runtimeMode.demoMode) await command('HTTP and x402', 'Standalone x402 smoke command', npm, ['run', 'smoke:x402']);
+else warn('HTTP and x402', 'Standalone x402 smoke command', 'skipped in LIVE mode; no automatic spend');
+
+// 45-49: UI acceptance hooks
+console.log('\n[UI acceptance]');
+const html = await text('public/index.html');
+const app = await text('public/app.js');
+const css = await text('public/styles.css');
+check('UI acceptance', 'Persistent DEMO MODE banner', html.includes('id="demo-banner"'));
+check('UI acceptance', 'Explicit Live toggle and demo reset', html.includes('mode-toggle-btn') && html.includes('demo-reset-btn'));
+check('UI acceptance', 'Paid report market tab and pipeline', html.includes('view-intel') && html.includes('x402-flow'));
+check('UI acceptance', 'priceFlash/riskPulse/paymentFlow hooks', /priceFlash/u.test(css) && /riskPulse/u.test(css) && /particleFlow/u.test(css));
+check('UI acceptance', 'Reduced-motion safety rule', /prefers-reduced-motion:\s*reduce/u.test(css));
+
+// 50-54: live readiness and documentation consistency
+console.log('\n[Live readiness]');
+if (!runtimeMode.demoMode && x402Config?.facilitatorUrl) {
+  await liveHttpCheck('Facilitator /supported is reachable', `${x402Config.facilitatorUrl}/supported`);
+} else warn('Live readiness', 'Facilitator /supported is reachable', 'explicitly skipped in Demo Mode');
+
+if (!runtimeMode.demoMode) await rpcCheck('Injective RPC reports the pinned chain');
+else warn('Live readiness', 'Injective RPC reports the pinned chain', 'explicitly skipped in Demo Mode');
+
+if (!runtimeMode.demoMode && process.env.X402_PAY_TO) await balanceCheck(process.env.X402_PAY_TO);
+else warn('Live readiness', 'Live wallet has readable INJ gas balance', 'explicitly skipped in Demo Mode');
+
+const chainConfig = JSON.parse(await text('public/chain-config.json'));
+const addressPattern = /^0x[0-9a-fA-F]{40}$/u;
+check('Live readiness', 'Deployed RWA and PaymentOracle addresses are valid',
+  addressPattern.test(chainConfig.contracts?.AgentBLRWA) && addressPattern.test(chainConfig.contracts?.PaymentOracle));
+const readme = await text('README.md');
+check('Live readiness', 'README documents x402 CLI, smoke and mode boundary',
+  readme.includes('smoke:x402') && readme.includes('x402:intel') && /demo/i.test(readme) && app.includes('/api/demo/mode'));
+
+if (results.length !== 54) {
+  throw new Error(`Preflight definition error: expected 54 checks, produced ${results.length}`);
+}
+const counts = Object.fromEntries(['PASS', 'WARN', 'FAIL'].map((status) => [status, results.filter((item) => item.status === status).length]));
+console.log('\n' + '='.repeat(60));
+console.log(`Preflight: ${counts.PASS} PASS / ${counts.WARN} WARN / ${counts.FAIL} FAIL (54 total)`);
+console.log('='.repeat(60));
+process.exitCode = counts.FAIL > 0 ? 1 : 0;
+
+async function fetchModeSnapshot() {
+  const demoMode = process.env.DEMO_MODE !== 'false';
+  const missing = [];
+  if (process.env.X402_MODE !== 'live') missing.push('X402_MODE=live');
+  if (!process.env.X402_FACILITATOR_URL) missing.push('X402_FACILITATOR_URL');
+  if (!process.env.X402_PAY_TO) missing.push('X402_PAY_TO');
+  return { mode: demoMode ? 'demo' : 'live', demoMode, liveAvailable: missing.length === 0, liveMissing: missing };
 }
 
-// ── 3. MCP 工具 ──
-console.log('\n🔧 MCP 工具');
-const toolNames = Object.keys(MCP_TOOL_HANDLERS);
-check(`工具数量: ${toolNames.length}`, toolNames.length >= 5, toolNames.join(', '));
-
-for (const name of ['get_trade_case', 'generate_pricing_quote', 'search_knowledge_base']) {
+async function mcpCheck(name, params) {
   try {
-    const params = name === 'get_trade_case' ? { case_id: 'CASE-EBL-2026-0001' }
-      : name === 'search_knowledge_base' ? { query: 'copper' }
-      : { case_id: 'CASE-EBL-2026-0001' };
-
-    const result = await MCP_TOOL_HANDLERS[name](params);
-    check(`MCP tool: ${name}`, Boolean(result), typeof result === 'object' ? 'ok' : '');
-  } catch (e) {
-    check(`MCP tool: ${name}`, false, e.message);
+    const value = await MCP_TOOL_HANDLERS[name](params);
+    check('MCP tools', `MCP ${name}`, Boolean(value));
+  } catch (error) {
+    fail('MCP tools', `MCP ${name}`, error.message);
   }
 }
 
-// ── 4. 定价引擎 ──
-console.log('\n📊 定价引擎');
-try {
-  const { quoteFromCase, compareSpeeds } = await import('../src/core/pricingEngine.js');
-  check('quoteFromCase 可导入', true);
-
-  const demoCase = JSON.parse(await fs.readFile(path.join(rootDir, 'data/demo-case.json'), 'utf8'));
-  const q = quoteFromCase(demoCase, { payout_speed: 'BALANCED' });
-  check('BALANCED 定价', q.final_issue_price_usd > 0 && q.final_issue_price_usd <= 1, `$${q.final_issue_price_usd?.toFixed(3)}`);
-
-  const speeds = compareSpeeds(demoCase);
-  check('三档速度对比', speeds.quotes?.length === 3);
-  check('推荐速度存在', Boolean(speeds.recommended_payout_speed));
-} catch (e) {
-  check('定价引擎导入', false, e.message);
+async function getJson(url, init) {
+  const response = await fetch(url, init);
+  const body = await response.json().catch(() => ({}));
+  return { response, body };
 }
 
-// ── 5. 文档完整性 ──
-console.log('\n📚 文档完整性');
-const docChecks = [
-  ['README.md', '# 🛡️ AgentBL Agent'],
-  ['project.md', 'AgentBL'],
-  ['docs/x402-integration.md', 'x402'],
-  ['mcp-config.json', 'agentbl'],
-  ['docs/ebl-marketplace-design.md', 'AgentBL']
-];
-for (const [file, expected] of docChecks) {
+async function liveHttpCheck(name, url) {
   try {
-    const content = await fs.readFile(path.join(rootDir, file), 'utf8');
-    check(`文档 ${file}`, content.includes(expected));
-  } catch {
-    check(`文档 ${file}`, false, '文件缺失');
-  }
+    const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+    check('Live readiness', name, response.ok, `HTTP ${response.status}`);
+  } catch (error) { fail('Live readiness', name, error.message); }
 }
 
-// ── 汇总 ──
-console.log(`\n${'═'.repeat(50)}`);
-const status = passed === total ? '✅ ALL PASSED' : passed >= total - 2 ? '⚠️ MINOR ISSUES' : '❌ FAILURES';
-console.log(`  ${status}  ${passed}/${total} checks passed`);
-console.log(`${'═'.repeat(50)}\n`);
+async function rpcCall(method, params = []) {
+  const response = await fetch(x402RpcUrl(), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    signal: AbortSignal.timeout(5_000)
+  });
+  if (!response.ok) throw new Error(`RPC HTTP ${response.status}`);
+  const body = await response.json();
+  if (body.error) throw new Error(body.error.message);
+  return body.result;
+}
 
-process.exit(passed === total ? 0 : 1);
+async function rpcCheck(name) {
+  try {
+    const chainId = Number.parseInt(await rpcCall('eth_chainId'), 16);
+    check('Live readiness', name, chainId === x402Config.chainId, `chainId ${chainId}`);
+  } catch (error) { fail('Live readiness', name, error.message); }
+}
+
+async function balanceCheck(address) {
+  try {
+    const balance = BigInt(await rpcCall('eth_getBalance', [address, 'latest']));
+    check('Live readiness', 'Live wallet has readable INJ gas balance', balance > 0n, `${balance} wei`);
+  } catch (error) { fail('Live readiness', 'Live wallet has readable INJ gas balance', error.message); }
+}

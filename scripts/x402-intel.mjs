@@ -1,109 +1,125 @@
-/**
- * x402 Intel CLI — AgentBL
- *
- * Command-line tool to query x402-protected premium risk intel.
- * Demonstrates the full HTTP 402 → payment → intel flow from the terminal.
- *
- * Usage:
- *   node scripts/x402-intel.mjs                          # default demo case
- *   node scripts/x402-intel.mjs --case copper-sg-shanghai # specific case
- *   node scripts/x402-intel.mjs --service premium-risk     # pick service
- *   BASE_URL=http://localhost:3000 node scripts/x402-intel.mjs
- */
-
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
-import { fetchPaidIntel } from '../src/x402/client.js';
+import path from 'node:path';
+import { createServer } from '../src/app/server.js';
+import { fetchPaidIntel, X402ClientError } from '../src/x402/client.js';
 import { X402_SERVICES } from '../src/x402/config.js';
 
-const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
-
-// Parse CLI args
 const args = process.argv.slice(2);
-const getArg = (flag) => {
-  const idx = args.indexOf(flag);
-  return idx >= 0 ? args[idx + 1] : null;
+const valueOf = (flag) => {
+  const index = args.indexOf(flag);
+  return index >= 0 ? args[index + 1] : null;
 };
+const has = (flag) => args.includes(flag);
 
-const serviceId = getArg('--service') || 'premium-risk';
-const service = X402_SERVICES.find((s) => s.serviceId === serviceId);
+const KIND_ALIASES = Object.freeze({
+  risk: 'premium-risk',
+  'risk-intelligence': 'premium-risk',
+  'premium-risk': 'premium-risk',
+  valuation: 'premium-valuation',
+  'collateral-valuation': 'premium-valuation',
+  'premium-valuation': 'premium-valuation',
+  fraud: 'fraud-review',
+  documents: 'fraud-review',
+  'fraud-review': 'fraud-review'
+});
+
+async function loadCase(selector) {
+  if (!selector) return JSON.parse(await fs.readFile('data/demo-case.json', 'utf8'));
+  const directCandidates = [
+    selector,
+    path.join('data', 'cases', selector),
+    path.join('data', 'cases', selector.endsWith('.json') ? selector : `${selector}.case.json`)
+  ];
+  for (const candidate of directCandidates) {
+    try { return JSON.parse(await fs.readFile(candidate, 'utf8')); } catch { /* try catalog lookup */ }
+  }
+  for (const file of await fs.readdir(path.join('data', 'cases'))) {
+    if (!file.endsWith('.json')) continue;
+    const candidate = JSON.parse(await fs.readFile(path.join('data', 'cases', file), 'utf8'));
+    if (candidate.case_id === selector) return candidate;
+  }
+  throw new Error(`Unknown case or file: ${selector}`);
+}
+
+async function withServer(run) {
+  const configured = process.env.BASE_URL?.replace(/\/$/u, '');
+  if (configured) return run(configured);
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    return await run(`http://127.0.0.1:${server.address().port}`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+function reportHash(report) {
+  return `0x${crypto.createHash('sha256').update(JSON.stringify(report)).digest('hex')}`;
+}
+
+const kind = KIND_ALIASES[valueOf('--kind') ?? valueOf('--service') ?? 'risk'];
+const service = X402_SERVICES.find((entry) => entry.serviceId === kind);
 if (!service) {
-  console.error(`Unknown service: ${serviceId}`);
-  console.error(`Available: ${X402_SERVICES.map((s) => s.serviceId).join(', ')}`);
-  process.exit(1);
-}
-
-const caseFile = getArg('--case');
-const caseData = caseFile
-  ? JSON.parse(await fs.readFile(`data/cases/${caseFile}${caseFile.endsWith('.json') ? '' : '.case.json'}`, 'utf8'))
-  : null;
-
-console.log('═══════════════════════════════════════════════════');
-console.log('  AgentBL x402 Paid Intel CLI');
-console.log('═══════════════════════════════════════════════════');
-console.log(`  Service:  ${service.title}`);
-console.log(`  Price:    ${service.priceUSDC} USDC`);
-console.log(`  Endpoint: ${service.endpoint}`);
-console.log('───────────────────────────────────────────────────');
-
-// Step 1: Try unpaid first
-console.log('\n  [1/3] Requesting without payment (expecting HTTP 402)...');
-const unpaidRes = await fetch(`${baseUrl}${service.endpoint}`, {
-  headers: { Accept: 'application/json' }
-});
-
-if (unpaidRes.status === 402) {
-  console.log(`  ✓ Server returned HTTP 402 Payment Required`);
-  const priceUSDC = unpaidRes.headers.get('X-Price-USDC');
-  const network = unpaidRes.headers.get('X-Network');
-  console.log(`    Price: ${priceUSDC} USDC  |  Network: ${network}`);
+  console.error(`Unknown --kind. Use: risk, valuation, or fraud`);
+  process.exitCode = 1;
 } else {
-  console.log(`  ⚠ Server returned ${unpaidRes.status} (expected 402 — might be in dev mode)`);
-}
-
-// Step 2: Pay and fetch
-console.log('\n  [2/3] Paying with x402 and fetching intel...');
-const result = await fetchPaidIntel(baseUrl, service.endpoint, {
-  budgetUSDC: 0.01
-});
-
-if (result.x402_required && result.paid) {
-  console.log(`  ✓ Payment settled — txHash: ${result.paymentTxHash || 'mock'}`);
-} else if (!result.x402_required) {
-  console.log(`  ℹ Endpoint returned intel without requiring payment (dev/demo mode)`);
-}
-
-// Step 3: Display results
-console.log('\n  [3/3] Intel Results');
-console.log('───────────────────────────────────────────────────');
-
-const data = result.paid || result.unpaid;
-if (data && data.ok !== false) {
-  if (data.events) {
-    console.log(`  Risk Events: ${data.events.length}`);
-    for (const evt of data.events.slice(0, 5)) {
-      console.log(`    • [${evt.severity || '?'}] ${evt.type || 'unknown'}: ${(evt.description || '').slice(0, 60)}`);
+  try {
+    const caseData = await loadCase(valueOf('--case'));
+    const live = has('--live') || process.env.X402_MODE === 'live';
+    const privateKey = process.env.WHITE_AGENT_PRIVATE_KEY ?? process.env.X402_PRIVATE_KEY;
+    if (live && !privateKey) {
+      throw new X402ClientError(
+        'X402_SIGNER_REQUIRED',
+        'Live mode requires WHITE_AGENT_PRIVATE_KEY; the key is used locally and is never printed or sent'
+      );
     }
-    if (data.events.length > 5) console.log(`    ... and ${data.events.length - 5} more`);
-  }
 
-  if (data.deepIntel) {
-    console.log(`\n  Deep Intel: ${data.deepIntel.length} entries`);
-    for (const item of data.deepIntel.slice(0, 3)) {
-      console.log(`    • [${item.type}] ${(item.snippet || '').slice(0, 80)}`);
-    }
-  }
+    console.log('AgentBL x402 paid AI report');
+    console.log(`  case:       ${caseData.case_id}`);
+    console.log(`  kind:       ${service.serviceId}`);
+    console.log(`  price cap:  ${service.priceUSDC} USDC`);
+    console.log(`  mode:       ${live ? 'LIVE' : 'DEMO (ephemeral signer, no real USDC)'}`);
 
-  if (data.before_quote && data.after_quote) {
-    console.log(`\n  Pricing Impact:`);
-    console.log(`    Before: $${data.before_quote.final_issue_price_usd} (risk: ${data.before_quote.risk_level})`);
-    console.log(`    After:  $${data.after_quote.final_issue_price_usd} (risk: ${data.after_quote.risk_level})`);
-    console.log(`    Delta:  ${data.delta?.issue_price_delta_usd || 'N/A'}`);
+    await withServer(async (baseUrl) => {
+      const result = await fetchPaidIntel(baseUrl, service.endpoint, {
+        privateKey,
+        demoMode: !live,
+        budgetUSDC: Number(valueOf('--budget') ?? 0.005),
+        caseData,
+        timeoutMs: Number(valueOf('--timeout') ?? 15_000),
+        onChallenge(challenge) {
+          console.log(`  challenge:  HTTP 402 / nonce ${challenge.body.nonce}`);
+          console.log(`  amount:     ${challenge.amount} USDC on ${challenge.network}`);
+        }
+      });
+      if (!result.paid) throw new Error(result.error?.error ?? 'Paid report was not unlocked');
+      const hash = reportHash(result.paid);
+      const transaction = result.payment?.live
+        ? result.paymentTxHash
+        : `(demo receipt ${result.paymentTxHash ?? 'none'}; not an on-chain settlement tx)`;
+      const oracleTransaction = result.payment?.live ? result.paymentTxHash : '(demo: PaymentOracle not written)';
+      console.log(`  settlement: ${transaction}`);
+      console.log(`  report hash:${hash}`);
+      console.log(`  oracle tx:  ${oracleTransaction}`);
+      console.log(`  result:     ${result.paid.service} unlocked`);
+
+      if (has('--json')) {
+        console.log(JSON.stringify({
+          case_id: caseData.case_id,
+          kind: service.serviceId,
+          amount_usdc: result.priceUSDC,
+          network: result.network,
+          settlement_tx: result.paymentTxHash,
+          oracle_tx: result.payment?.live ? result.paymentTxHash : null,
+          report_hash: hash,
+          report: result.paid
+        }, null, 2));
+      }
+    });
+  } catch (error) {
+    const code = error.code ? ` [${error.code}]` : '';
+    console.error(`x402 purchase failed${code}: ${error.message}`);
+    process.exitCode = 1;
   }
-} else {
-  console.log(`  ⚠ No intel data returned`);
-  console.log(`  Error: ${JSON.stringify(data)}`);
 }
-
-console.log('\n═══════════════════════════════════════════════════');
-console.log('  Done. x402 paid intel flow completed.');
-console.log('═══════════════════════════════════════════════════');

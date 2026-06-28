@@ -96,6 +96,7 @@ function visibleCases() {
 async function boot() {
   applyStaticI18n();
   wireStaticHandlers();
+  await loadDemoRuntimeMode();
   initVoyage();
   initPopupAssistant();
   onLangChange(onLangChanged);
@@ -114,6 +115,88 @@ async function boot() {
   await selectCase(state.cases[0]?.case_id);
   setView('market');
   warmMarketQuotes();
+}
+
+async function loadDemoRuntimeMode() {
+  try {
+    const response = await fetch('/api/demo/mode');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not load runtime mode');
+    state.demoMode = data.demoMode;
+    state.liveAvailable = data.liveAvailable;
+    state.modeGeneration = data.generation;
+  } catch {
+    state.demoMode = true;
+    state.liveAvailable = false;
+  }
+  refreshDemoModeUi();
+}
+
+function refreshDemoModeUi() {
+  const banner = $('#demo-banner');
+  const copy = $('#demo-mode-copy');
+  const toggle = $('#mode-toggle-btn');
+  const reset = $('#demo-reset-btn');
+  const livePill = $('#live-pill');
+  if (banner) banner.classList.toggle('live-mode', !state.demoMode);
+  if (copy) copy.textContent = state.demoMode
+    ? 'DEMO MODE · No wallet required · Simulated receipts are not chain transactions'
+    : 'LIVE MODE · Real wallet, USDC and on-chain transactions';
+  if (toggle) {
+    toggle.textContent = state.demoMode ? 'Switch to Live' : 'Switch to Demo';
+    toggle.title = state.liveAvailable || !state.demoMode
+      ? ''
+      : 'Configure X402_MODE=live, X402_FACILITATOR_URL and X402_PAY_TO first';
+  }
+  if (reset) reset.disabled = !state.demoMode;
+  if (livePill) {
+    livePill.innerHTML = `<span class="dot"></span> ${state.demoMode ? 'DEMO' : 'LIVE'}`;
+    livePill.classList.toggle('demo', state.demoMode);
+  }
+  const smoke = $('#x402-smoke-btn');
+  if (smoke) smoke.disabled = !state.demoMode;
+}
+
+async function onModeToggle() {
+  const target = state.demoMode ? 'live' : 'demo';
+  try {
+    const response = await fetch('/api/demo/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: target })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `Could not switch to ${target}`);
+    state.demoMode = data.demoMode;
+    state.liveAvailable = data.liveAvailable;
+    state.modeGeneration = data.generation;
+    refreshDemoModeUi();
+    toast(`Switched to ${target.toUpperCase()} mode`);
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+async function onDemoReset() {
+  try {
+    const response = await fetch('/api/demo/reset', { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Demo reset failed');
+    state.modeGeneration = data.generation;
+    state.marketComparisons = {};
+    state.marketSubscriptionResult = null;
+    state.mint = null;
+    state.poolId = null;
+    state.voyageInjected = false;
+    state.voyageOffering = null;
+    state.voyageEvents = [];
+    renderX402FlowReset();
+    await selectCase(state.cases[0]?.case_id);
+    setView('market');
+    toast('Demo state reset');
+  } catch (error) {
+    toast(error.message, true);
+  }
 }
 
 // Re-apply text + re-render the active view when the language changes.
@@ -1590,6 +1673,8 @@ function wireStaticHandlers() {
     b.addEventListener('click', () => setView(b.dataset.view)));
   $('#lang-btn').addEventListener('click', () => toggleLang());
   $('#wallet-btn').addEventListener('click', onWalletClick);
+  $('#mode-toggle-btn')?.addEventListener('click', onModeToggle);
+  $('#demo-reset-btn')?.addEventListener('click', onDemoReset);
   $('#mint-btn').addEventListener('click', onMint);
   $('#mint-financing').addEventListener('input', () => {
     const q = selectedQuote();

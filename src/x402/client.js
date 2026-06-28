@@ -1,160 +1,206 @@
+import { x402Network } from './config.js';
+
+export class X402ClientError extends Error {
+  constructor(code, message, options = {}) {
+    super(message);
+    this.name = 'X402ClientError';
+    this.code = code;
+    this.recoverable = options.recoverable ?? true;
+    this.cause = options.cause;
+  }
+}
+
+function demoModeDefault(env = process.env) {
+  return env.DEMO_MODE !== 'false' && env.X402_MODE !== 'live';
+}
+
+async function fetchWithTimeout(fetchImpl, url, init, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...init, signal: init.signal ?? controller.signal });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new X402ClientError('X402_TIMEOUT', `x402 request timed out after ${timeoutMs}ms`, { cause: error });
+    }
+    throw new X402ClientError('X402_NETWORK_ERROR', `x402 request failed: ${error.message}`, { cause: error });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function parseChallenge(response) {
+  let body = {};
+  try {
+    body = await response.clone().json();
+  } catch {
+    // A useful error is emitted below when the challenge is incomplete.
+  }
+  if (!body.challenge || !body.nonce) {
+    throw new X402ClientError(
+      'X402_CHALLENGE_UNSUPPORTED',
+      'The 402 response does not contain a signable AgentBL challenge'
+    );
+  }
+  const amount = Number(body.priceUSDC ?? response.headers.get('X-Price-USDC'));
+  const network = body.network ?? response.headers.get('X-Network') ?? x402Network();
+  const payTo = body.payTo ?? response.headers.get('X-Pay-To') ?? null;
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new X402ClientError('X402_PRICE_INVALID', 'The 402 response contains an invalid price', { recoverable: false });
+  }
+  return { body, amount, network, payTo };
+}
+
+async function resolveSigner(options) {
+  if (options.signer) {
+    const address = options.signerAddress
+      ?? options.signer.address
+      ?? await options.signer.getAddress?.();
+    const signMessage = options.signer.signMessage?.bind(options.signer);
+    if (!address || typeof signMessage !== 'function') {
+      throw new X402ClientError('X402_SIGNER_INVALID', 'Signer must expose an address and signMessage(message)');
+    }
+    return { address, signMessage, ephemeral: false };
+  }
+
+  const { ethers } = await import('ethers');
+  if (options.privateKey) {
+    try {
+      const wallet = new ethers.Wallet(options.privateKey.trim());
+      return { address: wallet.address, signMessage: wallet.signMessage.bind(wallet), ephemeral: false };
+    } catch (error) {
+      throw new X402ClientError('X402_PRIVATE_KEY_INVALID', 'Configured x402 signer key is invalid', {
+        recoverable: false,
+        cause: error
+      });
+    }
+  }
+  if (options.demoMode) {
+    const wallet = ethers.Wallet.createRandom();
+    return { address: wallet.address, signMessage: wallet.signMessage.bind(wallet), ephemeral: true };
+  }
+  throw new X402ClientError(
+    'X402_SIGNER_REQUIRED',
+    'Live x402 purchase requires WHITE_AGENT_PRIVATE_KEY or an injected wallet signer'
+  );
+}
+
+function mergePaidBody(init, challenge, payload) {
+  let original = {};
+  if (typeof init.body === 'string' && init.body.trim()) {
+    try { original = JSON.parse(init.body); } catch { original = {}; }
+  } else if (init.body && typeof init.body === 'object' && !(init.body instanceof Uint8Array)) {
+    original = init.body;
+  }
+  return JSON.stringify({ ...original, ...(payload ?? {}), nonce: challenge.body.nonce });
+}
+
 /**
- * x402 Paid Client — AgentBL
- *
- * Wraps fetch with x402 payment capability. When a request receives
- * HTTP 402, this client:
- * 1. Parses the PAYMENT-REQUIRED headers
- * 2. Signs an EIP-3009 TransferWithAuthorization (using viem)
- * 3. Pays through the x402 facilitator
- * 4. Retries the request with the payment proof
- * 5. Returns the unlocked response
- *
- * In a full implementation, this uses @x402/fetch's wrapFetchWithPayment.
- * This module provides both the real implementation (when @x402 is installed)
- * and a readable fallback for the hackathon demo.
+ * Create a fetch-compatible AgentBL x402 client. The first request receives a
+ * 402 challenge; an injected wallet/CLI signer signs it; the second request is
+ * retried with the signature. Private keys are used locally and never sent.
  */
+export function createPaidFetch(options = {}) {
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+  const timeoutMs = options.timeoutMs ?? 10_000;
+  const budgetUSDC = options.budgetUSDC ?? 0.005;
+  const allowedNetworks = new Set(options.allowedNetworks ?? ['eip155:1439', 'eip155:1776']);
+  if (typeof fetchImpl !== 'function') throw new TypeError('A fetch implementation is required');
 
-import crypto from 'node:crypto';
-import { x402FacilitatorUrl, x402Network, x402Usdc, isX402Configured } from './config.js';
+  return async function paidFetch(url, init = {}) {
+    const unpaid = await fetchWithTimeout(fetchImpl, url, init, timeoutMs);
+    if (unpaid.status !== 402) return unpaid;
+    const challenge = await parseChallenge(unpaid);
+    options.onChallenge?.(challenge, unpaid);
 
-/**
- * Create a payment-aware fetch wrapper.
- *
- * @param {object} opts
- * @param {string} [opts.privateKey] - White Agent wallet private key (hex)
- * @param {number} [opts.budgetUSDC=0.005] - Max spend per request
- * @returns {function} - A fetch-compatible function that auto-pays x402
- */
-export function createPaidFetch(opts = {}) {
-  const { privateKey, budgetUSDC = 0.005 } = opts;
-
-  /**
-   * Fetch with auto-x402 payment.
-   *
-   * Flow:
-   * 1. Attempt a normal fetch
-   * 2. If 402 → extract payment instructions
-   * 3. Sign payment authorization
-   * 4. Re-fetch with Payment header
-   */
-  async function paidFetch(url, init = {}) {
-    // First attempt — may get 402
-    let response = await fetch(url, init);
-
-    // Not a 402 — return as-is (free endpoint, or error)
-    if (response.status !== 402) {
-      return response;
+    if (challenge.amount > budgetUSDC) {
+      throw new X402ClientError(
+        'X402_BUDGET_EXCEEDED',
+        `Payment ${challenge.amount} USDC exceeds budget ${budgetUSDC} USDC`
+      );
+    }
+    if (!allowedNetworks.has(challenge.network)) {
+      throw new X402ClientError('X402_WRONG_NETWORK', `Refusing x402 payment on ${challenge.network}`);
     }
 
-    // 402 received — need to pay
-    const paymentRequired = response.headers.get('PAYMENT-REQUIRED');
-    if (!paymentRequired) {
-      throw new Error('Received 402 but missing PAYMENT-REQUIRED header');
-    }
-
-    const priceUSDC = parseFloat(response.headers.get('X-Price-USDC') || '0');
-    const network = response.headers.get('X-Network') || x402Network();
-    const payTo = response.headers.get('X-Pay-To') || '';
-
-    if (priceUSDC > budgetUSDC) {
-      throw new Error(
-        `x402 payment required ${priceUSDC} USDC but budget is ${budgetUSDC} USDC`
+    const signer = await resolveSigner({
+      ...options,
+      demoMode: options.demoMode ?? demoModeDefault(options.env)
+    });
+    let signature;
+    try {
+      signature = await signer.signMessage(challenge.body.challenge);
+    } catch (error) {
+      const rejected = error?.code === 4001 || error?.code === 'ACTION_REJECTED' || error?.code === 'REJECTED';
+      throw new X402ClientError(
+        rejected ? 'X402_SIGNATURE_CANCELLED' : 'X402_SIGNATURE_FAILED',
+        rejected ? 'The x402 signature request was cancelled' : `Could not sign x402 challenge: ${error.message}`,
+        { cause: error }
       );
     }
 
-    // Generate payment proof
-    // In the full @x402/evm implementation, this would:
-    //   1. Sign an EIP-3009 TransferWithAuthorization
-    //   2. Submit to the facilitator for settlement
-    //   3. Receive a discharge macaroon
-    // For the offline demo, we generate a deterministic payment hash
-    const paymentProof = privateKey
-      ? signPaymentProof(privateKey, { network, payTo, amountUSDC: priceUSDC, url })
-      : generateDemoPaymentProof({ network, payTo, amountUSDC: priceUSDC, url });
-
-    // Retry with payment proof
-    const paidHeaders = {
-      ...(init.headers || {}),
-      'X402-Payment': paymentProof,
-      'X-Network': network,
-      'X-Price-USDC': String(priceUSDC),
-      'X-Pay-To': payTo
+    const headers = new Headers(init.headers ?? {});
+    headers.set('Accept', 'application/json');
+    headers.set('Content-Type', 'application/json');
+    headers.set('X402-Signature', signature);
+    headers.set('X402-Signer', signer.address);
+    const paidInit = {
+      ...init,
+      method: options.retryMethod ?? 'POST',
+      headers,
+      body: mergePaidBody(init, challenge, options.payload)
     };
-
-    const paidResponse = await fetch(url, { ...init, headers: paidHeaders });
-    return paidResponse;
-  }
-
-  return paidFetch;
+    const paid = await fetchWithTimeout(fetchImpl, url, paidInit, timeoutMs);
+    options.onPayment?.({ challenge, signer: signer.address, ephemeral: signer.ephemeral, response: paid });
+    return paid;
+  };
 }
 
-/**
- * Sign a payment proof with the White Agent's private key.
- * Uses viem when available; falls back to a crypto-based mock signature.
- */
-function signPaymentProof(privateKey, { network, payTo, amountUSDC, url }) {
-  // Try to use viem for real EIP-712 signing
+function parsePaymentResponse(header) {
+  if (!header) return null;
   try {
-    // Dynamic import — viem may not be installed
-    // In a full setup: signTypedData with EIP-3009 domain
-    const message = JSON.stringify({ network, payTo, amountUSDC, url, timestamp: Math.floor(Date.now() / 1000) });
-    const hash = crypto.createHash('sha256').update(`${privateKey}:${message}`).digest('hex');
-    return `0x${hash}`;
+    return JSON.parse(header);
   } catch {
-    return generateDemoPaymentProof({ network, payTo, amountUSDC, url });
-  }
-}
-
-/**
- * Generate a demo payment proof (deterministic, for offline demo).
- */
-function generateDemoPaymentProof({ network, payTo, amountUSDC, url }) {
-  const nonce = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  const message = JSON.stringify({ network, payTo, amountUSDC, url, nonce });
-  const hash = crypto.createHash('sha256').update(message).digest('hex');
-  return `0x${hash}`;
-}
-
-/**
- * Convenience: fetch a paid x402 endpoint and return parsed JSON.
- *
- * @param {string} baseUrl - Server base URL (e.g. http://localhost:3000)
- * @param {string} endpoint - x402 endpoint path
- * @param {object} [opts]
- * @returns {Promise<{unpaid: object, paid: object|null, paymentTxHash: string|null}>}
- */
-export async function fetchPaidIntel(baseUrl, endpoint, opts = {}) {
-  const paidFetch = createPaidFetch(opts);
-  const url = `${baseUrl.replace(/\/$/, '')}${endpoint}`;
-
-  // Step 1: Attempt without payment (expect 402)
-  const unpaidRes = await fetch(url);
-  const unpaid = await unpaidRes.json().catch(() => ({}));
-
-  if (unpaidRes.status !== 402) {
-    // Endpoint doesn't require payment (or is misconfigured)
-    return { unpaid, paid: unpaid, paymentTxHash: null, x402_required: false };
-  }
-
-  // Step 2: Pay and retry
-  const paidRes = await paidFetch(url);
-  const paid = await paidRes.json().catch(() => ({}));
-  const paymentResponseHeader = paidRes.headers.get('PAYMENT-RESPONSE');
-  let paymentTxHash = null;
-
-  if (paymentResponseHeader) {
     try {
-      const parsed = JSON.parse(paymentResponseHeader);
-      paymentTxHash = parsed.txHash || null;
-    } catch { /* ignore parse errors */ }
+      return JSON.parse(Buffer.from(header, 'base64').toString('utf8'));
+    } catch {
+      return null;
+    }
   }
+}
 
+export async function fetchPaidIntel(baseUrl, endpoint, options = {}) {
+  let capturedChallenge = null;
+  let paymentMeta = null;
+  const paidFetch = createPaidFetch({
+    ...options,
+    payload: options.caseData ? { case: options.caseData } : options.payload,
+    onChallenge: (challenge, response) => {
+      capturedChallenge = { challenge, response };
+      options.onChallenge?.(challenge, response);
+    },
+    onPayment: (meta) => {
+      paymentMeta = meta;
+      options.onPayment?.(meta);
+    }
+  });
+  const url = `${baseUrl.replace(/\/$/u, '')}${endpoint}`;
+  const response = await paidFetch(url, { headers: { Accept: 'application/json' } });
+  const body = await response.json().catch(() => ({}));
+  if (!capturedChallenge) {
+    return { unpaid: body, paid: body, paymentTxHash: null, payment: null, x402_required: false };
+  }
+  const receipt = parsePaymentResponse(response.headers.get('PAYMENT-RESPONSE'));
   return {
-    unpaid,
-    paid: paidRes.ok ? paid : null,
-    paymentTxHash,
+    unpaid: capturedChallenge.challenge.body,
+    paid: response.ok ? body : null,
+    error: response.ok ? null : body,
+    paymentTxHash: receipt?.txHash ?? receipt?.transaction ?? body?.payment?.txHash ?? null,
+    payment: body?.payment ?? receipt,
     x402_required: true,
-    priceUSDC: parseFloat(unpaidRes.headers.get('X-Price-USDC') || '0'),
-    network: unpaidRes.headers.get('X-Network') || x402Network()
+    priceUSDC: capturedChallenge.challenge.amount,
+    network: capturedChallenge.challenge.network,
+    signer: paymentMeta?.signer ?? null,
+    demoSigner: paymentMeta?.ephemeral === true
   };
 }

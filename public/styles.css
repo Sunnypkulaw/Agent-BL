@@ -1137,6 +1137,33 @@ strong { color: var(--text); }
   letter-spacing: 0.5px;
 }
 .demo-banner.hidden { display: none; }
+.demo-banner.live-mode { background: linear-gradient(90deg, #176f3a, #2EA043); }
+.demo-banner-inner {
+  width: min(1500px, calc(100% - 32px));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.demo-banner-actions { display: flex; gap: 8px; }
+.demo-action {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 999px;
+  background: rgba(0,0,0,.14);
+  color: #fff;
+  padding: 3px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+.demo-action:hover { background: rgba(255,255,255,.16); }
+.demo-action:disabled { opacity: .5; cursor: not-allowed; }
+
+@media (max-width: 700px) {
+  .demo-banner-inner { align-items: stretch; flex-direction: column; gap: 5px; }
+  .demo-banner-actions { justify-content: center; }
+}
 
 /* Ship in ocean atmosphere (voyage view) */
 .voyage-ocean-bg {

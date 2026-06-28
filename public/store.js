@@ -5,6 +5,11 @@
 // state around or risking circular imports.
 
 export const state = {
+  // DEMO-1: one explicit runtime mode shared by the banner and payment UI.
+  demoMode: true,
+  liveAvailable: false,
+  modeGeneration: 1,
+
   // catalog + selection
   cases: [],
   caseId: null,

@@ -525,9 +525,16 @@ export function buildPaymentEvidence({ requestId, payer, serviceId, amountUSDC, 
 
 export async function recordPaymentEvidence({ serviceId, amountUSDC, responseData, payer }) {
   const evidence = buildPaymentEvidence({ serviceId, amountUSDC, responseData, payer });
-  try {
-    const oracle = await getPaymentOracleContract();
-    if (oracle) {
+  const demoMode = process.env.DEMO_MODE !== 'false';
+  if (!demoMode) {
+    try {
+      const oracle = await getPaymentOracleContract();
+      if (!oracle) {
+        throw new PaymentSettlementError(
+          'payment_oracle_unavailable',
+          'Live mode requires DEPLOYER_PRIVATE_KEY and a deployed PaymentOracle'
+        );
+      }
       const resolvedPayer = payer || await compatibilityWallet.getAddress();
       const transaction = await oracle.logPaymentEvidence(
         resolvedPayer,
@@ -561,9 +568,11 @@ export async function recordPaymentEvidence({ serviceId, amountUSDC, responseDat
           onchain: true
         }
       };
+    } catch (error) {
+      throw error instanceof PaymentSettlementError
+        ? error
+        : new PaymentSettlementError('payment_oracle_write_failed', `PaymentOracle write failed: ${error.message}`, { cause: error });
     }
-  } catch (error) {
-    console.warn(`[PaymentOracle] audit transaction unavailable; using demo receipt: ${error.message}`);
   }
 
   const generated = generatePaymentReceipt({ serviceId, amountUSDC, paymentRef: evidence.paymentRef });

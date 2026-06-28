@@ -43,6 +43,7 @@ The x402 integration gives AgentBL:
             │  GET /api/x402/config           — service catalog│
             │  *   /api/x402/intel/premium-risk   — HTTP 402   │
             │  *   /api/x402/valuation/premium    — HTTP 402   │
+            │  *   /api/x402/documents/fraud-review — HTTP 402 │
             │  POST /api/x402/smoke            — E2E test      │
             └──▲──────────────────────────────────▲───────────┘
                │                                  │
@@ -73,6 +74,7 @@ The x402 integration gives AgentBL:
 |---|---|---|---|
 | `premium-risk` | `/api/x402/intel/premium-risk` | 0.001 USDC | Live xAPI world-risk signals + RAG deep analysis with full source citations |
 | `premium-valuation` | `/api/x402/valuation/premium` | 0.002 USDC | Real-time commodity prices + historical comparables + volatility forecast |
+| `fraud-review` | `/api/x402/documents/fraud-review` | 0.0015 USDC | Five-dimension eBL / invoice / insurance consistency review, scenario action and pricing impact |
 
 ## API Reference
 
@@ -144,9 +146,15 @@ npm run smoke:x402
 
 ```bash
 npm run x402:intel
-npm run x402:intel -- --service premium-valuation
-npm run x402:intel -- --case copper-sg-shanghai
+npm run x402:intel -- --kind valuation
+npm run x402:intel -- --kind fraud --case CASE-EBL-2026-0001
+npm run x402:intel -- --kind risk --live  # requires WHITE_AGENT_PRIVATE_KEY
 ```
+
+Demo Mode is the default and uses an ephemeral local signer. It prints a demo
+receipt identifier, never labels it as an on-chain settlement. Live Mode fails
+closed when signer, facilitator, payee, RPC, or PaymentOracle configuration is
+missing; private keys never leave the local CLI process.
 
 ## On-Chain: PaymentOracle.sol
 

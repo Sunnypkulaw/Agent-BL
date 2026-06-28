@@ -310,6 +310,15 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
   const payTo = x402PayTo();
 
   return async function x402Route(request, response) {
+    if (process.env.DEMO_MODE === 'false') {
+      response.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({
+        ok: false,
+        code: 'x402_v2_live_transport_required',
+        error: 'The personal-sign compatibility route is disabled in Live mode; use the verified x402 V2 middleware'
+      }));
+      return;
+    }
     const signature = request.headers['x402-signature'];
     const claimedSigner = request.headers['x402-signer'];
     if (!signature || !claimedSigner) {
@@ -331,7 +340,10 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
         const chunks = [];
         for await (const chunk of request) chunks.push(chunk);
         const body = Buffer.concat(chunks).toString('utf8').trim();
-        if (body) nonce = JSON.parse(body).nonce || nonce;
+        if (body) {
+          request.x402Body = JSON.parse(body);
+          nonce = request.x402Body.nonce || nonce;
+        }
       } catch {
         // A body is optional for compatibility clients.
       }
@@ -394,63 +406,8 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
   };
 }
 
-export async function buildPremiumRiskIntel(caseData) {
-  const { assessWorldRisk } = await import('../agent/worldRiskAgent.js');
-  const { repriceWithWorldRisk } = await import('../core/worldRiskPricing.js');
-  const { retrieveRiskIntel } = await import('../agent/riskIntel.js');
-  const assessment = await assessWorldRisk(caseData, {});
-  const repriced = repriceWithWorldRisk(caseData, assessment.events);
-  const deepIntel = retrieveRiskIntel(caseData, { k: 8, includePolicies: true });
-  return {
-    ok: true,
-    service: 'premium-risk',
-    live: assessment.live,
-    provider: assessment.provider,
-    queried: assessment.queried,
-    profile: assessment.profile,
-    events: assessment.events,
-    signals: assessment.signals,
-    deepIntel: deepIntel.map((entry) => ({
-      id: entry.id,
-      type: entry.type,
-      region: entry.region,
-      severity: entry.severity,
-      source: entry.source,
-      snippet: entry.snippet,
-      score: entry.score
-    })),
-    summary: assessment.summary,
-    evidence_hash: assessment.evidence_hash,
-    before_quote: repriced.before,
-    after_quote: repriced.after,
-    delta: repriced.delta
-  };
-}
-
-export async function buildPremiumValuation(caseData) {
-  const { runDeterministic, runWithLlm } = await import('../agent/valuationAgent.js');
-  const { retrieveRiskIntel } = await import('../agent/riskIntel.js');
-  let valuation;
-  try {
-    valuation = await runWithLlm(caseData, {});
-  } catch {
-    valuation = runDeterministic(caseData);
-  }
-  const marketIntel = retrieveRiskIntel(caseData, { k: 3 });
-  return {
-    ok: true,
-    service: 'premium-valuation',
-    cargo_value: valuation.cargo_value_usd,
-    unit_price: valuation.unit_price_usd_per_mt,
-    valuation_method: valuation.method || 'premium',
-    data_sources: valuation.data_sources || ['offline:premium'],
-    historical_comparables: marketIntel.filter((entry) => entry.type === 'commodity_volatility'),
-    volatility_forecast: {
-      direction: 'neutral',
-      confidence: 0.65,
-      notes: 'Risk premium haircut applied; volatility is expected to persist'
-    },
-    price_haircut: valuation.haircut_pct || 0,
-    tool_trace: valuation.tool_trace || []
-  };
-}
+export {
+  buildPremiumFraudReview,
+  buildPremiumRiskIntel,
+  buildPremiumValuation
+} from './endpoints.js';

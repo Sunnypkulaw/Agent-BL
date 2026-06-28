@@ -307,6 +307,14 @@ export const X402_SERVICES = Object.freeze([
     title: 'Premium Cargo Valuation',
     description: 'Real-time commodity prices + historical comparables + volatility forecast',
     status: 'available'
+  }),
+  Object.freeze({
+    serviceId: 'fraud-review',
+    endpoint: '/api/x402/documents/fraud-review',
+    priceUSDC: 0.0015,
+    title: 'Anti-Fraud Document Review',
+    description: 'Five-dimension eBL, invoice and insurance consistency review with pricing impact',
+    status: 'available'
   })
 ]);
 
