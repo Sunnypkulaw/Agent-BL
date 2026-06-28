@@ -69,6 +69,38 @@ contract PaymentOracle {
     }
 
     /**
+     * @notice Internal: record a single payment and emit the event.
+     */
+    function _logPayment(
+        uint256 requestId,
+        address payer,
+        string calldata serviceId,
+        uint256 amountMicrousd,
+        string calldata paymentRef,
+        bytes32 responseHash,
+        bytes32 quoteHash,
+        bytes32 evidenceHash,
+        string calldata pricingAction
+    ) private {
+        payments[requestId] = PaymentRecord({
+            payer: payer,
+            serviceId: serviceId,
+            amountMicrousd: amountMicrousd,
+            paymentRef: paymentRef,
+            responseHash: responseHash,
+            quoteHash: quoteHash,
+            evidenceHash: evidenceHash,
+            pricingAction: pricingAction,
+            timestamp: block.timestamp
+        });
+
+        emit PaymentEvidenceLogged(
+            requestId, payer, serviceId, amountMicrousd,
+            paymentRef, responseHash, quoteHash, evidenceHash, pricingAction
+        );
+    }
+
+    /**
      * @notice Log a single x402 payment evidence entry.
      * @dev Callable by the backend after facilitator settlement succeeds.
      */
@@ -84,37 +116,12 @@ contract PaymentOracle {
     ) external returns (uint256 requestId) {
         requestCount += 1;
         requestId = requestCount;
-
-        payments[requestId] = PaymentRecord({
-            payer: payer,
-            serviceId: serviceId,
-            amountMicrousd: amountMicrousd,
-            paymentRef: paymentRef,
-            responseHash: responseHash,
-            quoteHash: quoteHash,
-            evidenceHash: evidenceHash,
-            pricingAction: pricingAction,
-            timestamp: block.timestamp
-        });
-
+        _logPayment(requestId, payer, serviceId, amountMicrousd, paymentRef, responseHash, quoteHash, evidenceHash, pricingAction);
         serviceSpend[serviceId] += amountMicrousd;
-
-        emit PaymentEvidenceLogged(
-            requestId,
-            payer,
-            serviceId,
-            amountMicrousd,
-            paymentRef,
-            responseHash,
-            quoteHash,
-            evidenceHash,
-            pricingAction
-        );
     }
 
     /**
      * @notice Batch-log multiple x402 payment evidence entries in one tx.
-     * @dev Gas-efficient when the AI purchases multiple intel services for one pricing decision.
      */
     function logBatchPaymentEvidence(
         address payer,
@@ -126,13 +133,10 @@ contract PaymentOracle {
         bytes32 evidenceHash,
         string calldata pricingAction
     ) external returns (uint256 fromRequestId) {
-        require(
-            serviceIds.length == amountsMicrousd.length &&
-            amountsMicrousd.length == paymentRefs.length &&
-            paymentRefs.length == responseHashes.length,
-            "PaymentOracle: array length mismatch"
-        );
-        require(serviceIds.length > 0, "PaymentOracle: empty batch");
+        require(serviceIds.length == amountsMicrousd.length, "len mismatch");
+        require(amountsMicrousd.length == paymentRefs.length, "len mismatch");
+        require(paymentRefs.length == responseHashes.length, "len mismatch");
+        require(serviceIds.length > 0, "empty batch");
 
         fromRequestId = requestCount + 1;
         uint256 totalMicrousd = 0;
@@ -140,32 +144,8 @@ contract PaymentOracle {
         for (uint256 i = 0; i < serviceIds.length; i++) {
             requestCount += 1;
             totalMicrousd += amountsMicrousd[i];
-
-            payments[requestCount] = PaymentRecord({
-                payer: payer,
-                serviceId: serviceIds[i],
-                amountMicrousd: amountsMicrousd[i],
-                paymentRef: paymentRefs[i],
-                responseHash: responseHashes[i],
-                quoteHash: quoteHash,
-                evidenceHash: evidenceHash,
-                pricingAction: pricingAction,
-                timestamp: block.timestamp
-            });
-
+            _logPayment(requestCount, payer, serviceIds[i], amountsMicrousd[i], paymentRefs[i], responseHashes[i], quoteHash, evidenceHash, pricingAction);
             serviceSpend[serviceIds[i]] += amountsMicrousd[i];
-
-            emit PaymentEvidenceLogged(
-                requestCount,
-                payer,
-                serviceIds[i],
-                amountsMicrousd[i],
-                paymentRefs[i],
-                responseHashes[i],
-                quoteHash,
-                evidenceHash,
-                pricingAction
-            );
         }
 
         emit BatchPaymentEvidenceLogged(fromRequestId, serviceIds.length, totalMicrousd);

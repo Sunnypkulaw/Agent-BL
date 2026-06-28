@@ -1430,28 +1430,7 @@ function wireX402Handlers() {
 // ===========================================================================
 // Wiring
 // ===========================================================================
-
-let demoMode = true; // Default ON — zero-config demo like wohainengren
-
 function wireStaticHandlers() {
-  // Demo mode toggle
-  const demoBanner = $('#demo-banner');
-  const demoToggle = $('#demo-toggle');
-  if (demoToggle) {
-    demoToggle.addEventListener('click', () => {
-      demoMode = !demoMode;
-      if (demoBanner) {
-        demoBanner.innerHTML = demoMode
-          ? '🔥 DEMO MODE — 无需钱包，零配置体验完整 AI 定价闭环 · <button id="demo-toggle" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:4px;padding:2px 10px;cursor:pointer;font-size:12px;margin-left:8px;">切换</button>'
-          : '⛓ LIVE MODE — 需要钱包连接 · <button id="demo-toggle" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:4px;padding:2px 10px;cursor:pointer;font-size:12px;margin-left:8px;">切换</button>';
-        document.getElementById('demo-toggle').addEventListener('click', arguments.callee);
-      }
-      if (state.view === 'market') renderMarket();
-      else if (state.view === 'mint') renderViewMint();
-      else if (state.view === 'voyage') renderVoyage();
-    });
-  }
-
   document.querySelectorAll('#nav .nav-tab').forEach((b) =>
     b.addEventListener('click', () => setView(b.dataset.view)));
   $('#lang-btn').addEventListener('click', () => toggleLang());

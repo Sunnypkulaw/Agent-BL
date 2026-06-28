@@ -6,7 +6,9 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy:injective": "hardhat run scripts/deploy-agentbl.js --network injective_testnet"
+    "deploy:injective": "hardhat run scripts/deploy-agentbl.js --network injective_testnet",
+    "deploy:payment-oracle": "hardhat run scripts/deploy-payment-oracle.js --network injective_testnet",
+    "deploy:all": "npm run deploy:injective && npm run deploy:payment-oracle"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
