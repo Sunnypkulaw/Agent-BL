@@ -1,6 +1,6 @@
 # AI 估值 Tool Calling（铜货市场估值 + 历史同类成交价）
 
-本文档说明 TradeShield 的 **AI 估值工具调用**：让一个 LLM 通过 tool calling，拉取一批货物的**实时市场估值**和**历史同类成交价**，再用本地确定性工具算出 RWA 折价发行的抵押地基（`ai_verified_collateral_value`）。
+本文档说明 AgentBL 的 **AI 估值工具调用**：让一个 LLM 通过 tool calling，拉取一批货物的**实时市场估值**和**历史同类成交价**，再用本地确定性工具算出 RWA 折价发行的抵押地基（`ai_verified_collateral_value`）。
 
 默认对**铜阴极板**那组数据（`data/cases/copper-sg-shanghai.case.json`）跑。
 
@@ -98,7 +98,7 @@ UN Comtrade 是"历史同类成交价"的最佳免费来源：查 **HS 740311（
 ## 5. tool calling 流程（OpenAI 兼容）
 
 ```
-system: 你是 TradeShield 估值分析师，用工具给货物估值...
+system: 你是 AgentBL 估值分析师，用工具给货物估值...
 user:   case CASE-EBL-2026-CU-SG-SHA：铜 500MT，HS740311，发票$6.875M，保险$7.5625M，宏观：war_risk/commodity_volatility
   → assistant.tool_calls: get_live_commodity_price(copper)
   ← tool: {price_usd_per_mt:13680, source:...}

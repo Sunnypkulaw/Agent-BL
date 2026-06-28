@@ -1,6 +1,6 @@
 # 船舶订舱确认书 (Booking Note)
 
-> 拟真样例数据，用于 TradeShield demo。
+> 拟真样例数据，用于 AgentBL demo。
 
 | | |
 |---|---|

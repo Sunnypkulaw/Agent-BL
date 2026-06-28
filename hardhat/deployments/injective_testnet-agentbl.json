@@ -2,7 +2,7 @@
   "network": "injective_testnet",
   "chainId": 1439,
   "deployer": "0x7598b2f89798DF9c7aA399bC71b899b0D35F8430",
-  "contract": "TradeShieldRWA",
+  "contract": "AgentBLRWA",
   "address": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",
   "deployTx": "0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128",
   "explorer": "https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",

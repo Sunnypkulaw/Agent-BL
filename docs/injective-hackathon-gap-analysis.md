@@ -1,4 +1,4 @@
-# TradeShield-AI → Injective 新星计划 开发方向分析
+# AgentBL-AI → Injective 新星计划 开发方向分析
 
 > **目标赛事**：Injective × Microsoft × Web3Labs 联合发起的 Injective 新星计划（AI × 真实应用场景方向）
 >
@@ -12,7 +12,7 @@
 
 ## 一、项目当前状态总览
 
-TradeShield-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能力如下：
+AgentBL-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能力如下：
 
 | 维度 | 现状 |
 |------|------|
@@ -55,7 +55,7 @@ TradeShield-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能
 
 | 合约 | 文件 | 说明 |
 |------|------|------|
-| `TradeShieldRWA` | [hardhat/contracts/TradeShieldRWA.sol](../hardhat/contracts/TradeShieldRWA.sol) | 主合约，许可型 demo |
+| `AgentBLRWA` | [hardhat/contracts/AgentBLRWA.sol](../hardhat/contracts/AgentBLRWA.sol) | 主合约，许可型 demo |
 | `RiskPricingOracle` | [hardhat/contracts/RiskPricingOracle.sol](../hardhat/contracts/RiskPricingOracle.sol) | AI 定价上链 |
 | `RWAOfferingPool` | [hardhat/contracts/RWAOfferingPool.sol](../hardhat/contracts/RWAOfferingPool.sol) | 发行池生命周期 |
 | `EBLRegistry` | [hardhat/contracts/EBLRegistry.sol](../hardhat/contracts/EBLRegistry.sol) | 升级版 eBL 注册表 |
@@ -92,7 +92,7 @@ TradeShield-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能
       "chainId": "injective-888",
       "rpcUrl": "https://testnet.sentry.tm.injective.network:443",
       "contracts": {
-        "TradeShieldRWA": { "address": "0x...", "abi": [...] },
+        "AgentBLRWA": { "address": "0x...", "abi": [...] },
         "RiskPricingOracle": { "address": "0x...", "abi": [...] }
       }
     },
@@ -100,7 +100,7 @@ TradeShield-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能
       "chainId": "11155111",
       "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com",
       "contracts": {
-        "TradeShieldRWA": { "address": "0xfCA6F1C4...", "abi": [...] }
+        "AgentBLRWA": { "address": "0xfCA6F1C4...", "abi": [...] }
       }
     }
   },
@@ -545,7 +545,7 @@ contract EBLRegistryV2 {
 
 ### 4.1 与其他项目的本质区别
 
-| 对比维度 | 典型参赛项目 | TradeShield-AI |
+| 对比维度 | 典型参赛项目 | AgentBL-AI |
 |----------|-------------|----------------|
 | AI 角色 | 聊天/客服/推荐 | **金融承保+定价**（承担真实金融职能） |
 | RWA | 代币化房地产/艺术品 | **eBL 提单**（全球贸易核心单据） |
@@ -579,7 +579,7 @@ contract EBLRegistryV2 {
                      └──────────────┬───────────────────┘
                                     │
     ┌───────────────────────────────┼───────────────────────────────┐
-    │                    TradeShield-AI                            │
+    │                    AgentBL-AI                            │
     │                                                              │
     │  ┌─────────────┐  ┌─────────────────┐  ┌──────────────────┐  │
     │  │ AI 文档解析  │  │  自主 Agent      │  │  AI 合规检查     │  │
@@ -625,7 +625,7 @@ contract EBLRegistryV2 {
 
 ## 七、总结
 
-当前 TradeShield-AI 底子扎实（154 测试、完整定价引擎、前后端全链路），向 Injective + ENI + 丽讯科技方向转型的核心工作在于：
+当前 AgentBL-AI 底子扎实（154 测试、完整定价引擎、前后端全链路），向 Injective + ENI + 丽讯科技方向转型的核心工作在于：
 
 1. **链迁移**：Ethereum → Injective inEVM
 2. **AI 升级**：按需调用 → 自主决策 Agent

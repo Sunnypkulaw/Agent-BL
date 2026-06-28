@@ -7,7 +7,7 @@
 |---|---|
 | **仓单类型** | 电子仓单 (Electronic Warehouse Receipt / EWR) |
 | **仓单编号** | EWR-2025-FS-AL0-CG-00017 |
-| **签发平台** | TradeShield ENI（数字仓单） |
+| **签发平台** | AgentBL ENI（数字仓单） |
 | **Token / Title Ref** | ENI-EWR-AL0-00017-XXXX |
 | **入库单号** | WH-FS-00017 |
 | **签发日期** | 2025-01-22 |

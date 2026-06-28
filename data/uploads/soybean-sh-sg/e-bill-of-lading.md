@@ -1,6 +1,6 @@
 # 电子提单 (Electronic Bill of Lading — eBL)
 
-> 拟真样例数据，用于 TradeShield demo。以下所有公司、人名、船名、单号均为**虚构**。
+> 拟真样例数据，用于 AgentBL demo。以下所有公司、人名、船名、单号均为**虚构**。
 > Issued as a sole electronic original on the TradeGo platform (MLETR-compliant).
 
 | | |

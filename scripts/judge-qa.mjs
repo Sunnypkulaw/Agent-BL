@@ -1,4 +1,4 @@
-// CLI: TradeShield Judge Q&A assistant (AI-12).
+// CLI: AgentBL Judge Q&A assistant (AI-12).
 //
 //   npm run qa                          # full judge rehearsal (deterministic, offline)
 //   npm run qa -- "your question"       # answer a single free-text question
@@ -33,7 +33,7 @@ function render(a) {
   if (a.citations.length) console.log(`   citations: ${a.citations.map((c) => c.id).join(', ')}`);
 }
 
-console.log('\nTradeShield Judge Q&A assistant (AI-12)');
+console.log('\nAgentBL Judge Q&A assistant (AI-12)');
 console.log('='.repeat(64));
 console.log(providerNote);
 

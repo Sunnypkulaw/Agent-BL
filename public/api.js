@@ -1,4 +1,4 @@
-// Thin API client for the TradeShield harness backend. Every pricing call goes
+// Thin API client for the AgentBL harness backend. Every pricing call goes
 // through the SAME endpoints the contract mock and CLI demo use, so the frontend
 // shows real engine output — never hard-coded numbers.
 

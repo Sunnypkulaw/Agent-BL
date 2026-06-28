@@ -1,4 +1,4 @@
-# TradeShield Agent 验收标准
+# AgentBL Agent 验收标准
 
 本文定义项目准备阶段和 MVP 开发阶段的验收标准。所有新增功能必须能被至少一个 harness 命令验证。
 

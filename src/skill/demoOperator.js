@@ -1,4 +1,4 @@
-// SKILL-2: TradeShield Demo Operator
+// SKILL-2: AgentBL Demo Operator
 //
 // Full demo pipeline: runs the complete MCP tool chain and produces
 // a demo-ready summary suitable for CLI output or API response.
@@ -36,7 +36,7 @@ export async function runDemoOperator({ case_id } = {}) {
   } catch (err) {
     errors.push(err.message);
     steps.push({ step: 1, tool: 'get_trade_case', status: 'error', error: err.message });
-    return { skill: 'tradeshield-demo-operator', status: 'failed', errors, steps };
+    return { skill: 'agentbl-demo-operator', status: 'failed', errors, steps };
   }
 
   const bl = outputs.get_trade_case.bill_of_lading;
@@ -75,7 +75,7 @@ export async function runDemoOperator({ case_id } = {}) {
   } catch (err) {
     errors.push(err.message);
     steps.push({ step: 3, tool: 'generate_pricing_quote', status: 'error', error: err.message });
-    return { skill: 'tradeshield-demo-operator', status: 'failed', errors, steps };
+    return { skill: 'agentbl-demo-operator', status: 'failed', errors, steps };
   }
 
   // Step 4: simulate_offering
@@ -121,7 +121,7 @@ export async function runDemoOperator({ case_id } = {}) {
   const oracle = outputs.push_pricing_to_oracle;
 
   return {
-    skill: 'tradeshield-demo-operator',
+    skill: 'agentbl-demo-operator',
     status: errors.length > 0 ? 'partial' : 'ok',
     demo: {
       case_id: case_id,

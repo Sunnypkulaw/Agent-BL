@@ -20,7 +20,7 @@ const usd = (n) => 'USD ' + Math.round(n).toLocaleString('en-US');
 const pad = (s, n) => String(s).padEnd(n);
 const padL = (s, n) => String(s).padStart(n);
 
-console.log('\nTradeShield AI dynamic pricing — eBL-backed RWA offering');
+console.log('\nAgentBL AI dynamic pricing — eBL-backed RWA offering');
 console.log('='.repeat(64));
 console.log(`Case        : ${caseData.case_id}  (${caseFile})`);
 

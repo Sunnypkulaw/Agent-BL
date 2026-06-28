@@ -1,4 +1,4 @@
-// TradeShield dashboard — router + marketplace + View ① (Tokenize / Mint).
+// AgentBL dashboard — router + marketplace + View ① (Tokenize / Mint).
 //
 // Three views share one selected trade case + one live PricingQuote (store.js):
 //   View ⓪ "Investment Marketplace" — a Taobao-like, investor-facing shelf of

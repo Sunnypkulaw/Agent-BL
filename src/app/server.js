@@ -205,7 +205,7 @@ export async function handleRequest(request, response) {
 
   try {
     if (request.method === 'GET' && url.pathname === '/api/health') {
-      sendJson(response, 200, { ok: true, service: 'tradeshield-agent-harness' });
+      sendJson(response, 200, { ok: true, service: 'agentbl-agent-harness' });
       return;
     }
 
@@ -310,7 +310,7 @@ export async function handleRequest(request, response) {
       // MCP-1: Return tools manifest
       if (request.method === 'GET' && url.pathname === '/api/mcp/tools') {
         const { MCP_TOOLS_MANIFEST } = await import('../mcp/mcpServer.js');
-        sendJson(response, 200, { ok: true, protocol: 'tradeshield-mcp-v1', tools: MCP_TOOLS_MANIFEST });
+        sendJson(response, 200, { ok: true, protocol: 'agentbl-mcp-v1', tools: MCP_TOOLS_MANIFEST });
         return;
       }
 
@@ -431,6 +431,6 @@ const isEntryPoint = process.argv[1]
 if (isEntryPoint) {
   const port = Number(process.env.PORT ?? 3000);
   createServer().listen(port, () => {
-    console.log(`TradeShield Agent harness running at http://localhost:${port}`);
+    console.log(`AgentBL Agent harness running at http://localhost:${port}`);
   });
 }

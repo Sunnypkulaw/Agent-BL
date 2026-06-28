@@ -1,4 +1,4 @@
-# TradeShield Agent 背景入门手册
+# AgentBL Agent 背景入门手册
 
 > 给非国际贸易、非供应链金融背景同学的黑客松补课材料。
 > 目标是让团队在 30-60 分钟内理解：为什么电子提单可以成为 RWA 贸易融资的核心资产，为什么 **AI Pricing & Risk Agent** 不是装饰，而是这个项目真正给 RWA 折价定价、控制发行额度的核心引擎。
@@ -16,7 +16,7 @@
 4. [提单是什么，为什么它是本项目核心](#4-提单是什么为什么它是本项目核心)
 5. [电子提单 eBL 不是 PDF，而是可控制、可转让的电子权利凭证](#5-电子提单-ebl-不是-pdf而是可控制可转让的电子权利凭证)
 6. [传统贸易融资流程和它的问题](#6-传统贸易融资流程和它的问题)
-7. [Web3 / RWA 视角下 TradeShield 在做什么](#7-web3--rwa-视角下-tradeshield-在做什么)
+7. [Web3 / RWA 视角下 AgentBL 在做什么](#7-web3--rwa-视角下-agentbl-在做什么)
 8. [Token 到底代表什么，收益从哪里来](#8-token-到底代表什么收益从哪里来)
 9. [风险从哪里来：这不是普通 DeFi 抵押借贷](#9-风险从哪里来这不是普通-defi-抵押借贷)
 10. [AI Risk Agent 应该做什么](#10-ai-risk-agent-应该做什么)
@@ -32,11 +32,11 @@
 
 ## 1. 项目一句话
 
-**TradeShield Agent 是一个基于电子提单的 AI 动态定价 RWA 贸易融资协议：出口商把电子提单质押进智能合约，系统发行以该批货物价值为支撑的 RWA 凭证；AI Pricing & Risk Agent 根据出口商到账速度偏好、货物估值、运输/天气/战争/港口/保险/地缘/市场价格风险，动态给出 RWA 的折价发行价格、风险折扣解释、可融资额度上限和链上风控动作。**
+**AgentBL Agent 是一个基于电子提单的 AI 动态定价 RWA 贸易融资协议：出口商把电子提单质押进智能合约，系统发行以该批货物价值为支撑的 RWA 凭证；AI Pricing & Risk Agent 根据出口商到账速度偏好、货物估值、运输/天气/战争/港口/保险/地缘/市场价格风险，动态给出 RWA 的折价发行价格、风险折扣解释、可融资额度上限和链上风控动作。**
 
 英文版：
 
-> TradeShield turns an electronic bill of lading into a dynamically priced RWA financing pool, where AI prices trade risk before investors buy it.
+> AgentBL turns an electronic bill of lading into a dynamically priced RWA financing pool, where AI prices trade risk before investors buy it.
 
 更适合路演的版本：
 
@@ -56,7 +56,7 @@
 
 > **让 AI 在投资者认购之前，就把真实贸易风险定价成一个可解释、可上链、可执行的 RWA 折价。**
 
-普通 DeFi 只会看 token price 决定清算；TradeShield 让 AI 决定 **RWA 该以什么折价发行**——这才是 AI 真正承担金融功能，而不是当聊天机器人。
+普通 DeFi 只会看 token price 决定清算；AgentBL 让 AI 决定 **RWA 该以什么折价发行**——这才是 AI 真正承担金融功能，而不是当聊天机器人。
 
 ---
 
@@ -103,7 +103,7 @@ T4 出口商回款
   出口商才能真正补回现金流
 ```
 
-TradeShield 要切入的是 T1 到 T4 之间的现金流缺口。
+AgentBL 要切入的是 T1 到 T4 之间的现金流缺口。
 
 ---
 
@@ -127,7 +127,7 @@ TradeShield 要切入的是 T1 到 T4 之间的现金流缺口。
 
 > **中小出口商已经有真实贸易、真实货物和真实提单，但传统银行无法高效地把这些贸易凭证转化为可融资、可追踪、可处置的资产。**
 
-TradeShield 的价值就在这里：
+AgentBL 的价值就在这里：
 
 ```text
 真实贸易
@@ -146,7 +146,7 @@ TradeShield 的价值就在这里：
 
 你可以把它理解为国际海运中的“超级凭证”。它通常同时承担三类功能：
 
-| 功能 | 通俗解释 | 对 TradeShield 的意义 |
+| 功能 | 通俗解释 | 对 AgentBL 的意义 |
 |---|---|---|
 | 货物收据 | 承运人确认已经收到或装载这批货 | 证明货物真实存在并进入运输流程 |
 | 运输合同证明 | 承运人与托运人之间存在运输安排 | 证明谁负责把货从哪里运到哪里 |
@@ -212,7 +212,7 @@ TradeShield 的价值就在这里：
 | 英国 ETDA 2023 | 让符合条件的电子贸易文件可以被占有、背书、转让 |
 | TradeTrust 等基础设施 | 提供电子贸易文件验证、转让和跨系统互操作的技术实践 |
 
-这给 TradeShield 的叙事提供了现实基础：
+这给 AgentBL 的叙事提供了现实基础：
 
 > **电子提单已经是数字贸易基础设施的一部分，我们进一步把它连接到 RWA 融资、AI 风控和链上执行。**
 
@@ -259,12 +259,12 @@ TradeShield 的价值就在这里：
 | 纸质风险 | 单据可能丢失、伪造、重复质押、难以验证 |
 | 动态风控弱 | 放款后风险变化不能及时转成可执行动作 |
 
-TradeShield 的替代思路：
+AgentBL 的替代思路：
 
 ```text
 传统：银行人工审单 + 内部风控 + 中心化放款
 
-TradeShield：
+AgentBL：
 电子提单链上质押
 + AI Pricing & Risk Agent 估值、折价定价、动态监控
 + permissioned investor pool 按 AI 折价认购 RWA
@@ -273,7 +273,7 @@ TradeShield：
 
 ---
 
-## 7. Web3 / RWA 视角下 TradeShield 在做什么
+## 7. Web3 / RWA 视角下 AgentBL 在做什么
 
 RWA = **Real World Assets**，现实世界资产。
 
@@ -291,7 +291,7 @@ RWA = **Real World Assets**，现实世界资产。
 - 碳信用；
 - 本项目中的电子提单融资份额。
 
-### 7.1 TradeShield 的核心机制
+### 7.1 AgentBL 的核心机制
 
 ```text
 出口商获得电子提单
@@ -320,7 +320,7 @@ ETH / BTC / stablecoin 抵押
 → 抵押率不足时清算
 ```
 
-TradeShield 的逻辑：
+AgentBL 的逻辑：
 
 ```text
 现实贸易资产
@@ -332,7 +332,7 @@ TradeShield 的逻辑：
 
 核心差异：
 
-| 普通 DeFi | TradeShield |
+| 普通 DeFi | AgentBL |
 |---|---|
 | 抵押物多为链上资产 | 抵押物来自真实贸易权利（eBL） |
 | 价格预言机喂的是 token 价格 | RiskPricingOracle 喂的是 AI 折价、风险等级和合约动作 |
@@ -350,7 +350,7 @@ TradeShield 的逻辑：
 
 ### 8.1 RWA Token 不是"空气币"
 
-在合规表述中，TradeShield 的 RWA 凭证不应该被描述成公开交易的投机币。
+在合规表述中，AgentBL 的 RWA 凭证不应该被描述成公开交易的投机币。
 
 更稳妥的定位是：
 
@@ -510,7 +510,7 @@ Token transfer is permissioned, whitelisted, and limited to eligible investors.
 | 司法辖区不确定 | eBL、质押、Token 权益在当地法律下不确定 |
 | 合规风险 | 面向公众募资、承诺收益、无牌销售证券型 Token |
 
-所以，TradeShield 的风控不是“看一个价格”，而是：
+所以，AgentBL 的风控不是“看一个价格”，而是：
 
 ```text
 单据真实性
@@ -682,7 +682,7 @@ type PricingQuote = {
 
 ## 11. 智能合约状态机和链上动作
 
-TradeShield 的链上逻辑可以先用 JS mock，后续再替换成 Solidity 合约（`RWAOfferingPool` + `RiskPricingOracle`，见 PRD §9.3）。
+AgentBL 的链上逻辑可以先用 JS mock，后续再替换成 Solidity 合约（`RWAOfferingPool` + `RiskPricingOracle`，见 PRD §9.3）。
 
 ### 11.1 正常路径
 
@@ -778,15 +778,15 @@ AI 把风险定成了一个具体的发行折价（0.85 → 0.78）
 
 ### 12.1 15 秒路演版本
 
-> TradeShield 把一张电子提单变成一个由 AI 动态定价的 RWA 折价发行池：出口商质押 eBL，AI 根据到账速度和贸易风险给出发行折价，投资者在认购前就看到价格、目标兑付价和风险来源。
+> AgentBL 把一张电子提单变成一个由 AI 动态定价的 RWA 折价发行池：出口商质押 eBL，AI 根据到账速度和贸易风险给出发行折价，投资者在认购前就看到价格、目标兑付价和风险来源。
 
 ### 12.2 30 秒路演版本
 
-> 全球贸易融资缺口仍然巨大，中小出口商即使有真实订单和货物，也经常拿不到快速、透明定价的融资。TradeShield 把电子提单作为 RWA 抵押物，让 AI Pricing & Risk Agent 调用实时行情和历史成交价完成估值，再把"到账速度 + 战争/天气/保险/价格风险"折算成一个可解释的 RWA 发行折价，写入链上 RiskPricingOracle。出口商越想快拿钱、风险越高，折价就越大。我们不做公开众筹，而是面向合格投资者的、AI 定价的 permissioned 贸易融资基础设施。
+> 全球贸易融资缺口仍然巨大，中小出口商即使有真实订单和货物，也经常拿不到快速、透明定价的融资。AgentBL 把电子提单作为 RWA 抵押物，让 AI Pricing & Risk Agent 调用实时行情和历史成交价完成估值，再把"到账速度 + 战争/天气/保险/价格风险"折算成一个可解释的 RWA 发行折价，写入链上 RiskPricingOracle。出口商越想快拿钱、风险越高，折价就越大。我们不做公开众筹，而是面向合格投资者的、AI 定价的 permissioned 贸易融资基础设施。
 
 ### 12.3 最强收束句
 
-> **普通 DeFi 让市场猜价格；TradeShield 让 AI 在投资者下单前，就把贸易风险定成 RWA 的折价。**
+> **普通 DeFi 让市场猜价格；AgentBL 让 AI 在投资者下单前，就把贸易风险定成 RWA 的折价。**
 
 ---
 
@@ -900,7 +900,7 @@ Demo 阶段使用 mock 数据。真实落地可接入电子提单平台、承运
 
 ### Q4：为什么不用普通 DeFi 预言机？
 
-普通价格预言机只能喂 token 或商品价格，不能判断提单是否真实、保险是否覆盖、船是否延误、货是否损坏、战争是否影响航线、进口商是否可能拒付——更不能据此给出一个发行折价。TradeShield 的 RiskPricingOracle 喂的是 AI 综合多源链下风险后算出的 issue price、风险等级和合约动作。
+普通价格预言机只能喂 token 或商品价格，不能判断提单是否真实、保险是否覆盖、船是否延误、货是否损坏、战争是否影响航线、进口商是否可能拒付——更不能据此给出一个发行折价。AgentBL 的 RiskPricingOracle 喂的是 AI 综合多源链下风险后算出的 issue price、风险等级和合约动作。
 
 ### Q5：这是不是非法集资？
 
@@ -1016,4 +1016,4 @@ AI Pricing & Risk Agent = 把"到账速度 + 链下风险"折算成 RWA 发行�
 
 最终要让评委记住：
 
-> **TradeShield 不是把贸易文件变成炒作 Token，而是让 AI 在投资者认购前，把电子提单背后的真实贸易风险定价成一个透明、可解释、可上链的 RWA 折价。**
+> **AgentBL 不是把贸易文件变成炒作 Token，而是让 AI 在投资者认购前，把电子提单背后的真实贸易风险定价成一个透明、可解释、可上链的 RWA 折价。**

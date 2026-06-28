@@ -1,4 +1,4 @@
-// TradeShield MCP Server
+// AgentBL MCP Server
 // MCP protocol mock: tools manifest + handler registry + callTool dispatcher
 //
 // This module serves as the central hub for the MCP tool layer.
@@ -117,7 +117,7 @@ export const MCP_TOOLS_MANIFEST = [
 
   {
     name: 'search_knowledge_base',
-    description: 'Search the TradeShield Risk Intelligence Knowledge Base for macro risk events relevant to a trade case. The knowledge base contains curated entries across 7 risk categories (war_risk, sanction_risk, port_congestion, severe_weather, commodity_volatility, fx_volatility, buyer_country_risk). Use this to gather risk intelligence before generating a pricing quote.',
+    description: 'Search the AgentBL Risk Intelligence Knowledge Base for macro risk events relevant to a trade case. The knowledge base contains curated entries across 7 risk categories (war_risk, sanction_risk, port_congestion, severe_weather, commodity_volatility, fx_volatility, buyer_country_risk). Use this to gather risk intelligence before generating a pricing quote.',
     inputSchema: {
       type: 'object',
       properties: {

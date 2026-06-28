@@ -1,4 +1,4 @@
-# TradeShield Web3 Contract Interface
+# AgentBL Web3 Contract Interface
 
 状态：WEB3-1 ~ WEB3-4 设计冻结  
 命名来源：以 `docs/PRD.md` v0.2 和 `docs/tasks.md` 为准  

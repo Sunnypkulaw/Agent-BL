@@ -1,4 +1,4 @@
-// TradeShield AI 悬浮助手 — 原生 JS 实现
+// AgentBL AI 悬浮助手 — 原生 JS 实现
 // 1) 右侧悬浮图标（可拖拽、hover 展开、点击打开弹窗）
 // 2) AI 对话弹窗（DeepSeek 流式 API + Function Calling 工作流）
 //
@@ -25,7 +25,7 @@ const ds = new DeepSeekClient();
 // ===========================================================================
 // System Prompt
 // ===========================================================================
-const SYSTEM_PROMPT = `你是 TradeShield 协议的 AI 助手。TradeShield 是一个 Web3 原生贸易融资协议——出口商将电子提单（eBL）tokenize 上链，AI 定价航线与货物风险，全球投资者直接投资。没有银行。没有信用审核。没有中间人。eBL 即抵押物，智能合约即清算。
+const SYSTEM_PROMPT = `你是 AgentBL 协议的 AI 助手。AgentBL 是一个 Web3 原生贸易融资协议——出口商将电子提单（eBL）tokenize 上链，AI 定价航线与货物风险，全球投资者直接投资。没有银行。没有信用审核。没有中间人。eBL 即抵押物，智能合约即清算。
 
 ## 你的两个服务视角
 
@@ -159,7 +159,7 @@ const TOOLS = [
   },
   {
     name: 'searchKnowledge',
-    description: '搜索 TradeShield 知识库，查找历史案例、风险事件和定价参考数据',
+    description: '搜索 AgentBL 知识库，查找历史案例、风险事件和定价参考数据',
     parameters: {
       type: 'object',
       properties: {
@@ -1061,7 +1061,7 @@ class PopupAssistant {
       id: 1,
       sender: 'assistant',
       type: 'text',
-      text: '👋 你好！我是 TradeShield 协议的 AI 助手。\n\nTradeShield 是一个 **Web3 原生贸易融资协议**：出口商 tokenize 电子提单，AI 定价航线风险，全球投资者直接投资。\n**没有银行。没有信用审核。没有中间人。**\n\n🔍 **投资者视角** — 说「帮我推荐收益高、风险中等的提单」试试 AI 智能推荐\n📊 **对比标的** — 说「对比前两个」并排比较\n💰 **一键认购** — 说「投 5000 美元」直接认购\n🛡️ **出口商视角** — 说「分析铜矿案例」执行 AI 定价\n\n试试对我说「推荐几个好标的」吧！'
+      text: '👋 你好！我是 AgentBL 协议的 AI 助手。\n\nAgentBL 是一个 **Web3 原生贸易融资协议**：出口商 tokenize 电子提单，AI 定价航线风险，全球投资者直接投资。\n**没有银行。没有信用审核。没有中间人。**\n\n🔍 **投资者视角** — 说「帮我推荐收益高、风险中等的提单」试试 AI 智能推荐\n📊 **对比标的** — 说「对比前两个」并排比较\n💰 **一键认购** — 说「投 5000 美元」直接认购\n🛡️ **出口商视角** — 说「分析铜矿案例」执行 AI 定价\n\n试试对我说「推荐几个好标的」吧！'
     }];
     this._chatHistory.push({ role: 'assistant', content: this.messages[0].text });
   }
@@ -1100,7 +1100,7 @@ class PopupAssistant {
 
     // Header
     dlg.append(el('div', { class: 'pa-header' },
-      el('h2', { class: 'pa-title', text: '◈ TradeShield AI 助手' }),
+      el('h2', { class: 'pa-title', text: '◈ AgentBL AI 助手' }),
       el('button', { class: 'pa-close', text: '✕', onclick: () => self.close() })
     ));
 

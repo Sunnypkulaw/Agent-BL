@@ -1,4 +1,4 @@
-# TradeShield Agent · 基础说明（团队协作与上手）
+# AgentBL Agent · 基础说明（团队协作与上手）
 
 > 这是项目的**基础说明 / 团队协作手册**（原 `README.md`）。它照顾第一次参加黑客松、第一次用 Node.js、第一次提 PR 的同学，覆盖 Harness 背景、命令、目录、改数据、领任务、开分支、提 PR 的完整流程。
 >
@@ -14,7 +14,7 @@
 
 ## 0. 先读这一段：这个项目到底是什么
 
-TradeShield Agent 是一个面向黑客松的 **AI Dynamic Pricing x eBL-backed RWA Trade Finance** 仓库。
+AgentBL Agent 是一个面向黑客松的 **AI Dynamic Pricing x eBL-backed RWA Trade Finance** 仓库。
 
 项目一句话：
 
@@ -205,14 +205,14 @@ npm.cmd run dev
 如果你已经拿到项目文件，终端进入：
 
 ```bash
-cd TradeShield-Agent-Starter
+cd AgentBL-Agent-Starter
 ```
 
 如果你是从 GitHub clone：
 
 ```bash
 git clone <repo-url>
-cd TradeShield-Agent-Starter
+cd AgentBL-Agent-Starter
 ```
 
 `<repo-url>` 换成真实仓库地址。
@@ -320,7 +320,7 @@ npm run demo
 这条命令会读取 `data/demo-case.json`，然后打印：
 
 ```text
-TradeShield Agent mock demo flow
+AgentBL Agent mock demo flow
 ==========================================
 1. [Created] ...
 2. [Funding] ...
@@ -350,7 +350,7 @@ npm run dev
 成功时会看到：
 
 ```text
-TradeShield Agent harness running at http://localhost:3000
+AgentBL Agent harness running at http://localhost:3000
 ```
 
 打开浏览器访问：
@@ -378,7 +378,7 @@ http://localhost:3000/api/health
 ```json
 {
   "ok": true,
-  "service": "tradeshield-agent-harness"
+  "service": "agentbl-agent-harness"
 }
 ```
 

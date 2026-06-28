@@ -11,7 +11,7 @@ import { runPricingScenarios } from '../src/core/pricingScenarioRunner.js';
 // --- Part 1: legacy RiskReport harness scenarios -----------------------------
 const legacy = await runHarnessScenarios();
 
-console.log('\nTradeShield harness scenarios (legacy RiskReport)');
+console.log('\nAgentBL harness scenarios (legacy RiskReport)');
 console.log('='.repeat(60));
 for (const result of legacy) {
   console.log(
@@ -35,7 +35,7 @@ console.log(JSON.stringify(legacyCounts, null, 2));
 // --- Part 2: AI dynamic-pricing scenarios (fast / balanced / high-risk) -------
 const pricing = await runPricingScenarios();
 
-console.log('\n\nTradeShield AI pricing scenarios (eBL-backed RWA discount issuance)');
+console.log('\n\nAgentBL AI pricing scenarios (eBL-backed RWA discount issuance)');
 console.log('='.repeat(60));
 for (const r of pricing) {
   const parts = [

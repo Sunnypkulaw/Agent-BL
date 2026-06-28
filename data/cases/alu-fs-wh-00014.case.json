@@ -10,7 +10,7 @@
     "bl_id": "EWR-2026-FS-AL0-00014",
     "bl_no": "FS/WH/AL0/2026/00014",
     "bl_type": "electronic_warehouse_receipt",
-    "ebl_platform": "TradeShield ENI (数字仓单)",
+    "ebl_platform": "AgentBL ENI (数字仓单)",
     "ebl_title_ref": "ENI-EWR-AL0-00014-4B7C",
     "shipper": "上海锦源国际贸易有限公司 (Shanghai Jinyuan International Trade Co., Ltd.)",
     "consignee": "南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)",

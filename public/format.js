@@ -1,4 +1,4 @@
-// Pure formatting + parsing helpers for the TradeShield pricing dashboard.
+// Pure formatting + parsing helpers for the AgentBL pricing dashboard.
 // No DOM, no network — just turn PricingQuote numbers into demo-ready strings
 // and classify the AI's risk factors into the five investor-facing dimensions.
 

@@ -1,6 +1,6 @@
 # COMMERCIAL INVOICE
 
-> 拟真样例数据，用于 TradeShield demo。所有公司、人名、单号、银行信息均为**虚构**。
+> 拟真样例数据，用于 AgentBL demo。所有公司、人名、单号、银行信息均为**虚构**。
 
 **EQUATOR ENERGY TRADING PTE. LTD.**
 80 Raffles Place, #45-01 UOB Plaza 1, Singapore 048624

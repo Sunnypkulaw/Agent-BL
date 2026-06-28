@@ -1,4 +1,4 @@
-// TradeShield View ② — Voyage tracking + live RWA pricing + in-transit events.
+// AgentBL View ② — Voyage tracking + live RWA pricing + in-transit events.
 //
 // A ship moves along the route on a VIRTUAL clock (departure -> ETA). Below it,
 // the live RWA price + financing progress + AI risk events (with sources) update

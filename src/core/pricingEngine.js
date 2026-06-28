@@ -1,4 +1,4 @@
-// TradeShield AI dynamic-pricing engine for eBL-backed RWA discount issuance.
+// AgentBL AI dynamic-pricing engine for eBL-backed RWA discount issuance.
 //
 // The job of this engine is NOT to "write an explanation" — it is to decide, for
 // a given trade case, the RWA issue price, the financing the exporter can take,

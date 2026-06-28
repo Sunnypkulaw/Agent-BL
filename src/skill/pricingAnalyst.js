@@ -1,4 +1,4 @@
-// SKILL-1: TradeShield Pricing Analyst
+// SKILL-1: AgentBL Pricing Analyst
 //
 // Chains MCP tools: get_trade_case → search_knowledge_base → generate_pricing_quote
 //
@@ -36,7 +36,7 @@ export async function runPricingAnalyst({ case_id, payout_speed } = {}) {
   } catch (err) {
     errors.push(`get_trade_case failed: ${err.message}`);
     steps.push({ step: 1, tool: 'get_trade_case', status: 'error', error: err.message });
-    return { skill: 'tradeshield-pricing-analyst', status: 'failed', errors, steps };
+    return { skill: 'agentbl-pricing-analyst', status: 'failed', errors, steps };
   }
 
   const bl = caseResult.result.bill_of_lading;
@@ -85,12 +85,12 @@ export async function runPricingAnalyst({ case_id, payout_speed } = {}) {
   } catch (err) {
     errors.push(`generate_pricing_quote failed: ${err.message}`);
     steps.push({ step: 3, tool: 'generate_pricing_quote', status: 'error', error: err.message });
-    return { skill: 'tradeshield-pricing-analyst', status: 'failed', errors, steps };
+    return { skill: 'agentbl-pricing-analyst', status: 'failed', errors, steps };
   }
 
   // Assemble the full analysis
   return {
-    skill: 'tradeshield-pricing-analyst',
+    skill: 'agentbl-pricing-analyst',
     status: errors.length > 0 ? 'partial' : 'ok',
     analysis: {
       case_id: case_id,

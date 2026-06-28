@@ -17,7 +17,7 @@ export function buildPricingNarrative(comparison) {
   const yieldPct = (rec.implied_gross_yield_bps / 100).toFixed(1);
   const sharePct = (rec.exporter_profit_share_bps / 100).toFixed(0);
   return (
-    `TradeShield's AI priced this eBL-backed RWA at ${rec.final_issue_price_usd.toFixed(2)} per token versus a 1.00 ` +
+    `AgentBL's AI priced this eBL-backed RWA at ${rec.final_issue_price_usd.toFixed(2)} per token versus a 1.00 ` +
     `target redemption value — a ${yieldPct}% gross upside for investors — on the exporter's ${rec.payout_speed} payout choice, ` +
     `which gives up about ${sharePct}% of ${usd(rec.exporter_gross_profit_usd)} verified trade profit. ` +
     `Current trade risk is ${rec.risk_level} (${rec.risk_score_bps}bps): ${rec.risk_factors.join('; ')}. ` +
@@ -30,7 +30,7 @@ function buildMessages(narrative, rec) {
     {
       role: 'system',
       content:
-        `You are TradeShield's demo narrator. Rephrase the GROUNDED NARRATIVE into a punchy 2-3 sentence spoken demo line (<= 80 words) for a hackathon judge. `
+        `You are AgentBL's demo narrator. Rephrase the GROUNDED NARRATIVE into a punchy 2-3 sentence spoken demo line (<= 80 words) for a hackathon judge. `
         + `Use ONLY the facts given; do not invent numbers; never say returns are guaranteed; keep the "target redemption, not guaranteed" nuance.`
     },
     {

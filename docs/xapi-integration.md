@@ -1,6 +1,6 @@
 # xAPI Live World-Risk Integration
 
-> How TradeShield turns **real-world signals** — international situation, officials'
+> How AgentBL turns **real-world signals** — international situation, officials'
 > statements, and prediction-market odds — into the AI's risk judgment on a specific
 > cargo, using **xAPI** (`xapi.to`). This makes *"the AI prices real-world risk"* literal.
 
@@ -11,7 +11,7 @@
 [xAPI](https://xapi.to) is an **Agent-friendly unified API platform**: one API key calls
 Twitter/X, Google Search, prediction markets, crypto quotes and ~20 other services, with output
 normalized to JSON. (It also offers an LLM gateway at `ai.xapi.to`, which we do **not** use here —
-TradeShield keeps its own OpenAI-compatible LLM client.)
+AgentBL keeps its own OpenAI-compatible LLM client.)
 
 We integrate **programmatically over HTTP** (no CLI subprocess), mirroring the open-source CLI
 (`github.com/xapi-labs/xapi-cli`):

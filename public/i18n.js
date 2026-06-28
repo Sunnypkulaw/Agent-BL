@@ -1,4 +1,4 @@
-// Lightweight dependency-free i18n for the TradeShield dashboard.
+// Lightweight dependency-free i18n for the AgentBL dashboard.
 //
 // `t(key, vars)` returns the string for the current language with {var}
 // interpolation. UI chrome (headings, labels, buttons, toasts) is translated;
@@ -66,7 +66,7 @@ export function applyStaticI18n(root = document) {
 const DICT = {
   zh: {
     // topbar / subbar
-    document_title: 'TradeShield · eBL-backed RWA 投资市场',
+    document_title: 'AgentBL · eBL-backed RWA 投资市场',
     brand_tag: 'AI 为提单背书 RWA 动态定价 · 链上执行',
     nav_market: '投资市场',
     nav_mint: '① 提单上链 · 铸造 RWA',
@@ -199,7 +199,7 @@ const DICT = {
     mint_btn: '⛓ 铸造 RWA 上链',
     minting: '⛓ 铸造中…',
     compliance: '<strong>非保本。</strong> 1 RWA = $1.00 是<em>目标</em>兑付价，取决于进口商付款、货物结算与保险覆盖。仅限合格投资者。',
-    onchain_h: '链上锚定 · TradeShieldRWA',
+    onchain_h: '链上锚定 · AgentBLRWA',
     mint_hint: '输入融资金额并点击「铸造 RWA 上链」。连接钱包且合约已部署时铸造真实链上交易，否则走高保真模拟交易。',
 
     // deal strip
@@ -323,13 +323,13 @@ const DICT = {
     wr_fetch_fail: '拉取实时风险失败: {msg}',
 
     // footer
-    footer_left: 'TradeShield Agent · ETHBeijing 2026 hackathon',
+    footer_left: 'AgentBL Agent · ETHBeijing 2026 hackathon',
     footer_right: '所有数字由本地 AI 定价引擎实时产生 · 货值估算、风险评分与哈希均确定性、可离线复现 · 上链锚定于测试网'
   },
 
   en: {
     // topbar / subbar
-    document_title: 'TradeShield · eBL-backed RWA Investment Marketplace',
+    document_title: 'AgentBL · eBL-backed RWA Investment Marketplace',
     brand_tag: 'AI-priced eBL-backed RWA · enforced on-chain',
     nav_market: 'Investment Marketplace',
     nav_mint: 'Pricing & Mint',
@@ -462,7 +462,7 @@ const DICT = {
     mint_btn: '⛓ Mint RWA on-chain',
     minting: '⛓ Minting…',
     compliance: '<strong>Not principal-protected.</strong> 1 RWA = $1.00 is a <em>target</em> redemption value, depending on importer payment, cargo settlement and insurance coverage. Permissioned investors only.',
-    onchain_h: 'On-chain anchoring · TradeShieldRWA',
+    onchain_h: 'On-chain anchoring · AgentBLRWA',
     mint_hint: 'Enter a financing amount and click “Mint RWA on-chain”. With a wallet connected and the contract deployed it mints a real on-chain tx, otherwise a high-fidelity simulated tx.',
 
     // deal strip
@@ -586,7 +586,7 @@ const DICT = {
     wr_fetch_fail: 'Failed to fetch live risk: {msg}',
 
     // footer
-    footer_left: 'TradeShield Agent · ETHBeijing 2026 hackathon',
+    footer_left: 'AgentBL Agent · ETHBeijing 2026 hackathon',
     footer_right: 'Every number is produced live by the local AI pricing engine · valuation, risk scoring and hashes are deterministic and offline-reproducible · anchored on the testnet'
   }
 };

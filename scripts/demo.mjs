@@ -14,7 +14,7 @@ const useLlm = !process.argv.includes('--no-llm') && isConfigured();
 const data = JSON.parse(await fs.readFile('data/demo-case.json', 'utf8'));
 const result = simulateWorkflow(data);
 
-console.log('\nTradeShield Agent mock demo flow (legacy RiskReport engine)');
+console.log('\nAgentBL Agent mock demo flow (legacy RiskReport engine)');
 console.log('='.repeat(58));
 for (const [index, step] of result.steps.entries()) {
   console.log(`${index + 1}. [${step.state}] ${step.actor}: ${step.event}`);
@@ -29,7 +29,7 @@ const caseData = JSON.parse(await fs.readFile('data/cases/copper-sg-shanghai.cas
 const comparison = compareSpeeds(caseData);
 const usd = (n) => 'USD ' + Math.round(n).toLocaleString('en-US');
 
-console.log('\n\nTradeShield AI dynamic pricing — eBL-backed RWA offering');
+console.log('\n\nAgentBL AI dynamic pricing — eBL-backed RWA offering');
 console.log('='.repeat(58));
 const s = comparison.quotes[0];
 console.log(`Case        : ${caseData.case_id}`);

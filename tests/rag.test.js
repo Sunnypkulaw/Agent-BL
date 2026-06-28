@@ -1,4 +1,4 @@
-// TradeShield RAG Tests
+// AgentBL RAG Tests
 // Data integrity + search correctness + Judge Q&A validation
 
 import test from 'node:test';

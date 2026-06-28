@@ -1,15 +1,15 @@
 {
-  "name": "tradeshield-contracts",
+  "name": "agentbl-contracts",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal Hardhat contracts for TradeShield eBL-backed RWA offering (WEB3-6 ~ WEB3-9).",
+  "description": "Minimal Hardhat contracts for AgentBL eBL-backed RWA offering (WEB3-6 ~ WEB3-9).",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
-    "deploy:tradeshield:sepolia": "hardhat run scripts/deploy-tradeshield.js --network sepolia",
+    "deploy:agentbl:sepolia": "hardhat run scripts/deploy-agentbl.js --network sepolia",
     "deploy:injective": "hardhat run scripts/deploy.js --network injective_testnet",
-    "deploy:tradeshield:injective": "hardhat run scripts/deploy-tradeshield.js --network injective_testnet"
+    "deploy:agentbl:injective": "hardhat run scripts/deploy-agentbl.js --network injective_testnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.8",

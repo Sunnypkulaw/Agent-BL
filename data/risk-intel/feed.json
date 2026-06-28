@@ -1,6 +1,6 @@
 {
   "feed_version": "2026-06-06",
-  "note": "Mock macro risk-intelligence feed + project policy notes for TradeShield's RAG retriever (AI-11). Calibrated to the June 2026 Strait of Hormuz war-premium narrative. Not real intelligence; demo data only.",
+  "note": "Mock macro risk-intelligence feed + project policy notes for AgentBL's RAG retriever (AI-11). Calibrated to the June 2026 Strait of Hormuz war-premium narrative. Not real intelligence; demo data only.",
   "documents": [
     {
       "id": "MRI-HORMUZ-WAR-2026-06",
@@ -86,7 +86,7 @@
       "commodity": "all",
       "severity": "info",
       "period": "2026-06",
-      "source": "TradeShield docs/PRD.md §7",
+      "source": "AgentBL docs/PRD.md §7",
       "tags": ["policy", "redemption", "guarantee", "compliance", "non-principal-protection"],
       "text": "1 RWA = 1.00 USD is a TARGET redemption value, not a guaranteed repayment. Investor returns come from buying at a discount and from trade repayment; actual redemption depends on importer payment, cargo settlement and insurance coverage. Demo uses permissioned mock investors and does no real fundraising."
     },
@@ -97,7 +97,7 @@
       "commodity": "all",
       "severity": "info",
       "period": "2026-06",
-      "source": "TradeShield docs/PRD.md §2.3/§2.4",
+      "source": "AgentBL docs/PRD.md §2.3/§2.4",
       "tags": ["policy", "collateral", "coverage", "guardrail", "exposure"],
       "text": "Target redemption exposure must stay within AI-verified collateral times the redemption coverage limit (default 0.9). This collateral guardrail caps how much can be issued and acts as a floor on the issue price."
     },
@@ -108,7 +108,7 @@
       "commodity": "all",
       "severity": "info",
       "period": "2026-06",
-      "source": "TradeShield docs/PRD.md §2.4",
+      "source": "AgentBL docs/PRD.md §2.4",
       "tags": ["policy", "pricing", "profit", "discount", "speed", "yield"],
       "text": "The RWA discount is priced as a share of the exporter's verified trade profit: faster payout gives up a larger share (FAST 50% / BALANCED 33% / LOW_COST 20% base), risk adds to the share, and the issue price is cash/(cash + share x profit)."
     }

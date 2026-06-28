@@ -36,7 +36,7 @@ loadEnv();
 const caseFile = process.argv[2] ?? 'data/cases/copper-sg-shanghai-warcrisis.case.json';
 const caseData = JSON.parse(await fsp.readFile(caseFile, 'utf8'));
 
-console.log('\nTradeShield · xAPI world-risk intelligence');
+console.log('\nAgentBL · xAPI world-risk intelligence');
 console.log('='.repeat(52));
 console.log(`Case   : ${caseData.case_id}  (${caseFile})`);
 console.log(`xAPI   : ${isXapiConfigured() ? 'configured (XAPI_KEY) -> live signals' : 'no key -> offline fixtures'}`);

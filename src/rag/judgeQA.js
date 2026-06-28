@@ -1,4 +1,4 @@
-// TradeShield RAG: Judge Q&A Pairs (Mock)
+// AgentBL RAG: Judge Q&A Pairs (Mock)
 // 4 prepared Q&A pairs for hackathon judge Q&A sessions
 // Each pair includes the question, a model answer, search keywords,
 // and a pointer to the relevant documentation or source code.
@@ -7,7 +7,7 @@ export const JUDGE_QA_PAIRS = [
   {
     id: 'QA-1',
     question: 'How does an electronic Bill of Lading serve as valid collateral for trade finance?',
-    answer: 'An electronic Bill of Lading (eBL) is a transferable document of title recognized under frameworks like MLETR (Model Law on Electronic Transferable Records, adopted by 8 jurisdictions) and the UK Electronic Trade Documents Act 2023. In the TradeShield model, the exporter pledges the eBL to a smart contract (EBLRegistry), which records the pledge on-chain. The eBL represents the legal right to claim the cargo at destination — it is not just a data record, but a title document that can be enforced through admiralty law. The AI Agent validates the eBL against insurance coverage, market value, and shipment events before allowing the financing pool to open. If the exporter defaults, the contract can transfer the eBL to investors or trigger cargo sale for recovery. This transforms a traditionally paper-based, bank-intermediated process into a programmable, AI-verified financing instrument.',
+    answer: 'An electronic Bill of Lading (eBL) is a transferable document of title recognized under frameworks like MLETR (Model Law on Electronic Transferable Records, adopted by 8 jurisdictions) and the UK Electronic Trade Documents Act 2023. In the AgentBL model, the exporter pledges the eBL to a smart contract (EBLRegistry), which records the pledge on-chain. The eBL represents the legal right to claim the cargo at destination — it is not just a data record, but a title document that can be enforced through admiralty law. The AI Agent validates the eBL against insurance coverage, market value, and shipment events before allowing the financing pool to open. If the exporter defaults, the contract can transfer the eBL to investors or trigger cargo sale for recovery. This transforms a traditionally paper-based, bank-intermediated process into a programmable, AI-verified financing instrument.',
     keywords: ['ebl', 'bill of lading', 'collateral', 'document of title', 'mletr', 'pledge', 'smart contract', 'enforcement'],
     source: 'docs/background.md, docs/PRD.md section 2',
     searchQuery: 'eBL legal status document of title trade finance collateral',

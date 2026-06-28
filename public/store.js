@@ -1,4 +1,4 @@
-// Shared application state for the TradeShield two-view dashboard.
+// Shared application state for the AgentBL two-view dashboard.
 //
 // One store, imported by the router (app.js) and the voyage view (voyage.js),
 // so both views read the same selected case + live PricingQuote without passing

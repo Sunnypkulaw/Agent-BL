@@ -1,4 +1,4 @@
-# TradeShield Agent PRD
+# AgentBL Agent PRD
 
 版本：v0.2 AI Dynamic Pricing RWA  
 状态：准备阶段 / Mock Harness / 待接入测试链合约  
@@ -6,11 +6,11 @@
 
 ## 1. 项目一句话描述
 
-**TradeShield Agent 是一个基于电子提单的 AI 动态定价 RWA 贸易融资协议：出口商将代表货权的电子提单质押到合约，系统发行以该批货物价值为支撑的 RWA 凭证；AI Pricing & Risk Agent 根据出口商贷款到账速度、货物估值、运输风险、天气、战争、港口、保险、国际形势和市场价格，动态给出 RWA 折价发行价格、风险提示和链上风控动作。**
+**AgentBL Agent 是一个基于电子提单的 AI 动态定价 RWA 贸易融资协议：出口商将代表货权的电子提单质押到合约，系统发行以该批货物价值为支撑的 RWA 凭证；AI Pricing & Risk Agent 根据出口商贷款到账速度、货物估值、运输风险、天气、战争、港口、保险、国际形势和市场价格，动态给出 RWA 折价发行价格、风险提示和链上风控动作。**
 
 更短的 pitch：
 
-> TradeShield turns an electronic bill of lading into a dynamically priced RWA financing pool, where AI prices trade risk before investors buy it.
+> AgentBL turns an electronic bill of lading into a dynamically priced RWA financing pool, where AI prices trade risk before investors buy it.
 
 ## 2. 核心商业模型
 

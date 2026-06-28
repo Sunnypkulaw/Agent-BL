@@ -1,4 +1,4 @@
-# TradeShield Agent MVP 任务拆分
+# AgentBL Agent MVP 任务拆分
 
 任务状态：`Todo` / `In Progress` / `Review` / `Done` / `Blocked`
 
@@ -114,15 +114,15 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 
 | ID | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|
-| MCP-1 | 设计 TradeShield MCP tools manifest | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| MCP-1 | 设计 AgentBL MCP tools manifest | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
 | MCP-2 | 实现 `get_trade_case` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
 | MCP-3 | 实现 `generate_pricing_quote` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
 | MCP-4 | 实现 `simulate_offering` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
 | MCP-5 | 实现 `push_pricing_to_oracle` mock / real tx | Xlen | Done | `npm run test` | merged from feature/mcp-server |
 | RAG-1 | 建立风险情报资料：天气、战争、港口、保险、价格 mock feed | Xlen | Done | `npm run test` | merged from feature/mcp-server |
 | RAG-2 | 准备 4 个评委追问检索问题 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| SKILL-1 | 创建 `tradeshield-pricing-analyst` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
-| SKILL-2 | 创建 `tradeshield-demo-operator` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| SKILL-1 | 创建 `agentbl-pricing-analyst` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| SKILL-2 | 创建 `agentbl-demo-operator` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
 
 ## 8. QA / Integrator
 

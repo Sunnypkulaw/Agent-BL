@@ -1,6 +1,6 @@
 # 商业发票 (Commercial Invoice)
 
-> 拟真样例数据，用于 TradeShield demo。
+> 拟真样例数据，用于 AgentBL demo。
 
 **Beijing Agricultural Trading Co., Ltd.**
 北京市朝阳区建国路88号，中国北京

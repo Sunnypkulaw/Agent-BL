@@ -60,7 +60,7 @@ const SCENARIOS = [
   }
 ];
 
-console.log('\nTradeShield — RWA settlement: why 1.00 is a target, not a guarantee');
+console.log('\nAgentBL — RWA settlement: why 1.00 is a target, not a guarantee');
 console.log('='.repeat(72));
 console.log(`Case   : ${caseData.case_id}  (${caseFile})`);
 console.log(`Cargo  : ${caseData.cargo?.commodity ?? caseData.bill_of_lading?.cargo}  ${caseData.bill_of_lading?.port_of_loading} -> ${caseData.bill_of_lading?.port_of_discharge}`);

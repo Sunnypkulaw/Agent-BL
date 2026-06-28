@@ -1,6 +1,6 @@
-# TradeShield Agent 拿奖路线与能力规划
+# AgentBL Agent 拿奖路线与能力规划
 
-这份文档回答一个问题：如果 TradeShield 不只是准备仓库，而是要在黑客松里冲奖，下一步应该补哪些任务、给 AI 什么能力、合约做到什么程度，以及 Harness 如何保证所有人没有跑偏。
+这份文档回答一个问题：如果 AgentBL 不只是准备仓库，而是要在黑客松里冲奖，下一步应该补哪些任务、给 AI 什么能力、合约做到什么程度，以及 Harness 如何保证所有人没有跑偏。
 
 当前主线：**AI 动态定价的 eBL-backed RWA 折价发行协议**（见 `docs/PRD.md` v0.2）。本文已对齐该模型——早期版本把项目讲成"RiskReport 风控 + 资金池放贷"，现在的核心是 **AI 决定 RWA 的发行折价**。
 
@@ -8,7 +8,7 @@
 
 推荐主叙事：
 
-> TradeShield 把电子提单变成一个由 AI 动态定价的 RWA 折价发行池：AI Pricing & Risk Agent 把"出口商到账速度 + 货物估值 + 运输/天气/战争/保险/市场风险"折算成一个 RWA 发行折价，写入链上 RiskPricingOracle，RWAOfferingPool 据此开盘、改价、暂停或清算。
+> AgentBL 把电子提单变成一个由 AI 动态定价的 RWA 折价发行池：AI Pricing & Risk Agent 把"出口商到账速度 + 货物估值 + 运输/天气/战争/保险/市场风险"折算成一个 RWA 发行折价，写入链上 RiskPricingOracle，RWAOfferingPool 据此开盘、改价、暂停或清算。
 
 不要把项目讲成"又一个 RWA 融资 dApp"，也不要讲成"AI 写风险报告"。评委更想看到：
 
@@ -60,8 +60,8 @@
 
 Skill 建议只做 2 个：
 
-1. `tradeshield-pricing-analyst`：固定审单 → 估值 → 折价定价 → 投资者解释的输出流程。
-2. `tradeshield-demo-operator`：演示时按剧本运行 scenario、合约交易、Q&A。
+1. `agentbl-pricing-analyst`：固定审单 → 估值 → 折价定价 → 投资者解释的输出流程。
+2. `agentbl-demo-operator`：演示时按剧本运行 scenario、合约交易、Q&A。
 
 ### P3：RAG
 
@@ -152,7 +152,7 @@ packages/hardhat/test
 packages/nextjs/contracts
 ```
 
-但业务上不要照搬众筹逻辑。TradeShield 的核心是"eBL 凭证 + AI 折价发行 + RiskPricingOracle"，不是捐赠 / 众筹。
+但业务上不要照搬众筹逻辑。AgentBL 的核心是"eBL 凭证 + AI 折价发行 + RiskPricingOracle"，不是捐赠 / 众筹。
 
 ## 5. Harness 新规则
 
@@ -193,7 +193,7 @@ npm run scenarios
 3. 40 秒：合约按折价开盘，RiskPricingOracle emit `PricingUpdated`，投资者认购。
 4. 40 秒：霍尔木兹战争升级 + 铜价剧烈波动 → AI 把 risk_discount 拉大，发行价压到 0.78，状态进入 Repriced / Paused。
 5. 30 秒：解释合规边界（目标兑付非保本）和未来可接真实行情 / AIS / 保险数据。
-6. 10 秒：收尾——TradeShield lets AI price trade risk into an RWA discount before investors buy it.
+6. 10 秒：收尾——AgentBL lets AI price trade risk into an RWA discount before investors buy it.
 
 ## 7. 最后的取舍
 

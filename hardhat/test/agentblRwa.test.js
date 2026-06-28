@@ -13,7 +13,7 @@ const ACTION = {
 
 async function deploy() {
   const [creator, other] = await ethers.getSigners();
-  const Factory = await ethers.getContractFactory('TradeShieldRWA');
+  const Factory = await ethers.getContractFactory('AgentBLRWA');
   const rwa = await Factory.deploy();
   await rwa.waitForDeployment();
   return { creator, other, rwa };
@@ -27,7 +27,7 @@ const COLLATERAL = 7_500_000n;
 const evidenceHash = ethers.id('evidence-bundle-copper');
 const quoteHash = ethers.id('pricing-quote-copper');
 
-describe('TradeShieldRWA (browser demo contract)', () => {
+describe('AgentBLRWA (browser demo contract)', () => {
   it('tokenizes an eBL, mints RWA = floor(financing*1e6/price) to the caller', async () => {
     const { creator, rwa } = await deploy();
 

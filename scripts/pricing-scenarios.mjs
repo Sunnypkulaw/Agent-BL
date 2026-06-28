@@ -4,7 +4,7 @@ import { runPricingScenarios } from '../src/core/pricingScenarioRunner.js';
 
 const results = await runPricingScenarios();
 
-console.log('\nTradeShield AI pricing scenarios');
+console.log('\nAgentBL AI pricing scenarios');
 console.log('='.repeat(72));
 for (const r of results) {
   const parts = [

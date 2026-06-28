@@ -4,7 +4,7 @@
   "chainIdDecimal": 11155111,
   "explorerBase": "https://sepolia.etherscan.io",
   "contracts": {
-    "TradeShieldRWA": "0x3bf5eA912bAcA135BF6F2908178cbf891B953e23"
+    "AgentBLRWA": "0x3bf5eA912bAcA135BF6F2908178cbf891B953e23"
   },
   "deployedAt": "2026-06-22T20:05:49.784Z",
   "deployTx": "0x8006b14e82742147d19bce10bc56627895ce540cac2dfabdcd504ea7ccc9947a",
@@ -242,7 +242,7 @@
               "type": "bool"
             }
           ],
-          "internalType": "struct TradeShieldRWA.Offering",
+          "internalType": "struct AgentBLRWA.Offering",
           "name": "",
           "type": "tuple"
         }

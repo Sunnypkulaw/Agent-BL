@@ -1,4 +1,4 @@
-// Browser web3 integration for TradeShield — multi-chain support.
+// Browser web3 integration for AgentBL — multi-chain support.
 //
 // Primary:  Injective Testnet (inEVM, chainId 1439)
 // Fallback: Ethereum Sepolia (chainId 11155111)
@@ -76,7 +76,7 @@ const isAddress = (a) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a);
 /** True when a real contract address is configured (deploy script has run). */
 export async function isRealChainConfigured() {
   const cfg = await loadChainConfig();
-  return Boolean(cfg && isAddress(cfg.contracts?.TradeShieldRWA));
+  return Boolean(cfg && isAddress(cfg.contracts?.AgentBLRWA));
 }
 
 export function hasInjectedWallet() {
@@ -154,8 +154,8 @@ export async function connectWallet() {
   _session = { provider, signer, address };
 
   // Re-create the session if the user changes account/network mid-demo.
-  if (!eth._tradeshieldWired) {
-    eth._tradeshieldWired = true;
+  if (!eth._agentblWired) {
+    eth._agentblWired = true;
     eth.on?.('accountsChanged', () => { _session = null; });
     eth.on?.('chainChanged', () => { _session = null; });
   }
@@ -164,8 +164,8 @@ export async function connectWallet() {
 
 async function getContract(write = false) {
   const cfg = await loadChainConfig();
-  const address = cfg?.contracts?.TradeShieldRWA;
-  if (!isAddress(address)) throw err('NO_CONTRACT', 'TradeShieldRWA 尚未部署（chain-config 无地址）');
+  const address = cfg?.contracts?.AgentBLRWA;
+  if (!isAddress(address)) throw err('NO_CONTRACT', 'AgentBLRWA 尚未部署（chain-config 无地址）');
   if (!_session) throw err('NO_SESSION', '钱包未连接');
   const ethers = await loadEthers();
   return new ethers.Contract(address, cfg.abi, write ? _session.signer : _session.provider);

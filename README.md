@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ TradeShield Agent
+# 🛡️ AgentBL Agent
 
 ### AI-priced, eBL-backed RWA trade-finance protocol · AI 动态定价的电子提单 RWA 贸易融资协议
 
@@ -31,10 +31,10 @@
 > → *the riskier the deal, the lower the price and the higher the investor's potential yield* →
 > every decision is **anchored on-chain**.
 
-### 📖 What is TradeShield
+### 📖 What is AgentBL
 
 In global trade, the cargo ships but the cash is locked for 30–45 days. The exporter needs cash
-**now**; capital wants **collateralized, short-duration** yield. TradeShield connects the two — and
+**now**; capital wants **collateralized, short-duration** yield. AgentBL connects the two — and
 puts an AI agent in charge of the dangerous part: **pricing real-world risk before investors are exposed.**
 
 1. The exporter pledges an **electronic bill of lading (eBL)** — title to the in-transit cargo — into a smart contract.
@@ -58,7 +58,7 @@ puts an AI agent in charge of the dangerous part: **pricing real-world risk befo
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
 
-Most RWA protocols price with a hand-waved LTV and a fixed rate. TradeShield's price is **economically grounded and explainable**:
+Most RWA protocols price with a hand-waved LTV and a fixed rate. AgentBL's price is **economically grounded and explainable**:
 
 ```text
 gross_profit  P = invoice_value − cost_of_goods          ← exporter's verifiable margin
@@ -141,7 +141,7 @@ So for the same cargo: **more urgency or more risk → lower issue price → hig
                         │ quote_hash / evidence_hash
         ┌───────────────┴───────────────────────────────────────────────┐
         │     Solidity contracts (hardhat/)  ·  LIVE on Sepolia          │
-        │  TradeShieldRWA · RiskPricingOracle · RWAOfferingPool · …       │
+        │  AgentBLRWA · RiskPricingOracle · RWAOfferingPool · …       │
         └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -151,7 +151,7 @@ safe coverage; `base − urgency − risk = indicative`; `final ≥ indicative`)
 
 ### ⛓️ Live on Sepolia
 
-The permissionless demo contract `TradeShieldRWA` is **already deployed and verifiable**:
+The permissionless demo contract `AgentBLRWA` is **already deployed and verifiable**:
 
 | | |
 |---|---|
@@ -181,7 +181,7 @@ npm run dev
 Success looks like:
 
 ```text
-TradeShield Agent harness running at http://localhost:3000
+AgentBL Agent harness running at http://localhost:3000
 ```
 
 **Requirements:** Node.js ≥ 18.18.0 · a modern browser · **no API key, no external deps** (a built-in
@@ -195,7 +195,7 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
 #### A. Local zero-config demo (5 steps)
 
 1. Install Node ≥ 18.18.0 — verify with `node -v`.
-2. Enter the project root: `cd TradeShield-AI`.
+2. Enter the project root: `cd AgentBL-AI`.
 3. Start the server: `npm run dev` (Windows: `npm.cmd run dev` if PowerShell blocks the script).
 4. Open `http://localhost:3000`.
 5. Follow the **two-UI walkthrough** below. The top bar shows `○ Contract not deployed · simulated minting`, and the Mint button produces a **high-fidelity simulated transaction** — the demo is complete and network-independent.
@@ -219,7 +219,7 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
    ```bash
    cd hardhat
    npm install                          # first time only (~1 min: hardhat + ethers)
-   npm run deploy:tradeshield:sepolia   # deploys TradeShieldRWA to Sepolia
+   npm run deploy:agentbl:sepolia   # deploys AgentBLRWA to Sepolia
    ```
    The script **auto-writes the address + ABI into `public/chain-config.json`** — no manual frontend edit.
 8. **Connect the wallet & mint:**
@@ -249,7 +249,7 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
 
 | Symptom | Cause / fix |
 |---|---|
-| Top bar stuck on `○ Contract not deployed` | Path B not run, or `contracts.TradeShieldRWA` empty in `public/chain-config.json`. Re-run step 7. |
+| Top bar stuck on `○ Contract not deployed` | Path B not run, or `contracts.AgentBLRWA` empty in `public/chain-config.json`. Re-run step 7. |
 | "Connect wallet" does nothing | MetaMask not installed (minting falls back to simulated). Install and refresh. |
 | MetaMask "insufficient funds" | Deployer wallet has no Sepolia ETH — back to step 3. |
 | `deploy` errors `Missing SEPOLIA_RPC_URL` | `.env` not in the project root, or field misnamed — recheck step 6. |
@@ -341,7 +341,7 @@ npx hardhat test          # 11 passing
 
 | Contract | Role |
 |---|---|
-| `TradeShieldRWA.sol` | **The deployed, permissionless demo contract.** `tokenize(...)` mints RWA from an AI quote and emits `Tokenized`; `reprice(...)` emits `Repriced`. Carries `quoteHash` / `evidenceHash`. |
+| `AgentBLRWA.sol` | **The deployed, permissionless demo contract.** `tokenize(...)` mints RWA from an AI quote and emits `Tokenized`; `reprice(...)` emits `Repriced`. Carries `quoteHash` / `evidenceHash`. |
 | `RiskPricingOracle.sol` | `updatePricing(poolId, issuePrice, riskLevel, action, evidenceHash)` → emits `PricingUpdated`, persists the latest quote/evidence hash |
 | `RWAOfferingPool.sol` | `createOffering / subscribe / settle / pause` |
 | `EBLRegistry.sol` · `RWAToken.sol` | eBL `mint / pledge / release`; investor RWA share token |
@@ -359,7 +359,7 @@ The backend's `/api/oracle/pricing-update` payload maps one-to-one onto the orac
 ### 📁 Project structure
 
 ```text
-TradeShield-AI/
+AgentBL-AI/
 ├── README.md              # this file
 ├── 基础说明.md            # team onboarding / harness background (original README)
 ├── package.json           # npm scripts
@@ -423,7 +423,7 @@ insurance coverage. The demo uses permissioned mock investors only.
 ### 📖 这是什么
 
 国际贸易里，货已装船、钱还没回来。出口商想**立刻**拿到现金，资本想要**有抵押、短久期**的收益资产。
-TradeShield 把两端接起来——并把最危险的那一步交给一个 AI Agent：**在投资者承担风险之前，先把真实世界的风险定准价。**
+AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent：**在投资者承担风险之前，先把真实世界的风险定准价。**
 
 1. 出口商把**电子提单（eBL）**——在途货物的物权凭证——质押进智能合约。
 2. **AI 定价与风控 Agent** 给这批货估值，再把*「出口商想多快拿钱」*和*「这笔交易有多大风险」*折算成一个 **RWA 发行折价**（例如 1 RWA = **$0.85**，目标兑付 **$1.00**）。
@@ -446,7 +446,7 @@ TradeShield 把两端接起来——并把最危险的那一步交给一个 AI A
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
 
-大多数 RWA 协议靠「拍脑袋的 LTV + 固定利率」定价。TradeShield 的定价**有经济学根基、可解释**：
+大多数 RWA 协议靠「拍脑袋的 LTV + 固定利率」定价。AgentBL 的定价**有经济学根基、可解释**：
 
 ```text
 gross_profit  P = invoice_value − cost_of_goods          ← 出口商可验证的毛利
@@ -528,7 +528,7 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
                             │ quote_hash / evidence_hash
             ┌───────────────┴───────────────────────────────────────────────┐
             │        Solidity 合约 (hardhat/)  ·  已上链 Sepolia              │
-            │  TradeShieldRWA · RiskPricingOracle · RWAOfferingPool · …       │
+            │  AgentBLRWA · RiskPricingOracle · RWAOfferingPool · …       │
             └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -538,7 +538,7 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
 
 ### ⛓️ 已上链 Sepolia
 
-许可型 demo 合约 `TradeShieldRWA` **已部署、可在浏览器核实**：
+许可型 demo 合约 `AgentBLRWA` **已部署、可在浏览器核实**：
 
 | | |
 |---|---|
@@ -567,7 +567,7 @@ npm run dev
 看到这行就成功了：
 
 ```text
-TradeShield Agent harness running at http://localhost:3000
+AgentBL Agent harness running at http://localhost:3000
 ```
 
 **环境要求**：Node.js ≥ 18.18.0 · 现代浏览器 · **无需 API Key、无外部依赖**（内置确定性 fallback，离线即可完整演示）。
@@ -580,7 +580,7 @@ TradeShield Agent harness running at http://localhost:3000
 #### A. 本地零配置演示（5 步）
 
 1. 装 Node ≥ 18.18.0：`node -v` 确认。
-2. 进入项目根目录：`cd TradeShield-AI`。
+2. 进入项目根目录：`cd AgentBL-AI`。
 3. 启动服务：`npm run dev`（Windows 若报错用 `npm.cmd run dev`）。
 4. 打开 `http://localhost:3000`。
 5. 照下方**两个界面操作步骤**玩。顶栏显示 `○ 合约未部署 · 当前为模拟上链`，铸造按钮产生**高保真模拟交易**——演示完整、不依赖网络。
@@ -604,7 +604,7 @@ TradeShield Agent harness running at http://localhost:3000
    ```bash
    cd hardhat
    npm install                          # 首次需要（约 1 分钟：hardhat + ethers）
-   npm run deploy:tradeshield:sepolia   # 部署 TradeShieldRWA 到 Sepolia
+   npm run deploy:agentbl:sepolia   # 部署 AgentBLRWA 到 Sepolia
    ```
    脚本会**自动把合约地址 + ABI 写进 `public/chain-config.json`**——前端无需手改。
 8. **连接钱包并铸造：**
@@ -634,7 +634,7 @@ TradeShield Agent harness running at http://localhost:3000
 
 | 现象 | 原因 / 解决 |
 |---|---|
-| 顶栏一直显示 `○ 合约未部署` | 没跑 B 路线，或 `public/chain-config.json` 里 `contracts.TradeShieldRWA` 为空。重跑第 7 步。 |
+| 顶栏一直显示 `○ 合约未部署` | 没跑 B 路线，或 `public/chain-config.json` 里 `contracts.AgentBLRWA` 为空。重跑第 7 步。 |
 | 点连接钱包没反应 | 没装 MetaMask（铸造会走模拟交易），装好后刷新。 |
 | MetaMask 报 `insufficient funds` | 部署账户没有 Sepolia 测试币，回到第 3 步。 |
 | `deploy` 报 `Missing SEPOLIA_RPC_URL` | `.env` 没建在项目根目录或字段名写错，检查第 6 步。 |
@@ -724,7 +724,7 @@ npx hardhat test          # 11 passing
 
 | 合约 | 职责 |
 |---|---|
-| `TradeShieldRWA.sol` | **已部署的许可型 demo 合约。** `tokenize(...)` 按 AI 定价铸造 RWA 并 emit `Tokenized`；`reprice(...)` emit `Repriced`。携带 `quoteHash` / `evidenceHash`。 |
+| `AgentBLRWA.sol` | **已部署的许可型 demo 合约。** `tokenize(...)` 按 AI 定价铸造 RWA 并 emit `Tokenized`；`reprice(...)` emit `Repriced`。携带 `quoteHash` / `evidenceHash`。 |
 | `RiskPricingOracle.sol` | `updatePricing(poolId, issuePrice, riskLevel, action, evidenceHash)` → emit `PricingUpdated`，持久化最新 quote/evidence 哈希 |
 | `RWAOfferingPool.sol` | `createOffering / subscribe / settle / pause` |
 | `EBLRegistry.sol` · `RWAToken.sol` | eBL `mint / pledge / release`；投资者 RWA 份额凭证 |
@@ -741,7 +741,7 @@ npx hardhat test          # 11 passing
 ### 📁 项目结构
 
 ```text
-TradeShield-AI/
+AgentBL-AI/
 ├── README.md              # 本文件
 ├── 基础说明.md            # 团队协作 / 新手上手 / Harness 背景（原 README）
 ├── package.json           # npm scripts

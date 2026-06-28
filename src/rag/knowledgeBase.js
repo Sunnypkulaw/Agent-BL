@@ -1,4 +1,4 @@
-// TradeShield RAG Risk Intelligence Knowledge Base
+// AgentBL RAG Risk Intelligence Knowledge Base
 // 28 entries across 7 MacroRiskEvent categories
 // All entries connect to the Shanghai -> Hamburg shipping route (Indian Ocean / Suez Canal)
 

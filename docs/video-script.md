@@ -1,4 +1,4 @@
-# 🎬 TradeShield · 项目视频脚本（AI Agent × Blockchain · 安全 / Risk Agent）
+# 🎬 AgentBL · 项目视频脚本（AI Agent × Blockchain · 安全 / Risk Agent）
 
 > **用途**：黑客松提交视频的口播脚本，主线是 **「我们的想法 + AI 亮点」**，并刻意对齐
 > 主赛道 **AI Agent × Blockchain** 与特别单项奖 **安全 / Risk Agent（Security / Risk Agent）**。
@@ -12,13 +12,13 @@
 
 ## 🎯 一句话定位（整支视频的「赢点」）
 
-> **大多数 Web3 项目里的「AI Agent」只是套了个聊天框；TradeShield 的 AI 是一个真正干脏活、
+> **大多数 Web3 项目里的「AI Agent」只是套了个聊天框；AgentBL 的 AI 是一个真正干脏活、
 > 担责任的「安全与风控 Agent」——它在投资者下单【之前】，替他们识别贸易欺诈、给真实世界风险
 > 定价，并把每一个决策写上链、由智能合约强制执行。AI 定价，链上执行。**
 
 英文 pitch（片头/片尾字幕）：
 
-> **TradeShield's AI isn't a chatbot — it's a Security & Risk Agent that prices real-world
+> **AgentBL's AI isn't a chatbot — it's a Security & Risk Agent that prices real-world
 > trade risk into an on-chain decision before investors are ever exposed.**
 > *The AI prices the risk. The chain enforces it.*
 
@@ -28,7 +28,7 @@
 
 > 国际贸易里，货一装船，钱要等一个多月才回来。出口商把代表货权的**电子提单**质押上链、发行
 > 以货值为支撑的 RWA，资本方折价认购、目标兑付 1 美元。但链下的世界全是欺诈和风险——
-> **谁在投资者下单前替他们看住这些？** TradeShield 的答案是一个 **AI 安全与风控 Agent**：
+> **谁在投资者下单前替他们看住这些？** AgentBL 的答案是一个 **AI 安全与风控 Agent**：
 > 它审单反欺诈、调用工具估值、给战争和保险风险定价，把「该不该开盘、发行价多少」写进链上合约。
 > 普通 DeFi 让市场猜价格；**我们让 AI 在认购前就把风险定成一个可解释、可上链的折价。**
 
@@ -41,7 +41,7 @@ on-chain issue price — before investors buy. The AI prices the risk; the chain
 ## ⏱️ 90 秒精简版（想法 → 安全亮点 → 战争 → 收束）
 
 **【0:00–0:20 想法】**
-> 这是 TradeShield。痛点很简单：货已装船、钱还要 45 天才回。出口商质押电子提单、发行 RWA 融资，
+> 这是 AgentBL。痛点很简单：货已装船、钱还要 45 天才回。出口商质押电子提单、发行 RWA 融资，
 > 投资者折价认购。但真正难的是——链下的欺诈和风险，谁来把关？我们的答案是一个 **AI 风控 Agent**。
 
 **【0:20–0:50 安全亮点：反欺诈审单】**
@@ -56,7 +56,7 @@ on-chain issue price — before investors buy. The AI prices the risk; the chain
 
 **【1:15–1:30 上链 + 收束】**
 > 每个决策连同**证据哈希**写进链上 RiskPricingOracle，可审计、防篡改。
-> **普通 DeFi 让市场猜价格；TradeShield 让 AI 在投资者下单前，把贸易风险定成可上链的折价。**
+> **普通 DeFi 让市场猜价格；AgentBL 让 AI 在投资者下单前，把贸易风险定成可上链的折价。**
 > AI 定价，链上执行。
 
 ---
@@ -68,7 +68,7 @@ on-chain issue price — before investors buy. The AI prices the risk; the chain
 
 ### 片头字幕（3 秒）
 ```
-TradeShield · AI 动态定价的 eBL-backed RWA 贸易融资协议
+AgentBL · AI 动态定价的 eBL-backed RWA 贸易融资协议
 The AI prices the risk. The chain enforces it.
 ETH Beijing 2026 · 主赛道 AI Agent × Blockchain · 单项奖 Security / Risk Agent
 ```
@@ -76,12 +76,12 @@ ETH Beijing 2026 · 主赛道 AI Agent × Blockchain · 单项奖 Security / Ris
 ### [0:00–0:30] 开场：我们的想法 & 那个该被问的问题
 **【画面】** 网页首页 / Logo（界面①顶部）
 **【口播】**
-> 大家好，这是 TradeShield。先看痛点：国际贸易里，货物一装船，出口商的钱要 30 到 45 天才回得来；
+> 大家好，这是 AgentBL。先看痛点：国际贸易里，货物一装船，出口商的钱要 30 到 45 天才回得来；
 > 而全球贸易融资缺口高达 **2.5 万亿美元**。我们让出口商把代表在途货权的**电子提单**质押上链，
 > 发行以这批货价值为支撑的 **RWA**，投资者折价认购、目标兑付 1 美元。
 > 但真正的难题不是发个币——是**链下的世界全是欺诈和风险**：单据可能造假、保险可能不足额、
 > 战争可能让一切归零。**谁在投资者下单之前，替他们把这些风险看准、定价？**
-> 这就是 TradeShield 的全部答案：一个 **AI 安全与风控 Agent**。
+> 这就是 AgentBL 的全部答案：一个 **AI 安全与风控 Agent**。
 
 🇬🇧 *The hard part isn't tokenizing a bill of lading — it's that the off-chain world is full of
 fraud and risk. Who prices that for the investor, before they buy? That's our AI Risk Agent.*
@@ -89,7 +89,7 @@ fraud and risk. Who prices that for the investor, before they buy? That's our AI
 ### [0:30–1:00] 定位：这才是「AI Agent × Blockchain」该有的样子
 **【画面】** README 架构图 / 简笔架构：`AI 引擎 → API → 智能合约`
 **【口播】**
-> TradeShield 是一个 **AI 动态定价的 RWA 贸易融资协议**。请记住一点：我们的 AI **不是聊天机器人**，
+> AgentBL 是一个 **AI 动态定价的 RWA 贸易融资协议**。请记住一点：我们的 AI **不是聊天机器人**，
 > 而是一个承担真实金融职责的 Agent——它**审单、估值、给风险定价、决定能融多少、该不该开盘**，
 > 然后把每一个决策写上链，由智能合约强制执行。
 > 这正是「AI Agent × Blockchain」最该有的分工：**AI 负责判断，区块链负责执行和存证。**
@@ -169,12 +169,12 @@ policy and schema guardrail validate it. 148 tests guard that invariant.*
 ### [3:30–3:50] 收束
 **【画面】** tagline 字幕全屏
 **【口播】**
-> 一句话总结：**普通 DeFi 让市场去猜价格、让清算去善后；TradeShield 让一个 AI 安全与风控 Agent，
+> 一句话总结：**普通 DeFi 让市场去猜价格、让清算去善后；AgentBL 让一个 AI 安全与风控 Agent，
 > 在投资者下单之前，就把贸易欺诈和真实世界风险，定成一个可解释、可上链的 RWA 折价。**
-> **AI 定价，链上执行。** 这就是 TradeShield。谢谢。
+> **AI 定价，链上执行。** 这就是 AgentBL。谢谢。
 
 🇬🇧 *Ordinary DeFi lets the market guess the price and lets liquidation clean up the mess.
-TradeShield lets an AI Security & Risk Agent price fraud and real-world risk into an explainable,
+AgentBL lets an AI Security & Risk Agent price fraud and real-world risk into an explainable,
 on-chain discount — before investors buy. The AI prices the risk. The chain enforces it.*
 
 ---
@@ -238,8 +238,8 @@ anchored on-chain.*
 - EN：**Not a chatbot — an on-chain Security & Risk Agent.**
 
 **收束金句**
-- 中：**普通 DeFi 让市场猜价格；TradeShield 让 AI 在你下单前把风险定价。**
-- EN：**Ordinary DeFi lets the market guess. TradeShield lets AI price the risk before you buy.**
+- 中：**普通 DeFi 让市场猜价格；AgentBL 让 AI 在你下单前把风险定价。**
+- EN：**Ordinary DeFi lets the market guess. AgentBL lets AI price the risk before you buy.**
 
 ---
 

@@ -1,4 +1,4 @@
-// TradeShield MCP Tool Implementations
+// AgentBL MCP Tool Implementations
 // 5 tools: get_trade_case, generate_pricing_quote, simulate_offering,
 // push_pricing_to_oracle, search_knowledge_base
 
@@ -235,9 +235,9 @@ export async function handlePushPricingToOracle({ case_id, pricing_quote } = {})
 
   // Build a deterministic but unique transaction payload
   const txPayload = {
-    oracle_id: 'TradeShield-RiskPricingOracle-v1',
+    oracle_id: 'AgentBL-RiskPricingOracle-v1',
     oracle_address: '0x' + crypto.createHash('sha256')
-      .update('TradeShield-RiskPricingOracle-v1')
+      .update('AgentBL-RiskPricingOracle-v1')
       .digest('hex').slice(0, 40),
     pool_address: '0x' + crypto.createHash('sha256')
       .update(case_id + '_pool')

@@ -287,7 +287,7 @@ function buildCase(c) {
       bl_id: `EWR-${c.contract_no.replace(/\//g, '-')}`,
       bl_no: `FS/WH/AL0/${c.contract_no.split('-').pop()}`,
       bl_type: 'electronic_warehouse_receipt',
-      ebl_platform: 'TradeShield ENI (数字仓单)',
+      ebl_platform: 'AgentBL ENI (数字仓单)',
       ebl_title_ref: `ENI-EWR-AL0-${c.contract_no.split('-').pop()}-${Math.random().toString(16).slice(2,6).toUpperCase()}`,
       shipper: `${c.supplier} (${c.supplier_en})`,
       consignee: '南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)',
@@ -421,7 +421,7 @@ function buildWarehouseReceipt(c) {
 |---|---|
 | **仓单类型** | 电子仓单 (Electronic Warehouse Receipt / EWR) |
 | **仓单编号** | EWR-${c.contract_no.replace(/\//g, '-')} |
-| **签发平台** | TradeShield ENI（数字仓单） |
+| **签发平台** | AgentBL ENI（数字仓单） |
 | **Token / Title Ref** | ENI-EWR-AL0-${c.contract_no.split('-').pop()}-XXXX |
 | **入库单号** | WH-FS-${c.contract_no.split('-').pop()} |
 | **签发日期** | ${c.sign_date} |

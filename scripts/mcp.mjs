@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// TradeShield MCP Tool Chain CLI Demo
+// AgentBL MCP Tool Chain CLI Demo
 // Runs the full 5-step MCP tool chain against the demo case
 
 import { callTool, MCP_TOOLS_MANIFEST } from '../src/mcp/mcpServer.js';
@@ -33,7 +33,7 @@ function info(label, value) {
 // ============================================================
 console.log('');
 console.log('╔══════════════════════════════════════════════════════════╗');
-console.log('║     TradeShield MCP Tool Chain — CLI Demo               ║');
+console.log('║     AgentBL MCP Tool Chain — CLI Demo               ║');
 console.log('╚══════════════════════════════════════════════════════════╝');
 
 // ============================================================

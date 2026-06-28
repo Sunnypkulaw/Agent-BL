@@ -1,4 +1,4 @@
-// TradeShield AI valuation tools (copper cathodes).
+// AgentBL AI valuation tools (copper cathodes).
 //
 // Each tool is exposed to the LLM as an OpenAI-compatible "function" spec and
 // has a matching executor. External-data tools (live price, historical trades)

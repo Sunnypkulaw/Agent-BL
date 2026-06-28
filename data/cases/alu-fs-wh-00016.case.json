@@ -10,7 +10,7 @@
     "bl_id": "EWR-2025-FS-AL0-CG-00016",
     "bl_no": "FS/WH/AL0/00016",
     "bl_type": "electronic_warehouse_receipt",
-    "ebl_platform": "TradeShield ENI (数字仓单)",
+    "ebl_platform": "AgentBL ENI (数字仓单)",
     "ebl_title_ref": "ENI-EWR-AL0-00016-B638",
     "shipper": "广西骏达供应链管理有限公司 (Guangxi Junda Supply Chain Management Co., Ltd.)",
     "consignee": "南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)",

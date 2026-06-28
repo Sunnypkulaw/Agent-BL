@@ -226,7 +226,7 @@ function buildSummary(events, profile, live) {
 
 /**
  * Assess real-world risk for a cargo via xAPI and return structured events.
- * @param {object} caseData a TradeShield case
+ * @param {object} caseData a AgentBL case
  * @param {object} [opts] { env, execute, forceFallback }
  *   - execute: injectable xAPI executor (tests) — see xapiClient.executeAction
  *   - forceFallback: skip live calls, use offline fixtures

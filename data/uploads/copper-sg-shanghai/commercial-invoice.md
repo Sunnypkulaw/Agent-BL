@@ -1,6 +1,6 @@
 # COMMERCIAL INVOICE
 
-> 拟真样例数据，用于 TradeShield demo。所有公司、人名、单号、银行信息均为**虚构**。
+> 拟真样例数据，用于 AgentBL demo。所有公司、人名、单号、银行信息均为**虚构**。
 
 **STRAIT RESOURCES TRADING PTE. LTD.**
 8 Marina View, #34-01 Asia Square Tower 1, Singapore 018960

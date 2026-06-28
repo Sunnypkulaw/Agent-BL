@@ -163,7 +163,7 @@ const GENERAL_INTENT = {
   label: 'General risk-intelligence lookup',
   retrieval: null,
   answer: (ctx, docs) =>
-    `Grounding this against TradeShield's risk intel: ${docs.map((d) => `${d.id} — ${d.snippet}`).join(' ')} `
+    `Grounding this against AgentBL's risk intel: ${docs.map((d) => `${d.id} — ${d.snippet}`).join(' ')} `
     + `In short: the RWA discount is priced as a share of the exporter's verified profit, 1.00 is a target (not guaranteed) redemption value, `
     + `and rising risk reprices or pauses the offering on-chain.`
 };
@@ -197,7 +197,7 @@ function buildLlmMessages(question, grounded, docs) {
     {
       role: 'system',
       content:
-        `You are TradeShield's hackathon Q&A assistant answering a judge. Rephrase the GROUNDED ANSWER clearly and concisely (<= 120 words). `
+        `You are AgentBL's hackathon Q&A assistant answering a judge. Rephrase the GROUNDED ANSWER clearly and concisely (<= 120 words). `
         + `Rules: use ONLY facts in the grounded answer; keep every citation tag like [MRI-...] or [POL-...]; never claim returns are guaranteed — `
         + `always preserve the "target redemption value, not guaranteed" nuance when present. Do not invent numbers.`
     },

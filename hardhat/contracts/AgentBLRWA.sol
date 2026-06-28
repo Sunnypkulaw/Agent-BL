@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-/// @title TradeShieldRWA — self-contained, permissionless demo contract for the
-///        browser (MetaMask) flow of the TradeShield dashboard.
+/// @title AgentBLRWA — self-contained, permissionless demo contract for the
+///        browser (MetaMask) flow of the AgentBL dashboard.
 /// @notice One transaction tokenizes an electronic Bill of Lading into an RWA
 ///         offering and mints the per-pool RWA balance to the caller, anchoring
 ///         the AI Pricing & Risk Agent's decision on-chain (issue price, risk
@@ -14,7 +14,7 @@ pragma solidity 0.8.24;
 ///         demo on Sepolia and produce a real, auditable transaction. Prices are
 ///         carried as USD * 1e6 (e.g. 0.848 USD => 848000). 1 RWA = 1.00 USD is a
 ///         TARGET redemption value, not a guarantee.
-contract TradeShieldRWA {
+contract AgentBLRWA {
     /// @dev Mirrors docs/contracts.md §2.3 / the off-chain pricing_action codes.
     enum Action {
         OPEN_OFFERING,        // 0

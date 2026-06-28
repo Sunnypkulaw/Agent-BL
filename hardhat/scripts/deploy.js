@@ -1,5 +1,5 @@
 /**
- * WEB3-10: Deploy TradeShield contracts to Sepolia.
+ * WEB3-10: Deploy AgentBL contracts to Sepolia.
  *
  * Required in project-root .env:
  *   SEPOLIA_RPC_URL=https://...
@@ -75,8 +75,8 @@ async function main() {
 
   if (demoSeed) {
     const metadataHash = ethers.id('EBL-2026-0001');
-    const evidenceHash = ethers.id('tradeshield-sepolia-evidence');
-    const quoteHash = ethers.id('tradeshield-sepolia-quote');
+    const evidenceHash = ethers.id('agentbl-sepolia-evidence');
+    const quoteHash = ethers.id('agentbl-sepolia-quote');
 
     const mintTx = await registry.mintEBL(metadataHash, deployer.address);
     await mintTx.wait();

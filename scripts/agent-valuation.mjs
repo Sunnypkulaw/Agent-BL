@@ -36,7 +36,7 @@ const caseFile = process.argv[2] ?? 'data/cases/copper-sg-shanghai.case.json';
 const caseData = JSON.parse(await fsp.readFile(caseFile, 'utf8'));
 
 const provider = resolveProvider();
-console.log('\nTradeShield AI valuation agent');
+console.log('\nAgentBL AI valuation agent');
 console.log('='.repeat(46));
 console.log(`Case        : ${caseData.case_id}  (${caseFile})`);
 console.log(`LLM         : ${isConfigured() ? `${provider.provider} / ${provider.model}` : 'none -> deterministic fallback'}`);

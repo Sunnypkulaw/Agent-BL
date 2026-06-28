@@ -1,4 +1,4 @@
-// TradeShield AI valuation agent.
+// AgentBL AI valuation agent.
 //
 // Orchestrates the copper-cathode market valuation:
 //   1. live LME-linked price   2. regional premium
@@ -19,7 +19,7 @@ import {
   computeCargoValuation
 } from './tools/copperValuationTools.js';
 
-const SYSTEM_PROMPT = `You are TradeShield's AI Pricing & Risk valuation analyst.
+const SYSTEM_PROMPT = `You are AgentBL's AI Pricing & Risk valuation analyst.
 Given a trade case backed by an electronic bill of lading, value the cargo so the protocol can price an RWA discount.
 Workflow:
 1. Call get_live_commodity_price for the commodity.

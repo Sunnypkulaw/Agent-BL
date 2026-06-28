@@ -1,4 +1,4 @@
-// TradeShield MCP Tests
+// AgentBL MCP Tests
 // Manifest validation + tool output shapes + error handling + chain integration
 
 import test from 'node:test';

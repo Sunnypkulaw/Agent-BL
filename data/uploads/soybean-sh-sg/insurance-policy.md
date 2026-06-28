@@ -1,6 +1,6 @@
 # 海运货物保险单 (Marine Cargo Insurance Policy)
 
-> 拟真样例数据，用于 TradeShield demo。
+> 拟真样例数据，用于 AgentBL demo。
 
 | | |
 |---|---|

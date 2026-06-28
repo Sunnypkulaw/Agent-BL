@@ -1,7 +1,7 @@
 // RAG risk-intelligence retriever (AI-11).
 //
 // A deliberately small, dependency-free retriever over a mock macro risk feed
-// (data/risk-intel/feed.json) plus TradeShield policy notes. It is the "R" in a
+// (data/risk-intel/feed.json) plus AgentBL policy notes. It is the "R" in a
 // RAG loop: given a trade case (or a free-text question), it returns the most
 // relevant risk-intel snippets with sources, which the pricing engine cites in
 // its evidence graph and the Judge Q&A assistant uses to ground answers.

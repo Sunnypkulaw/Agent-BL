@@ -1,5 +1,5 @@
 /**
- * Deploy TradeShieldRWA (the self-contained demo contract that the browser
+ * Deploy AgentBLRWA (the self-contained demo contract that the browser
  * dashboard drives via MetaMask) to the target network, then wire the deployed
  * address + ABI straight into the frontend by overwriting public/chain-config.json.
  *
@@ -17,8 +17,8 @@
  *   SEPOLIA_RPC_URL=https://...                                       (for Sepolia)
  *
  * Run:
- *   npm run deploy:tradeshield:injective      (Injective Testnet)
- *   npm run deploy:tradeshield:sepolia        (Ethereum Sepolia)
+ *   npm run deploy:agentbl:injective      (Injective Testnet)
+ *   npm run deploy:agentbl:sepolia        (Ethereum Sepolia)
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -49,8 +49,8 @@ async function main() {
   if (!SUPPORTED.includes(network.name)) {
     throw new Error(
       `Refusing to deploy on "${network.name}".\n` +
-      `  Use: npm run deploy:tradeshield:injective  (Injective Testnet)\n` +
-      `   or: npm run deploy:tradeshield:sepolia    (Ethereum Sepolia)`
+      `  Use: npm run deploy:agentbl:injective  (Injective Testnet)\n` +
+      `   or: npm run deploy:agentbl:sepolia    (Ethereum Sepolia)`
     );
   }
 
@@ -70,16 +70,16 @@ async function main() {
     throw new Error(`Deployer balance is 0 ${meta.gasToken}. Fund the wallet first.`);
   }
 
-  const Factory = await ethers.getContractFactory('TradeShieldRWA');
+  const Factory = await ethers.getContractFactory('AgentBLRWA');
   const contract = await Factory.deploy();
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
   const deployTx = contract.deploymentTransaction()?.hash ?? null;
   const chainId = (await ethers.provider.getNetwork()).chainId;
-  const { abi } = await artifacts.readArtifact('TradeShieldRWA');
+  const { abi } = await artifacts.readArtifact('AgentBLRWA');
 
-  console.log('\n✅ TradeShieldRWA deployed');
+  console.log('\n✅ AgentBLRWA deployed');
   console.log('   Address:', address);
   console.log('   Tx:     ', deployTx);
 
@@ -89,7 +89,7 @@ async function main() {
     chainId: '0x' + chainId.toString(16),
     chainIdDecimal: Number(chainId),
     explorerBase: meta.explorerBase,
-    contracts: { TradeShieldRWA: address },
+    contracts: { AgentBLRWA: address },
     deployedAt: new Date().toISOString(),
     deployTx,
     abi
@@ -101,13 +101,13 @@ async function main() {
   // 2) Deployment record.
   const outDir = path.join(__dirname, '..', 'deployments');
   fs.mkdirSync(outDir, { recursive: true });
-  const recordFilename = `${meta.name}-tradeshield.json`;
+  const recordFilename = `${meta.name}-agentbl.json`;
   const recordPath = path.join(outDir, recordFilename);
   fs.writeFileSync(recordPath, JSON.stringify({
     network: meta.name,
     chainId: Number(chainId),
     deployer: deployer.address,
-    contract: 'TradeShieldRWA',
+    contract: 'AgentBLRWA',
     address,
     deployTx,
     explorer: `${meta.explorerBase}${meta.explorerAddressPath}${address}`,

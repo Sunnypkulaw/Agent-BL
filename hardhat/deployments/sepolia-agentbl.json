@@ -2,7 +2,7 @@
   "network": "sepolia",
   "chainId": 11155111,
   "deployer": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
-  "contract": "TradeShieldRWA",
+  "contract": "AgentBLRWA",
   "address": "0x3bf5eA912bAcA135BF6F2908178cbf891B953e23",
   "deployTx": "0x8006b14e82742147d19bce10bc56627895ce540cac2dfabdcd504ea7ccc9947a",
   "explorer": "https://sepolia.etherscan.io/address/0x3bf5eA912bAcA135BF6F2908178cbf891B953e23",

@@ -1,4 +1,4 @@
-# TradeShield → Injective 新星计划 开发方向分析 v2
+# AgentBL → Injective 新星计划 开发方向分析 v2
 
 > **目标赛事**：Injective × Microsoft × Web3Labs 联合发起的 Injective 新星计划（AI × 真实应用场景方向）
 >
@@ -14,10 +14,10 @@
 
 ## 一、核心叙事：取代银行，不是服务银行
 
-### 1.1 传统贸易融资 vs TradeShield
+### 1.1 传统贸易融资 vs AgentBL
 
 ```
-传统模式（银行中介）                      TradeShield（Web3 原生）
+传统模式（银行中介）                      AgentBL（Web3 原生）
 
 出口商                                  出口商
   │                                       │
@@ -34,7 +34,7 @@
 
 ### 1.2 一句话定位
 
-> **TradeShield is a Web3-native trade finance protocol.**
+> **AgentBL is a Web3-native trade finance protocol.**
 >
 > Exporters tokenize electronic bills of lading on-chain. AI prices the cargo risk — not the exporter's credit score. Global investors fund the trade directly. No bank. No credit committee. No intermediary.
 >
@@ -44,7 +44,7 @@
 
 | # | 原则 | 含义 |
 |---|------|------|
-| 1 | **Exporters tokenize** | 出口商是主动方。打开 TradeShield，上传 eBL，一键 tokenize。不需要银行审批。 |
+| 1 | **Exporters tokenize** | 出口商是主动方。打开 AgentBL，上传 eBL，一键 tokenize。不需要银行审批。 |
 | 2 | **AI prices risk, not people** | AI 只评估"这批货 + 这条航线 + 当前世界局势"的风险。不查出口商的征信报告。 |
 | 3 | **Investors fund directly** | 全球任何人只要有钱包，就可以浏览 eBL 市场、认购 RWA。资金从投资者直达出口商。 |
 | 4 | **Smart contracts settle** | 进口商付款 → 合约自动兑付。货物到港 → 合约自动结算。不需要银行的清算部门。 |
@@ -54,7 +54,7 @@
 
 ## 二、项目当前状态总览
 
-TradeShield 是 ETHBeijing 2026 黑客松获奖项目，已具备核心能力：
+AgentBL 是 ETHBeijing 2026 黑客松获奖项目，已具备核心能力：
 
 | 维度 | 现状 |
 |------|------|
@@ -98,7 +98,7 @@ TradeShield 是 ETHBeijing 2026 黑客松获奖项目，已具备核心能力：
 
 | 合约 | 文件 | 说明 |
 |------|------|------|
-| `TradeShieldRWA` | [hardhat/contracts/TradeShieldRWA.sol](../hardhat/contracts/TradeShieldRWA.sol) | 主合约：tokenize() + 发行池管理 |
+| `AgentBLRWA` | [hardhat/contracts/AgentBLRWA.sol](../hardhat/contracts/AgentBLRWA.sol) | 主合约：tokenize() + 发行池管理 |
 | `RiskPricingOracle` | [hardhat/contracts/RiskPricingOracle.sol](../hardhat/contracts/RiskPricingOracle.sol) | AI 定价锚定上链 |
 | `RWAOfferingPool` | [hardhat/contracts/RWAOfferingPool.sol](../hardhat/contracts/RWAOfferingPool.sol) | 发行池：开盘→认购→暂停→结算 |
 | `EBLRegistry` | [hardhat/contracts/EBLRegistry.sol](../hardhat/contracts/EBLRegistry.sol) | eBL 注册表（需升级至 V2） |
@@ -464,7 +464,7 @@ AI 不关心出口商是谁。它只回答三个问题：
 
 ### 5.1 与其他项目的本质区别
 
-| 对比维度 | 典型参赛项目 | TradeShield |
+| 对比维度 | 典型参赛项目 | AgentBL |
 |----------|-------------|----------------|
 | 核心理念 | Web3 工具 / DeFi 协议 | **取代银行贸易融资的 Web3 原生协议** |
 | AI 角色 | 聊天/客服/推荐 | **货值定价 + 航线风险评估 + 自主决策** |
@@ -476,7 +476,7 @@ AI 不关心出口商是谁。它只回答三个问题：
 
 ### 5.2 一句话
 
-> **TradeShield:** Exporters tokenize eBLs. AI prices the cargo, not the credit score. Global investors fund the trade. Injective enforces every decision on-chain. No bank required.
+> **AgentBL:** Exporters tokenize eBLs. AI prices the cargo, not the credit score. Global investors fund the trade. Injective enforces every decision on-chain. No bank required.
 
 ### 5.3 3 分钟演示脚本
 
@@ -499,7 +499,7 @@ AI 不关心出口商是谁。它只回答三个问题：
                          └────────────┬─────────────┘
                                       │
     ┌─────────────────────────────────┼─────────────────────────────┐
-    │                      TradeShield Protocol                    │
+    │                      AgentBL Protocol                    │
     │                                                              │
     │  ┌───────────┐  ┌────────────────┐  ┌──────────────────┐    │
     │  │ 文档解析   │  │  自主 AI Agent  │  │  eBL 市场        │    │
@@ -540,13 +540,13 @@ AI 不关心出口商是谁。它只回答三个问题：
 | LLM API 在比赛期间限流 | 中 | 中 | 确定性 fallback 引擎已就绪（全离线可跑） |
 | ENI API 对接不及预期 | 低 | 中 | eBL 功能自包含，可独立演示 ENI 价值 |
 | 时间不足 | 高 | 高 | 严格按 P0→P1→P2 优先级执行 |
-| 评委不理解"取代银行"叙事 | 中 | 中 | "Uber replaced taxi dispatchers. TradeShield replaces trade finance banks." |
+| 评委不理解"取代银行"叙事 | 中 | 中 | "Uber replaced taxi dispatchers. AgentBL replaces trade finance banks." |
 
 ---
 
 ## 八、总结
 
-当前 TradeShield 底子扎实（155 测试、完整定价引擎、前后端全链路）。向 Injective + ENI + 丽讯科技方向转型的核心工作：
+当前 AgentBL 底子扎实（155 测试、完整定价引擎、前后端全链路）。向 Injective + ENI + 丽讯科技方向转型的核心工作：
 
 1. **链迁移**：Ethereum → Injective inEVM
 2. **AI 升级**：按需调用 → 事件驱动的自主决策 Agent

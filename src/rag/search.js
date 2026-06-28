@@ -1,4 +1,4 @@
-// TradeShield RAG Search Engine
+// AgentBL RAG Search Engine
 // Dual-mode: static knowledge base (28 deep entries) + real-time risk-intel feed
 // Supports keyword-weighted scoring over both sources
 

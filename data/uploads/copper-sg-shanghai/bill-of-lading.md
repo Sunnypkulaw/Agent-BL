@@ -1,6 +1,6 @@
 # NEGOTIABLE ELECTRONIC BILL OF LADING (eBL)
 
-> 拟真样例数据，用于 TradeShield demo。以下所有公司、人名、船名、单号、地址均为**虚构**，不指向任何真实实体或真实货运。
+> 拟真样例数据，用于 AgentBL demo。以下所有公司、人名、船名、单号、地址均为**虚构**，不指向任何真实实体或真实货运。
 > Issued as a sole electronic original on an MLETR-compliant eBL platform.
 
 | | |

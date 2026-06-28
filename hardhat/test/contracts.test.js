@@ -64,7 +64,7 @@ async function createDemoOffering(ctx) {
   return 1; // poolId
 }
 
-describe('TradeShield contracts', () => {
+describe('AgentBL contracts', () => {
   it('creates an offering and opens it', async () => {
     const ctx = await deployStack();
     const poolId = await createDemoOffering(ctx);

@@ -1,5 +1,5 @@
 """
-TradeShield AI pricing model — reference / sanity-check implementation (Python).
+AgentBL AI pricing model — reference / sanity-check implementation (Python).
 
 This is the *economic spec* for the profit-grounded RWA discount-issuance pricing
 implemented in `src/core/pricingEngine.js`. It is intentionally a standalone,
@@ -86,7 +86,7 @@ def quote(speed, cash, profit, collateral, coverage, risk_bps):
 
 
 def main():
-    print("\nTradeShield profit-grounded RWA pricing - copper SG -> Shanghai")
+    print("\nAgentBL profit-grounded RWA pricing - copper SG -> Shanghai")
     print("=" * 78)
     invoice = 6_875_000
     cogs = 5_500_000  # 500 MT x USD 11,000/MT pre-Hormuz cost basis

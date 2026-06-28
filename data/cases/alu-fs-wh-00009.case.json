@@ -10,7 +10,7 @@
     "bl_id": "EWR-2025-FS-AL0-CG-00009",
     "bl_no": "FS/WH/AL0/00009",
     "bl_type": "electronic_warehouse_receipt",
-    "ebl_platform": "TradeShield ENI (数字仓单)",
+    "ebl_platform": "AgentBL ENI (数字仓单)",
     "ebl_title_ref": "ENI-EWR-AL0-00009-54CA",
     "shipper": "厦门同鑫实业有限公司 (Xiamen Tongxin Industrial Co., Ltd.)",
     "consignee": "南方有色金属贸易有限公司 (SouthMet International Trade Co., Ltd.)",
