@@ -535,9 +535,9 @@ strong { color: var(--text); }
 .sub-line.big { font-size: 14px; }
 .sub-line.big strong { color: var(--accent-2); font-size: 18px; font-variant-numeric: tabular-nums; }
 .sub-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
-.mini-kv { display: flex; flex-direction: column; gap: 2px; background: #0a1124; border-radius: 10px; padding: 9px; }
+.mini-kv { display: flex; flex-direction: column; gap: 2px; background: #0a1124; border-radius: 10px; padding: 9px; min-width: 0; }
 .mini-kv-k { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-3); }
-.mini-kv-v { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mini-kv-v { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.25; }
 .mini-kv-v.gain { color: var(--ok); }
 .sub-foot { font-size: 10.5px; margin-top: 9px; }
 .sub-paused { font-size: 12.5px; color: var(--crit); }
