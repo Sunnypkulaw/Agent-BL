@@ -24,7 +24,7 @@ const CHAIN_PRESETS = {
       'https://k8s.testnet.json-rpc.injective.network',
       'https://testnet.sentry.chain.json-rpc.injective.network'
     ],
-    blockExplorerUrls: ['https://testnet.explorer.injective.network'],
+    blockExplorerUrls: ['https://testnet.blockscout.injective.network'],
     faucetUrl: 'https://testnet.faucet.injective.network/'
   }
 };
@@ -36,7 +36,7 @@ let _session = null; // { provider, signer, address }
 let _cachedProvider = null; // detected EIP-1193 provider
 
 /** Auto-detect the active EIP-1193 provider. Supports MetaMask, OKX, Trust, Bitget, Rabby, etc. */
-function getEthereumProvider() {
+export function getEthereumProvider() {
   if (_cachedProvider) return _cachedProvider;
   if (typeof window === 'undefined') return null;
   // Prefer wallet-specific namespaces (e.g. OKX → window.okxwallet), fall back to window.ethereum.
@@ -175,9 +175,13 @@ export async function connectWallet() {
 async function getContract(write = false) {
   const cfg = await loadChainConfig();
   const address = cfg?.contracts?.AgentBLRWA;
+  const hasAbi = Array.isArray(cfg?.abi) && cfg.abi.length > 0;
+  console.log('[mint] chain-config:', { network: cfg?.network, address: address?.slice(0,10)+'…', abiLen: cfg?.abi?.length, hasAbi, session: !!_session });
   if (!isAddress(address)) throw err('NO_CONTRACT', 'AgentBLRWA 尚未部署（chain-config 无地址）');
   if (!_session) throw err('NO_SESSION', '钱包未连接');
   const ethers = await loadEthers();
+  console.log('[mint] signer address:', await _session.signer.getAddress());
+  console.log('[mint] provider network:', await _session.provider.getNetwork());
   return new ethers.Contract(address, cfg.abi, write ? _session.signer : _session.provider);
 }
 
@@ -219,8 +223,28 @@ export function mintedTokensFor(quote, financingUsd) {
  */
 export async function mintOnChain(quote, financingUsd) {
   const cfg = await loadChainConfig();
+  console.log('[mint] mintOnChain start — quote:', {
+    blId: quote.bl_id || quote.case_id,
+    price: quote.final_issue_price_usd,
+    risk: quote.risk_score_bps,
+    level: quote.risk_level,
+    quoteHash: quote.quote_hash?.slice(0,18)+'…',
+    evidenceHash: quote.evidence_hash?.slice(0,18)+'…'
+  });
+  console.log('[mint] financingUsd:', financingUsd);
   const contract = await getContract(true);
   const a = mintArgsFromQuote(quote, financingUsd);
+  console.log('[mint] tokenize args:', {
+    blId: a.blId,
+    issuePriceE6: a.issuePriceE6.toString(),
+    tokenSupply: a.tokenSupply.toString(),
+    financingUsd: a.financingUsd.toString(),
+    collateralValueUsd: a.collateralValueUsd.toString(),
+    riskScoreBps: a.riskScoreBps,
+    riskLevel: a.riskLevel,
+    quoteHash: a.quoteHash?.slice(0,18)+'…',
+    evidenceHash: a.evidenceHash?.slice(0,18)+'…'
+  });
   let tx;
   try {
     tx = await contract.tokenize(
@@ -228,10 +252,26 @@ export async function mintOnChain(quote, financingUsd) {
       a.collateralValueUsd, a.riskScoreBps, a.riskLevel, a.quoteHash, a.evidenceHash
     );
   } catch (e) {
+    console.error('[mint] tokenize FAILED:', e);
     if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) throw err('REJECTED', '用户在钱包中拒绝了交易');
     throw e;
   }
-  const receipt = await tx.wait();
+  console.log('[mint] tx sent:', tx.hash);
+  console.log('[mint] waiting for confirmation...');
+  let receipt;
+  try {
+    // ethers v6 tx.wait() — 60s timeout, 1 confirmation
+    receipt = await Promise.race([
+      tx.wait(1),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('tx.wait() timed out after 60s')), 60000))
+    ]);
+    console.log('[mint] confirmed — block:', receipt.blockNumber, 'gas:', receipt.gasUsed?.toString());
+  } catch (waitErr) {
+    console.error('[mint] tx.wait() FAILED:', waitErr.message);
+    // Don't throw — tx might have been submitted; try to recover hash
+    console.log('[mint] tx may still be pending — hash:', tx.hash);
+    throw waitErr;
+  }
 
   let poolId = null, mintedAmount = null;
   for (const log of receipt.logs ?? []) {
@@ -301,5 +341,48 @@ export async function simulatedMint(caseId, quote, financingUsd) {
     address: tx.from ?? null,
     blockNumber: tx.block_number ?? null,
     gasUsed: tx.gas_used ?? null
+  };
+}
+
+/**
+ * Call PaymentOracle.logPaymentEvidence() directly from the connected wallet.
+ * User pays gas; payer field = the user's wallet address.
+ *
+ * @returns {Promise<{txHash, explorerUrl, blockNumber}>}
+ * @throws {Error} with .code: NO_SESSION | REJECTED
+ */
+export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, paymentRef, responseHash, quoteHash, evidenceHash, pricingAction }) {
+  const cfg = await loadChainConfig();
+  const address = cfg?.contracts?.PaymentOracle;
+  const abi = cfg?.paymentOracle?.abi;
+  if (!isAddress(address) || !abi) throw err('NO_CONTRACT', 'PaymentOracle 未部署 — 请先运行 deploy:payment-oracle');
+
+  if (!_session) throw err('NO_SESSION', '钱包未连接');
+
+  const ethers = await loadEthers();
+  const oracle = new ethers.Contract(address, abi, _session.signer);
+
+  let tx;
+  try {
+    tx = await oracle.logPaymentEvidence(
+      payer,
+      serviceId,
+      BigInt(amountMicrousd),
+      paymentRef,
+      responseHash,
+      quoteHash,
+      evidenceHash,
+      pricingAction
+    );
+  } catch (e) {
+    if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) throw err('REJECTED', '用户在钱包中拒绝了交易');
+    throw e;
+  }
+
+  const receipt = await tx.wait();
+  return {
+    txHash: tx.hash,
+    explorerUrl: explorerTx(cfg, tx.hash),
+    blockNumber: receipt.blockNumber
   };
 }

@@ -26,7 +26,7 @@ const { ethers, network, artifacts } = hre;
 const NETWORK_META = {
   injective_testnet: {
     name: 'injective_testnet',
-    explorerBase: 'https://testnet.explorer.injective.network',
+    explorerBase: 'https://testnet.blockscout.injective.network',
     explorerAddressPath: '/address/',
     explorerTxPath: '/tx/',
     gasToken: 'INJ'
@@ -59,7 +59,17 @@ async function main() {
 
   // ── Deploy PaymentOracle ──
   const Factory = await ethers.getContractFactory('PaymentOracle');
-  const contract = await Factory.deploy();
+
+  // Injective testnet sometimes needs explicit gas to avoid hanging
+  const feeData = await ethers.provider.getFeeData();
+  const overrides = {
+    gasLimit: 2_000_000n,
+    gasPrice: feeData.gasPrice ? feeData.gasPrice * 2n : 50000000000n // 50 gwei fallback
+  };
+
+  console.log(`⛏  Deploying with gasLimit=${overrides.gasLimit}, gasPrice=${overrides.gasPrice}wei…`);
+  const contract = await Factory.deploy(overrides);
+  console.log('⏳ Waiting for confirmation (Injective testnet may take 30-60s)…');
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();

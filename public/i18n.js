@@ -324,7 +324,7 @@ const DICT = {
     wr_fetch_fail: '拉取实时风险失败: {msg}',
 
     // footer
-    footer_left: 'AgentBL Agent · ETHBeijing 2026 hackathon',
+    footer_left: 'AgentBL Agent',
     footer_right: '所有数字由本地 AI 定价引擎实时产生 · 货值估算、风险评分与哈希均确定性、可离线复现 · 上链锚定于测试网',
 
     // ── x402 AI 风控报告市场 ──
@@ -644,7 +644,7 @@ const DICT = {
     wr_fetch_fail: 'Failed to fetch live risk: {msg}',
 
     // footer
-    footer_left: 'AgentBL Agent · ETHBeijing 2026 hackathon',
+    footer_left: 'AgentBL Agent',
     footer_right: 'Every number is produced live by the local AI pricing engine · valuation, risk scoring and hashes are deterministic and offline-reproducible · anchored on the testnet',
 
     // ── x402 AI Risk Report Market ──

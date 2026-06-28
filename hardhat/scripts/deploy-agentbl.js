@@ -26,7 +26,7 @@ const { ethers, network, artifacts } = hre;
 const NETWORK_META = {
   injective_testnet: {
     name: 'injective_testnet',
-    explorerBase: 'https://testnet.explorer.injective.network',
+    explorerBase: 'https://testnet.blockscout.injective.network',
     explorerAddressPath: '/address/',
     explorerTxPath: '/tx/',
     gasToken: 'INJ'

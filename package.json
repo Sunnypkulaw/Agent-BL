@@ -36,5 +36,8 @@
     "electronic-bill-of-lading",
     "rwa"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
 }

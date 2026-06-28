@@ -1356,6 +1356,7 @@ function updateX402PricingImpact(data) {
 }
 
 async function runX402Smoke() {
+  // Legacy: no-wallet demo mode — calls /api/x402/smoke directly
   const log = $('#x402-log');
   if (!log) return;
   log.innerHTML = `<p class="muted">${t('x402_running')}</p>`;
@@ -1386,7 +1387,10 @@ async function runX402Smoke() {
       updateX402PricingImpact(data);
       log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.intel_preview?.events_count || 0, intel: data.intel_preview?.deep_intel_count || 0 })}</span></p>`;
       if (data.payment?.txHash) {
-        log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_tx_log', { tx: data.payment.txHash.slice(0, 42) + '…' })}</span></p>`;
+        const isLive = data.payment.live;
+        const liveLabel = isLive ? '⛓️ On-chain' : '🔬 Mock hash (not on chain)';
+        const liveColor = isLive ? '#2EA043' : '#D29922';
+        log.innerHTML += `<p>• <span style="color:${liveColor};">${t('x402_tx_log', { tx: data.payment.txHash.slice(0, 42) + '…' })}</span> <span style="font-size:0.8em;color:${liveColor};">[${liveLabel}]</span></p>`;
       }
       log.innerHTML += `<p style="margin-top:8px;color:#2EA043;"><strong>${t('x402_pass')}</strong></p>`;
     } else {
@@ -1399,6 +1403,152 @@ async function runX402Smoke() {
   }
 }
 
+/**
+ * Real x402 wallet flow — user's wallet directly calls PaymentOracle on-chain:
+ *   1. GET endpoint → HTTP 402 + challenge
+ *   2. User signs challenge via personal_sign
+ *   3. User's wallet calls PaymentOracle.logPaymentEvidence() (user pays gas)
+ *   4. POST signed tx hash to server → intel report unlocked
+ */
+async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
+  const log = $('#x402-log');
+  if (!log) return;
+  log.innerHTML = `<p class="muted">${t('x402_initiating')}</p>`;
+  renderX402FlowReset();
+
+  // ── Get wallet ──
+  const eth = web3.getEthereumProvider();
+  if (!eth) {
+    log.innerHTML += `<p>• <span style="color:#D6336C;">❌ No wallet detected. Please install MetaMask or OKX wallet, or use the 🔥 Run Demo button.</span></p>`;
+    setX402Step('pay', 'error', 'No wallet');
+    return;
+  }
+
+  try {
+    // ── Step 1: GET without payment → HTTP 402 ──
+    setX402Step('challenge', 'active', t('x402_challenge_status'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_challenge_log')}</span></p>`;
+
+    const unpaidRes = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+    if (unpaidRes.status !== 402) {
+      throw new Error(`Expected HTTP 402, got ${unpaidRes.status}`);
+    }
+    const unpaidBody = await unpaidRes.json();
+    const challenge = unpaidBody.challenge;
+    const nonce = unpaidBody.nonce;
+    if (!challenge) throw new Error('No challenge message in 402 response');
+
+    log.innerHTML += `<p>• <span style="color:#D6336C;">📝 Challenge received: "${challenge.slice(0, 60)}…"</span></p>`;
+
+    // ── Step 2: Wallet personal_sign ──
+    setX402Step('pay', 'active', t('x402_signing_status'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">🦊 Opening wallet — please sign the payment authorization…</span></p>`;
+
+    // Ensure connected
+    if (!web3.isWalletConnected()) {
+      try {
+        const { address } = await web3.connectWallet();
+        state.wallet = { address };
+      } catch (e) {
+        if (e.code === 'NO_WALLET') throw e;
+        if (e.code === 'REJECTED') { const err = new Error('User rejected wallet connection'); err.code = 'REJECTED'; throw err; }
+        throw e;
+      }
+    }
+
+    const accounts = await eth.request({ method: 'eth_requestAccounts' });
+    const signerAddr = accounts[0];
+    const signature = await eth.request({
+      method: 'personal_sign',
+      params: [challenge, signerAddr]
+    });
+
+    log.innerHTML += `<p>• <span style="color:#2EA043;">✓ Signed by ${signerAddr.slice(0, 8)}…${signerAddr.slice(-4)}</span></p>`;
+
+    // ── Step 3: User's wallet calls PaymentOracle.logPaymentEvidence() on-chain ──
+    setX402Step('settle', 'active', t('x402_settling_status'));
+
+    // Compute evidence hashes via Web Crypto
+    const responsePayload = JSON.stringify({ serviceId, priceUSDC, payer: signerAddr, nonce });
+    const respBuf = new TextEncoder().encode(responsePayload);
+    const respDigest = await crypto.subtle.digest('SHA-256', respBuf);
+    const responseHash = '0x' + [...new Uint8Array(respDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const paymentRef = `x402:${serviceId}:${nonce}`;
+    const amountMicrousd = Math.floor(priceUSDC * 1_000_000);
+
+    let paymentResult;
+    let useDirectChain = false;
+    try {
+      paymentResult = await web3.logX402PaymentOnChain({
+        payer: signerAddr,
+        serviceId,
+        amountMicrousd,
+        paymentRef,
+        responseHash,
+        quoteHash: responseHash,
+        evidenceHash: responseHash,
+        pricingAction: 'OPEN'
+      });
+      useDirectChain = true;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">⛓️ On-chain tx sent from your wallet: ${paymentResult.txHash.slice(0, 18)}…</span></p>`;
+    } catch (chainErr) {
+      // Fallback: server relay if PaymentOracle not deployed or user rejected
+      if (chainErr.code === 'REJECTED') throw chainErr;
+      log.innerHTML += `<p>• <span style="color:#D29922;">⚠ Direct on-chain call unavailable (${chainErr.message}) — using server relay fallback.</span></p>`;
+    }
+
+    // ── Step 4: POST to server to get the unlocked intel report ──
+    const paidRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X402-Signature': signature,
+        'X402-Signer': signerAddr,
+        ...(useDirectChain ? {
+          'X402-TxHash': paymentResult.txHash,
+          'X402-BlockNumber': String(paymentResult.blockNumber)
+        } : {})
+      },
+      body: JSON.stringify({ nonce, txHash: useDirectChain ? paymentResult.txHash : undefined })
+    });
+
+    if (!paidRes.ok) {
+      const errBody = await paidRes.json().catch(() => ({}));
+      throw new Error(errBody.error || `Server returned ${paidRes.status}`);
+    }
+
+    const data = await paidRes.json();
+
+    // ── Done ──
+    setX402Step('pay', 'done', t('x402_signed'));
+    setX402Step('settle', 'done', useDirectChain ? '⛓️ Settled (your wallet)' : t('x402_settled'));
+    setX402Step('unlock', 'done', t('x402_unlocked'));
+    updateX402PaymentCard(data);
+    updateX402PricingImpact(data);
+
+    log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.events?.length || 0, intel: data.deepIntel?.length || 0 })}</span></p>`;
+
+    // Show the ACTUAL on-chain tx hash from user's wallet
+    const displayTx = useDirectChain ? paymentResult : data.payment;
+    if (displayTx?.txHash) {
+      const explorerUrl = displayTx.explorerUrl
+        || `https://testnet.blockscout.injective.network/tx/${displayTx.txHash}`;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">⛓️ <a href="${explorerUrl}" target="_blank" style="color:#1F6FEB;">View on Injective Explorer ↗</a></span></p>`;
+      log.innerHTML += `<p>• <span style="color:#2EA043;">💳 Payer (tx from YOUR wallet): ${signerAddr.slice(0, 10)}…${signerAddr.slice(-6)}</span></p>`;
+    }
+
+    log.innerHTML += `<p style="margin-top:8px;color:#2EA043;"><strong>💰 x402 Payment Complete ✓ — Report Unlocked</strong></p>`;
+  } catch (e) {
+    setX402Step('settle', 'error', t('x402_failed'));
+    log.innerHTML += `<p>• <span style="color:#D6336C;">✗ ${t('x402_fail_log', { msg: e.message })}</span></p>`;
+    if (e.code === 4001 || e.code === 'REJECTED') {
+      log.innerHTML += `<p>• <span style="color:#D29922;">⚠ User rejected in wallet</span></p>`;
+    }
+  }
+}
+
 function wireX402Handlers() {
   const smokeBtn = $('#x402-smoke-btn');
   if (smokeBtn) {
@@ -1408,12 +1558,7 @@ function wireX402Handlers() {
   const purchaseBtn = $('#x402-purchase-btn');
   if (purchaseBtn) {
     purchaseBtn.addEventListener('click', () => {
-      const log = $('#x402-log');
-      if (log) {
-        log.innerHTML = `<p class="muted">${t('x402_initiating')}</p>`;
-        log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_step1_call')}</span></p>`;
-      }
-      runX402Smoke();
+      purchaseWithWallet('premium-risk', 0.001, '/api/x402/intel/premium-risk');
     });
   }
 

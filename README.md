@@ -13,7 +13,7 @@
 [![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
 [![tests](https://img.shields.io/badge/tests-174_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
-[![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
+[![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
 [![MCP](https://img.shields.io/badge/MCP-Server-1F6FEB)](#)
 [![x402](https://img.shields.io/badge/x402-Enabled-D6336C)](#)
 [![deps](https://img.shields.io/badge/deps-zero-1F6FEB)](#)
@@ -161,8 +161,8 @@ The permissionless demo contract `AgentBLRWA` is **already deployed and verifiab
 | | |
 |---|---|
 | **Network** | Injective Testnet (chainId `1439`) |
-| **Contract** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
-| **Deploy tx** | [`0xf1cb0a86…3ef128`](https://testnet.explorer.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
+| **Contract** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
+| **Deploy tx** | [`0xf1cb0a86…3ef128`](https://testnet.blockscout.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
 
 Connect MetaMask (Injective Testnet) in **View ①** and click **Mint** to produce a real, signed on-chain
 transaction. No wallet / not deployed? The demo falls back to a high-fidelity simulated transaction —
@@ -553,8 +553,8 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
 | | |
 |---|---|
 | **网络** | Injective Testnet（chainId `1439`） |
-| **合约地址** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
-| **部署交易** | [`0xf1cb0a86…3ef128`](https://testnet.explorer.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
+| **合约地址** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
+| **部署交易** | [`0xf1cb0a86…3ef128`](https://testnet.blockscout.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
 
 在**界面①**连接 MetaMask（Injective Testnet）点「铸造」即可产生真实、已签名的链上交易。未连钱包 / 未部署时，
 demo 走高保真**模拟交易**——**离线永不中断**。

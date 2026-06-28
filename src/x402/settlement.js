@@ -1,36 +1,110 @@
 /**
  * x402 Settlement — AgentBL
  *
- * Handles the on-chain settlement side of x402 payments.
- * When the White Agent pays for premium intel:
- * 1. The payment proof goes to the x402 facilitator
- * 2. On settlement success, the chain emits PaymentEvidenceLogged
- * 3. This module provides the on-chain record-keeping layer
+ * Records x402 payment evidence on-chain via PaymentOracle.logPaymentEvidence().
  *
- * Uses the existing Injective Testnet deployment where AgentBLRWA
- * already lives. The PaymentOracle contract (new) records x402 payment
- * evidence on the same chain.
+ * When DEPLOYER_PRIVATE_KEY is configured in .env:
+ *   1. Builds the PaymentEvidence payload
+ *   2. Signs and sends logPaymentEvidence() tx to Injective Testnet
+ *   3. Returns the REAL on-chain tx hash
+ *
+ * When key is NOT configured:
+ *   Falls back to deterministic mock hashes (offline demo mode).
  */
 
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { x402Network, x402PayTo, x402Usdc } from './config.js';
 
-/**
- * Generate a deterministic payment receipt for offline demo mode.
- * In production, this would be the actual transaction hash from
- * the facilitator settlement.
- *
- * @param {object} params
- * @param {string} params.serviceId - x402 service purchased
- * @param {number} params.amountUSDC - Amount paid in USDC
- * @param {string} [params.paymentRef] - External payment reference
- * @returns {{ txHash: string, receipt: object }}
- */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, '../..');
+
+// Load .env if not already loaded (dotenv may not be installed)
+try {
+  const dotenvPath = path.join(rootDir, 'node_modules', 'dotenv', 'config.js');
+  if (fs.existsSync(dotenvPath)) {
+    await import(dotenvPath);
+  } else {
+    // Fallback: manual .env parser
+    try {
+      const envContent = fs.readFileSync(path.join(rootDir, '.env'), 'utf8');
+      for (const line of envContent.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx === -1) continue;
+        const key = trimmed.slice(0, eqIdx).trim();
+        let value = trimmed.slice(eqIdx + 1).trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+        if (key && !process.env[key]) process.env[key] = value;
+      }
+    } catch { /* no .env file */ }
+  }
+} catch { /* ignore */ }
+
+// ── Chain / wallet helpers ─────────────────────────────────
+
+let _provider = null;
+let _wallet = null;
+let _paymentOracle = null;
+
+function loadChainConfig() {
+  const configPath = path.join(rootDir, 'public', 'chain-config.json');
+  try {
+    return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function hasChainConfig() {
+  const cfg = loadChainConfig();
+  return Boolean(cfg?.contracts?.PaymentOracle && cfg?.paymentOracle?.abi);
+}
+
+async function getChainProvider() {
+  if (_provider) return _provider;
+  const { ethers } = await import('ethers');
+  const rpcUrl = process.env.INJECTIVE_RPC_URL
+    || 'https://testnet.sentry.chain.json-rpc.injective.network';
+  _provider = new ethers.JsonRpcProvider(rpcUrl);
+  return _provider;
+}
+
+async function getSigner() {
+  if (_wallet) return _wallet;
+  const privateKey = process.env.DEPLOYER_PRIVATE_KEY;
+  if (!privateKey) return null;
+
+  const provider = await getChainProvider();
+  const { ethers } = await import('ethers');
+  _wallet = new ethers.Wallet(privateKey.trim(), provider);
+  return _wallet;
+}
+
+async function getPaymentOracleContract() {
+  if (_paymentOracle) return _paymentOracle;
+  const cfg = loadChainConfig();
+  if (!cfg?.contracts?.PaymentOracle || !cfg?.paymentOracle?.abi) return null;
+
+  const signer = await getSigner();
+  if (!signer) return null;
+
+  const { ethers } = await import('ethers');
+  _paymentOracle = new ethers.Contract(cfg.contracts.PaymentOracle, cfg.paymentOracle.abi, signer);
+  return _paymentOracle;
+}
+
+// ── Payment receipt builders ───────────────────────────────
+
 export function generatePaymentReceipt({ serviceId, amountUSDC, paymentRef }) {
   const timestamp = new Date().toISOString();
   const nonce = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const payload = JSON.stringify({ serviceId, amountUSDC, paymentRef, timestamp, nonce });
-
   const txHash = `0x${crypto.createHash('sha256').update(payload).digest('hex')}`;
 
   return {
@@ -48,13 +122,6 @@ export function generatePaymentReceipt({ serviceId, amountUSDC, paymentRef }) {
   };
 }
 
-/**
- * Build the on-chain PaymentEvidence payload for the PaymentOracle contract.
- * Matches the shape of PaymentEvidenceLogged event.
- *
- * @param {object} params
- * @returns {{ requestId: number, payer: string, serviceId: string, amountMicrousd: number, paymentRef: string, responseHash: string }}
- */
 export function buildPaymentEvidence({ requestId, payer, serviceId, amountUSDC, paymentRef, responseData }) {
   const responseHash = responseData
     ? `0x${crypto.createHash('sha256').update(JSON.stringify(responseData)).digest('hex')}`
@@ -70,30 +137,93 @@ export function buildPaymentEvidence({ requestId, payer, serviceId, amountUSDC, 
   };
 }
 
-/**
- * Record payment evidence for the on-chain PaymentOracle.
- * In the offline demo, this generates deterministic hashes.
- * In production, this calls the Injective chain.
- */
-export async function recordPaymentEvidence({ serviceId, amountUSDC, responseData }) {
-  const { txHash, receipt } = generatePaymentReceipt({ serviceId, amountUSDC });
-  const evidence = buildPaymentEvidence({
-    serviceId,
-    amountUSDC,
-    paymentRef: txHash,
-    responseData
-  });
+// ── Main: record payment evidence ──────────────────────────
 
+/**
+ * Record payment evidence — if chain is available, call PaymentOracle.logPaymentEvidence()
+ * on Injective Testnet. Otherwise, generate deterministic mock hashes.
+ *
+ * @returns {Promise<{ok: boolean, payment: object}>}
+ */
+export async function recordPaymentEvidence({ serviceId, amountUSDC, responseData, payer: givenPayer }) {
+  const evidence = buildPaymentEvidence({ serviceId, amountUSDC, responseData, payer: givenPayer });
+
+  // ── Try on-chain first ──
+  try {
+    const oracle = await getPaymentOracleContract();
+    if (oracle) {
+      // Use given payer address (from MetaMask signature), or fall back to deployer
+      const payer = givenPayer || (await (await getSigner()).getAddress());
+
+      console.log(`[PaymentOracle] Submitting logPaymentEvidence on-chain…`);
+      console.log(`  givenPayer (from MetaMask): ${givenPayer || '(not provided)'}`);
+      console.log(`  Payer (resolved):  ${payer}`);
+      console.log(`  Service:  ${serviceId}`);
+      console.log(`  Amount:   ${evidence.amountMicrousd} micro-USDC`);
+
+      const tx = await oracle.logPaymentEvidence(
+        payer,
+        serviceId,
+        evidence.amountMicrousd,
+        evidence.paymentRef,
+        evidence.responseHash,
+        evidence.responseHash, // quoteHash = responseHash (same payload in MVP)
+        evidence.responseHash, // evidenceHash = responseHash
+        'OPEN'                 // pricingAction
+      );
+
+      console.log(`  Tx sent:  ${tx.hash}`);
+      console.log(`  Waiting for confirmation…`);
+
+      const receipt = await tx.wait();
+      const chainId = process.env.INJECTIVE_RPC_URL?.includes('injective') ? 1439 : 1439;
+      const explorerBase = 'https://testnet.blockscout.injective.network';
+
+      return {
+        ok: true,
+        payment: {
+          txHash: receipt.hash,
+          blockNumber: receipt.blockNumber,
+          explorerUrl: `${explorerBase}/tx/${receipt.hash}`,
+          receipt: {
+            network: x402Network(),
+            token: x402Usdc(),
+            payTo: x402PayTo(),
+            amountUSDC,
+            amountMicrousd: evidence.amountMicrousd,
+            serviceId,
+            paymentRef: evidence.paymentRef,
+            timestamp: new Date().toISOString()
+          },
+          evidence,
+          onChainEvent: 'PaymentEvidenceLogged',
+          live: true
+        }
+      };
+    }
+  } catch (err) {
+    console.warn(`[PaymentOracle] On-chain call failed, falling back to mock:`, err.message);
+  }
+
+  // ── Fallback: offline mock ──
+  const { txHash } = generatePaymentReceipt({ serviceId, amountUSDC });
   return {
     ok: true,
     payment: {
       txHash,
-      receipt,
+      receipt: {
+        network: x402Network(),
+        token: x402Usdc(),
+        payTo: x402PayTo(),
+        amountUSDC,
+        amountMicrousd: evidence.amountMicrousd,
+        serviceId,
+        paymentRef: txHash,
+        timestamp: new Date().toISOString()
+      },
       evidence,
-      // In production: real Injective tx hash
-      // For demo: deterministic hash that maps to the PaymentOracle event
       onChainEvent: 'PaymentEvidenceLogged',
-      contractNote: 'PaymentOracle.sol — deploy on Injective Testnet for real on-chain audit trail'
+      live: false
     }
   };
 }
