@@ -1024,3 +1024,77 @@ strong { color: var(--text); }
 .wr-sig-text { margin: 0 0 2px; font-size: 12px; line-height: 1.45; color: var(--text); }
 .wr-source { font-size: 10px; color: var(--violet); font-family: var(--mono); }
 @media (max-width: 760px) { .wr-signals { grid-template-columns: 1fr; } }
+
+/* ====================================================================
+   x402 Intel Market — paid intelligence view
+   ==================================================================== */
+.x402-flow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 20px 16px; margin-bottom: 20px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); overflow-x: auto;
+}
+.x402-step {
+  display: flex; align-items: center; gap: 10px;
+  flex: 1 1 0; min-width: 180px;
+  padding: 12px; background: var(--card);
+  border-radius: var(--radius); border: 1px solid var(--line-soft);
+  transition: border-color 0.2s;
+}
+.x402-step-num {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--panel-2); border: 2px solid var(--line);
+  font-size: 13px; font-weight: 700; color: var(--text-3); flex-shrink: 0;
+}
+.x402-step-body strong { font-size: 13px; color: var(--text); display: block; margin-bottom: 2px; }
+.x402-step-body p { margin: 0; font-size: 11px; }
+.x402-step-arrow {
+  font-size: 18px; color: var(--text-3); flex-shrink: 0;
+}
+.x402-step-status {
+  font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+}
+.x402-step-active .x402-step-num { border-color: #D6336C; color: #D6336C; }
+.x402-step-active .x402-step-status { color: #D6336C; }
+.x402-step-done .x402-step-num { border-color: #2EA043; background: #2EA04322; color: #2EA043; }
+.x402-step-done .x402-step-status { color: #2EA043; }
+.x402-step-error .x402-step-num { border-color: #D6336C; background: #D6336C22; }
+.x402-step-error .x402-step-status { color: #D6336C; }
+
+.x402-payment-detail { display: grid; gap: 10px; padding: 12px 0; }
+.x402-payment-kv {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 8px 12px; background: var(--panel); border-radius: var(--radius-sm);
+}
+.x402-hash {
+  font-family: var(--mono); font-size: 11px; color: var(--violet);
+  background: #0b1224; padding: 2px 8px; border-radius: 4px;
+  max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.x402-impact-grid {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 0; justify-content: center;
+}
+.x402-impact-cell { text-align: center; min-width: 160px; }
+.x402-impact-cell .live-price { font-size: 28px; font-weight: 800; margin: 6px 0; }
+.x402-impact-arrow { font-size: 24px; color: var(--violet); }
+.x402-delta-note { text-align: center; margin-top: 8px; }
+
+.x402-actions {
+  display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap;
+}
+.x402-log {
+  margin-top: 16px; padding: 12px 16px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); font-size: 13px; line-height: 1.7;
+  max-height: 300px; overflow-y: auto;
+}
+.x402-log p { margin: 2px 0; }
+
+@media (max-width: 760px) {
+  .x402-flow { flex-direction: column; }
+  .x402-step-arrow { transform: rotate(90deg); }
+  .x402-impact-grid { flex-direction: column; }
+  .x402-impact-arrow { transform: rotate(90deg); }
+}

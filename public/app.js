@@ -185,7 +185,9 @@ function setView(name) {
   $('#view-market').hidden = name !== 'market';
   $('#view-mint').hidden = name !== 'mint';
   $('#view-voyage').hidden = name !== 'voyage';
-  if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
+  $('#view-intel').hidden = name !== 'intel';
+  if (name === 'intel') { stopMarketClock(); stopVoyageClock(); renderIntelMarket(); }
+  else if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
   else {
     stopVoyageClock();
     if (name === 'market') { renderMarket(); startMarketClock(); }
@@ -1232,6 +1234,194 @@ async function onWalletClick() {
     else if (e.code === 'REJECTED') toast(t('t_connect_cancel'), true);
     else toast(t('t_connect_fail', { msg: e.message || e }), true);
   }
+}
+
+// ===========================================================================
+// VIEW ③ — x402 Intel Market rendering
+// ===========================================================================
+
+let x402Services = [];
+let x402Configured = false;
+let x402Network = 'eip155:1439';
+
+async function loadX402Config() {
+  try {
+    const res = await fetch('/api/x402/config');
+    const data = await res.json();
+    if (data.ok) {
+      x402Services = data.services;
+      x402Configured = data.configured;
+      x402Network = data.network;
+    }
+  } catch {
+    x402Services = [];
+    x402Configured = false;
+  }
+}
+
+function renderIntelMarket() {
+  loadX402Config().then(() => {
+    renderX402StatusBar();
+    renderX402ServiceList();
+    renderX402FlowReset();
+    wireX402Handlers();
+  });
+}
+
+function renderX402StatusBar() {
+  const el = $('#x402-status-bar');
+  if (!el) return;
+  const badgeClass = x402Configured ? 'badge green' : 'badge';
+  const badgeText = x402Configured ? '● x402 Ready' : '○ x402 Demo Mode';
+  el.innerHTML = [
+    `<div class="stat"><span class="stat-val">${x402Services.length}</span><span class="stat-label">Paid Services</span></div>`,
+    `<div class="stat"><span class="stat-val ${x402Configured ? 'green' : ''}">${badgeText}</span><span class="stat-label">Network: ${x402Network}</span></div>`,
+    `<div class="stat"><span class="stat-val">0.001–0.002</span><span class="stat-label">Price Range (USDC)</span></div>`
+  ].join('');
+}
+
+function renderX402ServiceList() {
+  const el = $('#x402-service-list');
+  if (!el) return;
+  if (!x402Services.length) {
+    el.innerHTML = '<p class="muted">Loading services…</p>';
+    return;
+  }
+  el.innerHTML = x402Services.map((s, i) => [
+    `<div class="x402-service-item" style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;" data-idx="${i}">`,
+    `<div style="display:flex;justify-content:space-between;align-items:center;">`,
+    `<strong style="font-size:14px;">${s.title}</strong>`,
+    `<span class="badge" style="background:#1F6FEB22;color:#1F6FEB;font-size:11px;">${s.priceUSDC} USDC</span>`,
+    `</div>`,
+    `<p class="muted" style="font-size:12px;margin:4px 0 0;">${s.description}</p>`,
+    `<span class="badge" style="font-size:10px;margin-top:4px;display:inline-block;">${s.status}</span>`,
+    `</div>`
+  ].join(''));
+}
+
+function renderX402FlowReset() {
+  const steps = ['challenge', 'pay', 'settle', 'unlock'];
+  for (const s of steps) {
+    const el = $(`#status-${s}`);
+    if (el) { el.textContent = '—'; el.className = 'x402-step-status'; }
+  }
+  const card = $('#x402-payment-card');
+  if (card) card.hidden = true;
+  const impact = $('#x402-pricing-impact');
+  if (impact) impact.hidden = true;
+  const log = $('#x402-log');
+  if (log) log.innerHTML = '';
+}
+
+function setX402Step(stepId, status, text) {
+  const el = $(`#status-${stepId}`);
+  if (!el) return;
+  el.textContent = text || status;
+  el.className = `x402-step-status x402-step-${status}`;
+}
+
+function updateX402PaymentCard(data) {
+  const card = $('#x402-payment-card');
+  if (!card) return;
+  card.hidden = false;
+  const tx = $('#x402-txhash');
+  if (tx && data.payment?.txHash) tx.textContent = data.payment.txHash.slice(0, 42) + '…';
+  const svc = $('#x402-service');
+  if (svc && data.payment?.receipt?.serviceId) svc.textContent = data.payment.receipt.serviceId;
+  const amt = $('#x402-amount');
+  if (amt && data.payment?.receipt?.amountUSDC !== undefined) amt.textContent = data.payment.receipt.amountUSDC + ' USDC';
+  const rh = $('#x402-resphash');
+  if (rh && data.payment?.evidence?.responseHash) rh.textContent = data.payment.evidence.responseHash.slice(0, 42) + '…';
+}
+
+function updateX402PricingImpact(data) {
+  const impact = $('#x402-pricing-impact');
+  if (!impact || !data.intel_preview) return;
+  impact.hidden = false;
+  const before = data.intel_preview.before_price;
+  const after = data.intel_preview.after_price;
+  const delta = data.intel_preview.price_delta;
+  if (before !== undefined) $('#x402-price-before').textContent = '$' + before.toFixed(3);
+  if (after !== undefined) $('#x402-price-after').textContent = '$' + after.toFixed(3);
+  if (delta !== undefined) {
+    const deltaNote = $('#x402-delta-note');
+    if (deltaNote) {
+      const dir = delta < 0 ? '↓ price drop (higher risk detected)' : delta > 0 ? '↑ price rise' : '→ no change';
+      deltaNote.innerHTML = `<span class="${delta !== 0 ? 'badge red' : 'badge'}">${dir} — delta: ${delta >= 0 ? '+' : ''}$${delta.toFixed(3)}</span>`;
+    }
+  }
+}
+
+async function runX402Smoke() {
+  const log = $('#x402-log');
+  if (!log) return;
+  log.innerHTML = '<p class="muted">Running x402 smoke test…</p>';
+  renderX402FlowReset();
+
+  try {
+    setX402Step('challenge', 'active', '402 Returned');
+    log.innerHTML += '<p>• <span style="color:#D6336C;">HTTP 402</span> — Payment Required challenge returned</p>';
+
+    setTimeout(() => setX402Step('pay', 'active', 'Signing…'), 500);
+    log.innerHTML += '<p>• <span style="color:#D6336C;">EIP-3009</span> — White Agent signing TransferWithAuthorization</p>';
+
+    setTimeout(() => setX402Step('settle', 'active', 'Settling…'), 1000);
+    log.innerHTML += '<p>• <span style="color:#1F6FEB;">Facilitator</span> — Settlement in progress</p>';
+
+    const res = await fetch('/api/x402/smoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ locale: 'en' })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      setX402Step('pay', 'done', '✓ Signed');
+      setX402Step('settle', 'done', '✓ Settled');
+      setX402Step('unlock', 'done', '✓ Intel Unlocked');
+      updateX402PaymentCard(data);
+      updateX402PricingImpact(data);
+      log.innerHTML += `<p>• <span style="color:#2EA043;">✓</span> Intel unlocked — ${data.intel_preview?.events_count || 0} risk events, ${data.intel_preview?.deep_intel_count || 0} deep intel entries</p>`;
+      if (data.payment?.txHash) {
+        log.innerHTML += `<p>• <span style="color:#2EA043;">✓</span> Settlement tx: <code style="font-size:11px;">${data.payment.txHash.slice(0, 42)}…</code></p>`;
+      }
+      log.innerHTML += '<p style="margin-top:8px;color:#2EA043;"><strong>x402 smoke test passed ✓</strong></p>';
+    } else {
+      setX402Step('unlock', 'error', '✗ Failed');
+      log.innerHTML += `<p>• <span style="color:#D6336C;">✗</span> x402 smoke test failed: ${data.error || 'Unknown error'}</p>`;
+    }
+  } catch (e) {
+    setX402Step('settle', 'error', '✗ Error');
+    log.innerHTML += `<p>• <span style="color:#D6336C;">✗</span> Error: ${e.message}</p>`;
+  }
+}
+
+function wireX402Handlers() {
+  const smokeBtn = $('#x402-smoke-btn');
+  if (smokeBtn) {
+    smokeBtn.addEventListener('click', runX402Smoke);
+  }
+
+  const purchaseBtn = $('#x402-purchase-btn');
+  if (purchaseBtn) {
+    purchaseBtn.addEventListener('click', () => {
+      const log = $('#x402-log');
+      if (log) {
+        log.innerHTML = '<p class="muted">Initiating x402 purchase flow…</p>';
+        log.innerHTML += '<p>• <span style="color:#D6336C;">Step 1:</span> Calling premium-risk endpoint without payment…</p>';
+      }
+      runX402Smoke();
+    });
+  }
+
+  document.querySelectorAll('#x402-service-list .x402-service-item').forEach((item) => {
+    item.addEventListener('click', function () {
+      document.querySelectorAll('#x402-service-list .x402-service-item').forEach((i) => {
+        i.style.borderColor = 'var(--border)';
+      });
+      this.style.borderColor = '#D6336C';
+    });
+  });
 }
 
 // ===========================================================================

@@ -54,6 +54,7 @@ puts an AI agent in charge of the dangerous part: **pricing real-world risk befo
 | 🔭 | **It sees through deceptive signals** | When war spikes the copper price, a price oracle thinks the collateral is *safer*. The agent knows war premium is a **correlated double-edge** (default ↑, insurance void, recovery ↓) and does the opposite: haircut + **PAUSE**. |
 | 🔗 | **Grounded, tool-using, retrieval-backed** | Tool calls for live LME price, regional premium and UN Comtrade historical comparables; a RAG retriever cites macro-risk intel with sources → an auditable **evidence graph**. |
 | 🌐 | **Live real-world risk via xAPI** | Pulls X/Twitter, Google News and prediction-market (Polymarket-style) signals through [xAPI](https://xapi.to), maps them to structured risk events, and folds them into the price — *the AI prices live world events on this cargo*. No key? Offline fixtures keep the demo running. |
+| 💰 | **x402 Paid Intel Market — AI buys premium intelligence** | When free intel isn't enough, the AI pays through the **x402 protocol** (HTTP 402 + EIP-3009) to unlock premium risk data. Every payment is signed, settled on-chain, and recorded in `PaymentOracle` — giving the pricing engine an auditable edge. `npm run smoke:x402` proves the full flow. |
 | ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **174 + 11 tests** guard the invariants. |
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
@@ -271,6 +272,8 @@ All commands run **offline** (deterministic fallback when no API key is set).
 | `npm run mcp` | Demo the MCP tool chain (get_trade_case → search → price → simulate → push oracle) |
 | `npm run agent:value` | Run the AI cargo-valuation tools (live price / historical comparables / valuation; offline fallback) |
 | `npm run intel` | **Live world-risk via xAPI**: X/Twitter + news + prediction-market signals → risk events → re-priced quote (offline fixtures with no key) |
+| `npm run smoke:x402` | **x402 end-to-end**: HTTP 402 challenge → EIP-3009 payment → settlement → premium intel unlocked |
+| `npm run x402:intel` | CLI paid intel query — pay for and display premium risk/valuation data |
 | `npm run check` | Low-cost self-check: files, scripts, seed data, engine integrity |
 | `npm run test` | Full unit / integration suite (`node --test`, **174 passing**) |
 | `npm run smoke` | Spin up a temp server and smoke-test the key APIs |
@@ -390,6 +393,7 @@ AgentBL-AI/
 | `npm run check` | files / scripts / seed / engine integrity | ✅ |
 | `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 174 passing |
 | `npm run smoke` | key APIs end-to-end | ✅ |
+| `npm run smoke:x402` | x402 paid-intel flow (HTTP 402 → payment → settlement → intel) | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause regression | ✅ |
 | `cd hardhat && npx hardhat test` | Solidity contract suite | ✅ 11 passing |
 
@@ -443,6 +447,7 @@ AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent
 | 🔭 | **能看穿欺骗性信号** | 战争推高铜价时，价格预言机以为抵押*更安全*；Agent 知道战争溢价是**相关性双刃剑**（违约↑、保险失效、回收↓），于是反向操作：haircut + **暂停**。 |
 | 🔗 | **有据可查：工具调用 + RAG 检索** | 调用实时 LME 铜价、区域升水、UN Comtrade 历史同类成交价；RAG 检索器带来源引用宏观风险情报 → 一张可审计的**证据图**。 |
 | 🌐 | **xAPI 实时世界风险** | 通过 [xAPI](https://xapi.to) 拉取 X/Twitter、Google 新闻、预测市场（Polymarket 类）信号，映射成结构化风险事件并入定价——*AI 为这批货实时给真实世界事件定价*。无密钥时走离线兜底，demo 永远能跑。 |
+| 💰 | **x402 付费情报市场 — AI 为情报付费** | 免费情报不够时，AI 通过 **x402 协议**（HTTP 402 + EIP-3009）支付解锁高级风险数据。每次支付签名上链，记录在 `PaymentOracle` 中——赋予定价引擎可审计的竞争力。`npm run smoke:x402` 验证全链路。 |
 | ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**174 + 11 个测试**守护不变量。 |
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
