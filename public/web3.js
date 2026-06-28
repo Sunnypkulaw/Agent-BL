@@ -217,34 +217,18 @@ export function mintedTokensFor(quote, financingUsd) {
 }
 
 /**
- * Mint on real chain: call tokenize(), wait, parse the Tokenized event.
- * @returns {Promise<{mode:'chain', txHash, poolId, mintedAmount, issuePriceE6, explorerUrl, address, blockNumber}>}
- * @throws {Error} with .code REJECTED on user cancel; others bubble up.
+ * Mint on real chain: submit tx, return pending result immediately,
+ * then poll a public RPC in background to confirm.
+ *
+ * Returns { mode:'chain_pending', txHash, ... } right after tx is sent.
+ * Calls onConfirmed(confirmedResult) when receipt arrives.
+ *
+ * @param {Function} [onConfirmed] — receives final result with poolId/blockNumber
  */
-export async function mintOnChain(quote, financingUsd) {
+export async function mintOnChain(quote, financingUsd, onConfirmed) {
   const cfg = await loadChainConfig();
-  console.log('[mint] mintOnChain start — quote:', {
-    blId: quote.bl_id || quote.case_id,
-    price: quote.final_issue_price_usd,
-    risk: quote.risk_score_bps,
-    level: quote.risk_level,
-    quoteHash: quote.quote_hash?.slice(0,18)+'…',
-    evidenceHash: quote.evidence_hash?.slice(0,18)+'…'
-  });
-  console.log('[mint] financingUsd:', financingUsd);
   const contract = await getContract(true);
   const a = mintArgsFromQuote(quote, financingUsd);
-  console.log('[mint] tokenize args:', {
-    blId: a.blId,
-    issuePriceE6: a.issuePriceE6.toString(),
-    tokenSupply: a.tokenSupply.toString(),
-    financingUsd: a.financingUsd.toString(),
-    collateralValueUsd: a.collateralValueUsd.toString(),
-    riskScoreBps: a.riskScoreBps,
-    riskLevel: a.riskLevel,
-    quoteHash: a.quoteHash?.slice(0,18)+'…',
-    evidenceHash: a.evidenceHash?.slice(0,18)+'…'
-  });
   let tx;
   try {
     tx = await contract.tokenize(
@@ -257,43 +241,68 @@ export async function mintOnChain(quote, financingUsd) {
     throw e;
   }
   console.log('[mint] tx sent:', tx.hash);
-  console.log('[mint] waiting for confirmation...');
-  let receipt;
-  try {
-    // ethers v6 tx.wait() — 60s timeout, 1 confirmation
-    receipt = await Promise.race([
-      tx.wait(1),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('tx.wait() timed out after 60s')), 60000))
-    ]);
-    console.log('[mint] confirmed — block:', receipt.blockNumber, 'gas:', receipt.gasUsed?.toString());
-  } catch (waitErr) {
-    console.error('[mint] tx.wait() FAILED:', waitErr.message);
-    // Don't throw — tx might have been submitted; try to recover hash
-    console.log('[mint] tx may still be pending — hash:', tx.hash);
-    throw waitErr;
-  }
 
-  let poolId = null, mintedAmount = null;
-  for (const log of receipt.logs ?? []) {
-    try {
-      const parsed = contract.interface.parseLog(log);
-      if (parsed?.name === 'Tokenized') {
-        poolId = parsed.args.poolId;
-        mintedAmount = parsed.args.mintedAmount;
-      }
-    } catch { /* not our event */ }
-  }
-
-  return {
-    mode: 'chain',
+  const pending = {
+    mode: 'chain_pending',
     txHash: tx.hash,
-    poolId: poolId != null ? poolId.toString() : null,
-    mintedAmount: mintedAmount != null ? Number(mintedAmount) : mintedTokensFor(quote, financingUsd),
+    poolId: null,
+    mintedAmount: mintedTokensFor(quote, financingUsd),
     issuePriceE6: Number(a.issuePriceE6),
     explorerUrl: explorerTx(cfg, tx.hash),
-    address: _session.address,
-    blockNumber: receipt.blockNumber
+    address: _session?.address ?? null,
+    blockNumber: null
   };
+
+  // Background: poll public RPC every 3s until confirmed (max 2min)
+  pollForReceipt(tx.hash, contract, quote, financingUsd, a, cfg, onConfirmed);
+
+  return pending;
+}
+
+async function pollForReceipt(txHash, contract, quote, financingUsd, a, cfg, onConfirmed) {
+  const ethers = await loadEthers();
+  const pubProvider = new ethers.JsonRpcProvider('https://testnet.sentry.chain.json-rpc.injective.network');
+  const deadline = Date.now() + 120000;
+
+  const poll = async () => {
+    try {
+      const receipt = await pubProvider.getTransactionReceipt(txHash);
+      if (receipt && receipt.blockNumber) {
+        console.log('[mint] confirmed via poll — block:', receipt.blockNumber);
+        let poolId = null, mintedAmount = null;
+        for (const log of receipt.logs ?? []) {
+          try {
+            const parsed = contract.interface.parseLog(log);
+            if (parsed?.name === 'Tokenized') {
+              poolId = parsed.args.poolId;
+              mintedAmount = parsed.args.mintedAmount;
+            }
+          } catch { /* not our event */ }
+        }
+        const confirmed = {
+          mode: 'chain',
+          txHash,
+          poolId: poolId != null ? poolId.toString() : null,
+          mintedAmount: mintedAmount != null ? Number(mintedAmount) : mintedTokensFor(quote, financingUsd),
+          issuePriceE6: Number(a.issuePriceE6),
+          explorerUrl: explorerTx(cfg, txHash),
+          address: _session?.address ?? null,
+          blockNumber: receipt.blockNumber
+        };
+        if (onConfirmed) onConfirmed(confirmed);
+        return;
+      }
+    } catch (e) {
+      // RPC hiccup, retry
+    }
+    if (Date.now() < deadline) {
+      setTimeout(poll, 3000);
+    } else {
+      console.warn('[mint] poll timed out — tx:', txHash);
+    }
+  };
+
+  setTimeout(poll, 2000); // start after 2s
 }
 
 /** Best-effort on-chain reprice for View ②'s in-transit events (non-blocking). */
@@ -309,7 +318,8 @@ export async function repriceOnChain(poolId, newQuote, reason) {
     newQuote.evidence_hash,
     String(reason || 'in-transit risk event').slice(0, 120)
   );
-  await tx.wait();
+  // Fire and forget — don't block on tx.wait()
+  console.log('[reprice] tx sent:', tx.hash);
   return { txHash: tx.hash, explorerUrl: explorerTx(cfg, tx.hash) };
 }
 
@@ -346,16 +356,13 @@ export async function simulatedMint(caseId, quote, financingUsd) {
 
 /**
  * Call PaymentOracle.logPaymentEvidence() directly from the connected wallet.
- * User pays gas; payer field = the user's wallet address.
- *
- * @returns {Promise<{txHash, explorerUrl, blockNumber}>}
- * @throws {Error} with .code: NO_SESSION | REJECTED
+ * Returns pending result immediately; polls public RPC for confirmation.
  */
-export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, paymentRef, responseHash, quoteHash, evidenceHash, pricingAction }) {
+export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, paymentRef, responseHash, quoteHash, evidenceHash, pricingAction }, onConfirmed) {
   const cfg = await loadChainConfig();
   const address = cfg?.contracts?.PaymentOracle;
   const abi = cfg?.paymentOracle?.abi;
-  if (!isAddress(address) || !abi) throw err('NO_CONTRACT', 'PaymentOracle 未部署 — 请先运行 deploy:payment-oracle');
+  if (!isAddress(address) || !abi) throw err('NO_CONTRACT', 'PaymentOracle 未部署');
 
   if (!_session) throw err('NO_SESSION', '钱包未连接');
 
@@ -365,24 +372,30 @@ export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, 
   let tx;
   try {
     tx = await oracle.logPaymentEvidence(
-      payer,
-      serviceId,
-      BigInt(amountMicrousd),
-      paymentRef,
-      responseHash,
-      quoteHash,
-      evidenceHash,
-      pricingAction
+      payer, serviceId, BigInt(amountMicrousd), paymentRef,
+      responseHash, quoteHash, evidenceHash, pricingAction
     );
   } catch (e) {
     if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) throw err('REJECTED', '用户在钱包中拒绝了交易');
     throw e;
   }
+  console.log('[x402] tx sent:', tx.hash);
 
-  const receipt = await tx.wait();
-  return {
-    txHash: tx.hash,
-    explorerUrl: explorerTx(cfg, tx.hash),
-    blockNumber: receipt.blockNumber
+  // Background poll for confirmation
+  const pubProvider = new ethers.JsonRpcProvider('https://testnet.sentry.chain.json-rpc.injective.network');
+  const deadline = Date.now() + 120000;
+  const poll = async () => {
+    try {
+      const receipt = await pubProvider.getTransactionReceipt(tx.hash);
+      if (receipt && receipt.blockNumber) {
+        console.log('[x402] confirmed via poll — block:', receipt.blockNumber);
+        if (onConfirmed) onConfirmed({ txHash: tx.hash, explorerUrl: explorerTx(cfg, tx.hash), blockNumber: receipt.blockNumber });
+        return;
+      }
+    } catch { /* retry */ }
+    if (Date.now() < deadline) setTimeout(poll, 3000);
   };
+  setTimeout(poll, 2000);
+
+  return { txHash: tx.hash, explorerUrl: explorerTx(cfg, tx.hash), blockNumber: null };
 }

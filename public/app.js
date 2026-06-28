@@ -1126,7 +1126,13 @@ async function onMint() {
       }
       if (!res) {
         try {
-          res = await web3.mintOnChain(quote, financing);
+          // Fire: tx sent → pending UI. Confirm: background poll → update UI.
+          res = await web3.mintOnChain(quote, financing, (confirmed) => {
+            state.mint = confirmed;
+            state.poolId = confirmed.poolId && confirmed.poolId !== 'sim' ? confirmed.poolId : state.poolId;
+            renderMintResult(confirmed, quote);
+            console.log('[mint] UI updated — block:', confirmed.blockNumber);
+          });
         } catch (e) {
           if (e.code === 'REJECTED') { toast(t('t_cancel_mint'), true); return; }
           res = await fallbackSim(quote, financing, t('t_chain_call_failed', { msg: e.message || '' }));
@@ -1140,6 +1146,7 @@ async function onMint() {
     state.poolId = res.poolId && res.poolId !== 'sim' ? res.poolId : state.poolId;
     renderMintResult(res, quote);
     if (res.mode === 'chain') toast(t('t_minted_chain', { n: f.int(res.mintedAmount), network: await networkName() }));
+    else if (res.mode === 'chain_pending') toast('⛓ 交易已提交，等待链上确认…');
     else toast(t('t_minted_sim', { n: f.int(res.mintedAmount) }));
   } catch (e) {
     toast(t('t_mint_fail', { msg: e.message || e }), true);
@@ -1157,25 +1164,28 @@ async function fallbackSim(quote, financing, note) {
 function renderMintResult(res, quote) {
   const box = $('#mint-result');
   clear(box);
-  const chain = res.mode === 'chain';
+  const chain = res.mode === 'chain' || res.mode === 'chain_pending';
+  const pending = res.mode === 'chain_pending';
   box.append(
     el('div', { class: 'mint-result-head' },
-      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim') }),
+      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: pending ? '⛓ 已提交 · 确认中' : chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim') }),
       el('span', { class: 'mint-minted' }, t('res_minted_pre') + ' ', el('strong', { text: f.int(res.mintedAmount) }), ' ' + t('res_unit_rwa'))
     ),
     el('div', { class: 'mint-result-rows' },
       mintRow(t('res_price'), `$${f.price(quote.final_issue_price_usd)} ${t('unit_per_token')}`),
       mintRow('tx_hash', f.shortHash(res.txHash, 12, 10), chain && res.explorerUrl ? res.explorerUrl : null),
       res.poolId ? mintRow('poolId', String(res.poolId)) : null,
-      res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : null
+      res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : (pending ? mintRow('block', '⏳ 确认中…') : null)
     )
   );
-  if (chain) {
+  if (chain && res.poolId) {
     const balRow = mintRow(t('res_balance'), t('res_reading'));
     box.append(balRow);
     web3.readBalance(res.poolId, res.address)
       .then((bal) => { balRow.querySelector('.mint-row-v').textContent = f.int(bal); })
       .catch(() => { balRow.querySelector('.mint-row-v').textContent = '—'; });
+  } else if (pending) {
+    box.append(el('p', { class: 'sub-foot', style: 'color:#D29922', text: '⏳ 交易已广播，正在后台轮询链上确认（每 3 秒）…' }));
   } else {
     box.append(el('p', { class: 'sub-foot muted', text: t('res_sim_foot') }));
   }
