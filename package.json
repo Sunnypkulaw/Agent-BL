@@ -21,7 +21,7 @@
     "mcp": "node scripts/mcp.mjs"
   },
   "engines": {
-    "node": ">=18.18.0"
+    "node": ">=20"
   },
   "keywords": [
     "hackathon",
@@ -31,5 +31,12 @@
     "electronic-bill-of-lading",
     "rwa"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@injectivelabs/x402": "0.0.1",
+    "express": "5.2.1"
+  },
+  "overrides": {
+    "ws": "8.21.0"
+  }
 }

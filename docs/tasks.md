@@ -11,12 +11,12 @@
 
 | 能力 | 真实状态 | 结论 / 下一步 |
 |---|---|---|
-| AI 定价、反欺诈审单、风险场景、RAG、xAPI | ✅ 已有 | `npm test` 实测 **174/174 passed**；继续作为产品主线，不重做 |
+| AI 定价、反欺诈审单、风险场景、RAG、xAPI | ✅ 已有 | `npm test` 实测 **200/200 passed**；继续作为产品主线，不重做 |
 | Solidity 合约 | 🟡 部分已有 | `hardhat test` 实测 **11/11 passed**；但当前真实部署主要是 `AgentBLRWA` Demo 合约，不等于完整五合约协议 |
 | Injective Testnet | 🟡 已有单合约真实交易 | 已有 chainId `1439`、合约地址和 explorer；仍需完整协议部署与事件回读 |
 | MCP Server | 🟡 只有 5-tool mock | 当前是自定义 handler + HTTP mock，不是标准 MCP stdio server；没有 resources，不能宣称“7 工具 + 3 资源” |
 | Demo Mode | 🟡 有离线 fallback、无统一开关 | 尚无 `demoMode=true`、状态标签、数据重置与 live/mock 一键切换 |
-| x402 | ❌ 未实现 | 无依赖、无 `src/x402/`、无 402 端点、无 `PaymentOracle`、无 CLI/测试 |
+| x402 | 🟡 支付底座完成 | X402-1/2/3/4/6 已完成，官方依赖、配置、V2 402 门禁、settlement/幂等恢复与 26 tests 已有；付费业务端点、PaymentOracle、CLI/UI 仍待实现 |
 | Preflight | ❌ 未实现 | `package.json` 无 `preflight`；现有 check/test/smoke/scenarios/demo 需汇总成赛前总闸门 |
 | 动效 | 🟡 仅 waterfall 已有 | `priceFlash`、`riskPulse`、支付流水和 Demo banner 待补，且必须支持 reduced motion |
 | 中文路演 | 🟡 有 30 秒和 3 分钟素材 | 需统一成 30 秒 / 1 分钟 / 3 分钟同一故事，并补 x402 与评委追问 |
@@ -378,11 +378,11 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
 | X402-1 | 做官方 Injective x402 兼容性 spike：确认 `@injectivelabs/x402` 版本、Node 版本、Express 依赖、facilitator `/supported`、USDC 资产、主网 `eip155:1776` 与测试网 `eip155:1439` 支持情况 | P0 | Codex | Done | `docs/x402-spike.md` 记录 npm/SDK 与真实 HTTP 响应：稳定版 `0.0.1`、Node `>=20`、Express optional peer；官方 Demo 与 `/supported` 实测仅返回 Testnet 1439 + USDC/EIP-3009。当前 staging facilitator 为 HTTP，Mainnet 1776 未验活；已明确 Testnet 一次性钱包、显式 Demo settlement 和 Mainnet fail-closed 边界 |
-| X402-2 | 加入最小依赖并锁版本：优先 `@injectivelabs/x402`；客户端确有需要才加 `@x402/core` / `@x402/evm` / `@x402/fetch` | P0 | Unassigned | Todo | `npm install` 后 lockfile 可复现；`npm audit` 无 high/critical；依赖用途写入 README |
-| X402-3 | 新建 `src/x402/config.js`：network、asset、decimals、payTo、facilitator URL、三端点价格、TTL、live/demo mode；启动时做 fail-fast 校验 | P0 | Unassigned | Todo | `tests/x402Config.test.js` 覆盖缺变量、非法 CAIP-2、金额精度、错误地址、live/demo 两模式 |
-| X402-4 | 新建 `src/x402/server.js`：统一 402 challenge、V2 标准 headers、支付校验、settle、成功后放行；不把业务逻辑复制进 middleware | P0 | Unassigned | Todo | 未支付返回 402 + 可解码 requirements；合法支付返回 200；非法/过期/错网/错金额/错收款人均拒绝 |
+| X402-2 | 加入最小依赖并锁版本：优先 `@injectivelabs/x402`；客户端确有需要才加 `@x402/core` / `@x402/evm` / `@x402/fetch` | P0 | Codex | Done | 精确锁定 `@injectivelabs/x402@0.0.1` + `express@5.2.1`，Node 提升到 `>=20`；`ws` override 到修复版 `8.21.0`，`npm audit` 为 0 vulnerabilities；README 已说明用途与不引入第二套 x402 包的边界 |
+| X402-3 | 新建 `src/x402/config.js`：network、asset、decimals、payTo、facilitator URL、三端点价格、TTL、live/demo mode；启动时做 fail-fast 校验 | P0 | Codex | Done | `config.js` 固定 1776/1439 原生 USDC、3 个 atomic price、Live/Demo 与 HTTPS 门禁；`/supported` 校验 V2/exact/asset/decimals/EIP-3009；`tests/x402Config.test.js` 10 tests passed |
+| X402-4 | 新建 `src/x402/server.js`：统一 402 challenge、V2 标准 headers、支付校验、settle、成功后放行；不把业务逻辑复制进 middleware | P0 | Codex | Done | Express middleware 输出可解码 `PAYMENT-REQUIRED`，使用官方 decoder；在 facilitator 前拒绝 malformed/expired/future/wrong network/asset/amount/payTo/domain，settle 成功才 `next()`；`tests/x402Server.test.js` 9 tests passed |
 | X402-5 | 新建 `src/x402/client.js`：支持浏览器外部钱包和 CLI signer 的 402→签名→重试流程；私钥绝不从前端发往服务端 | P0 | Unassigned | Todo | client contract tests；取消签名、余额不足、网络错误、settlement timeout 都有明确可恢复提示 |
-| X402-6 | 新建 `src/x402/settlement.js`：facilitator verify/settle adapter、幂等键、receipt store、重试与状态机 `CHALLENGED/SIGNED/SETTLING/SETTLED/UNLOCKED/FAILED` | P0 | Unassigned | Todo | 同一 payment payload 并发提交只结算一次；进程重启后可恢复；失败不解锁报告 |
+| X402-6 | 新建 `src/x402/settlement.js`：facilitator verify/settle adapter、幂等键、receipt store、重试与状态机 `CHALLENGED/SIGNED/SETTLING/SETTLED/UNLOCKED/FAILED` | P0 | Codex | Done | 官方 V2 verify/settle adapter + bounded retry + 原子 JSON receipt store + single-flight；已结算/解锁重启恢复，悬空 SETTLING 转人工 reconciliation FAILED，失败永不解锁；`tests/x402Settlement.test.js` 7 tests passed |
 | X402-7 | 定义 `PaidReportEnvelope` schema，至少包含 `report_id/kind/case_id/payer/payee/network/asset/amount/payment_tx/settled_at/data_snapshot/model_provider/evidence_hash/report_hash/expires_at` | P0 | Unassigned | Todo | schema 正反例测试；`report_hash` 可重算；不含原始 chain-of-thought、私钥或完整敏感单据 |
 | X402-8 | 实现三个付费端点，复用现有 `worldRiskAgent`、`valuationAgent`、`documentConsistency`、`pricingEngine` 和 scenario runner | P0 | Unassigned | Todo | `tests/x402Endpoints.test.js` 验证 3 个端点在支付后返回不同且有业务价值的结构化结果；不得出现双套定价逻辑 |
 | X402-9 | 新建 `hardhat/contracts/PaymentOracle.sol`：把 `reportHash`、`caseIdHash`、原始 payment tx hash、payer、asset、amount 绑定为事件；防重复存证并支持 attestor 权限 | P0 | Unassigned | Todo | `hardhat test` 覆盖成功、重复 receipt、零哈希、越权、金额为零；事件字段可由前端回读 |
@@ -478,7 +478,7 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | DEMO-2 | 首页只保一个主 CTA：“购买这笔 RWA 的 AI 风控报告”；二级入口再放融资/市场/航运 | P0 | Unassigned | Todo | 5 秒可用性测试：新用户能说出谁付钱、买什么、链上发生什么 |
 | DEMO-3 | 完成支付流水、riskPulse、priceFlash、waterfall、Agent activity 的同屏联动 | P1 | Unassigned | Todo | 同一 `report_id/decision_id/tx_hash` 贯穿各面板；没有随机日志或不一致数字 |
 | DEMO-4 | 编写 30 秒 / 1 分钟 / 3 分钟中文路演稿与英文 tagline，三版数字、角色和叙事完全一致 | P0 | Unassigned | Todo | 交叉检查 README、PRD、demo-script、video-script；至少 3 次计时彩排 |
-| DEMO-5 | 新建 `npm run preflight`，汇总 54 项检查：环境、文件/schema、174 Node tests、11 contract tests、smoke/scenarios、MCP、x402、RPC/facilitator、余额、合约地址、UI asset、文档一致性 | P0 | Unassigned | Todo | 输出分组 PASS/WARN/FAIL 和总数；关键项失败 exit 1；离线模式只跳过被明确标记的 live checks |
+| DEMO-5 | 新建 `npm run preflight`，汇总 54 项检查：环境、文件/schema、200 Node tests、11 contract tests、smoke/scenarios、MCP、x402、RPC/facilitator、余额、合约地址、UI asset、文档一致性 | P0 | Unassigned | Todo | 输出分组 PASS/WARN/FAIL 和总数；关键项失败 exit 1；离线模式只跳过被明确标记的 live checks |
 | DEMO-6 | 评委追问预案：为什么 AI、谁承担货损、为何不是证券保本、报告是否能伪造、支付失败怎么办、为何必须 Injective、与 TradeGo/银行差异 | P0 | Unassigned | Todo | 每题 20 秒答案 + 可点击证据/代码/tx；不做未经律师确认的法律断言 |
 | DEMO-7 | 录制 Live 主视频 + Demo Mode 兜底视频，准备本地 MP4、关键截图和 CLI 兜底 | P0 | Unassigned | Todo | 飞行模式也能播放；视频中的 tx 链接和当前部署配置一致 |
 | DEMO-8 | 做一次“故障彩排”：RPC、facilitator、LLM、xAPI、钱包分别失效 | P0 | Unassigned | Todo | 每种故障 15 秒内切到正确兜底；不刷新整场、不暴露堆栈/密钥 |
@@ -510,7 +510,7 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | 19 | case/cargo/payment/report ID 无重复 | 46 | reduced-motion 模式无强闪烁动效 |
 | 20 | README 覆盖当前全部环境变量 | 47 | Demo reset 后状态完全可重放 |
 | 21 | `npm run check` | 48 | 1 分钟主流程计时 ≤65 秒 |
-| 22 | `npm test` 且不少于当前 174 tests | 49 | 30 秒/1 分钟/3 分钟数字与角色一致 |
+| 22 | `npm test` 且不少于当前 200 tests | 49 | 30 秒/1 分钟/3 分钟数字与角色一致 |
 | 23 | `npm run smoke` | 50 | README/UI/视频中的 explorer 链接可打开 |
 | 24 | `npm run scenarios` | 51 | Live 模式无 `mock/random/demo tx` |
 | 25 | `npm run demo` | 52 | 日志与 telemetry 隐私/secret 扫描 |
@@ -534,7 +534,7 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | 评审维度 | 评委必须看到的证据 | 对应任务 | Gate |
 |---|---|---|---|
 | Innovation | “AI 报告本身可按次交易”，支付证据与报告哈希绑定，报告再驱动 RWA 定价 | X402-7~11、X402-15 | 一次真实 402 + 一次真实 oracle event |
-| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、174+11 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
+| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、200+11 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
 | Use Case & Impact | 45 天回款痛点、银行/保险/投资者/Agent 都能买报告、明确收费与市场入口 | PM-8、X402-8、TRUST-7 | 1 分钟说清 payer/buyer/value/revenue |
 | Product & UX | 402→支付→结算→解锁一屏看懂；证据可展开；钱包失败可恢复 | X402-11/12、DEMO-1~3 | 5 秒理解测试 + 60 秒 demo |
 | Ecosystem Fit | 官方 Injective x402、MCP、EVM、Explorer、可选 precompile；Azure eval/tracing | SP-1~10 | 每个 logo 都能指向代码、配置、trace 或 tx |
