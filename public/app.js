@@ -130,6 +130,7 @@ function onLangChanged() {
   renderMarket();
   renderViewMint();
   if (state.view === 'voyage') renderVoyage();
+  if (state.view === 'intel') renderIntelMarket();
 }
 
 // ===========================================================================

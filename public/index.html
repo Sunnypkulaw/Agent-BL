@@ -27,7 +27,7 @@
           <button class="nav-tab active" data-view="market" role="tab" data-i18n="nav_market">Investment Marketplace</button>
           <button class="nav-tab" data-view="mint" role="tab" data-i18n="nav_mint">Pricing & Mint</button>
           <button class="nav-tab" data-view="voyage" role="tab" data-i18n="nav_voyage">Voyage Risk</button>
-          <button class="nav-tab" data-view="intel" role="tab" data-i18n="nav_intel">x402 Intel Market</button>
+          <button class="nav-tab" data-view="intel" role="tab" data-i18n="nav_intel">x402 风控报告</button>
         </nav>
 
         <div class="topbar-right">
@@ -304,28 +304,25 @@
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW ③ — x402 Paid Intel Market: HTTP 402 premium risk intelligence   -->
+      <!-- VIEW ③ — x402 AI Risk Report Market: pay-to-unlock AI analysis   -->
       <!-- =================================================================== -->
       <section class="view" id="view-intel" hidden>
         <section class="market-hero" aria-labelledby="intel-title">
           <div class="market-hero-copy">
-            <p class="eyebrow" data-i18n="x402_hero_eyebrow">x402 Paid Intel Market</p>
-            <h1 id="intel-title" data-i18n="x402_hero_h1">AI pays for premium intelligence — on-chain audit trail.</h1>
+            <p class="eyebrow" data-i18n="x402_hero_eyebrow">x402 AI 风控报告市场</p>
+            <h1 id="intel-title" data-i18n="x402_hero_h1">一份 AI 风控报告，一个 RWA 定价决策。链上审计。</h1>
             <p class="market-subtitle" data-i18n-html="x402_hero_sub">
-              When free intel isn't enough, the AI Agent pays through the <strong>x402 protocol</strong>
-              (HTTP 402) to unlock premium risk data. Every payment is signed (EIP-3009), settled
-              via the x402 facilitator, and recorded on-chain — giving the pricing engine an
-              auditable edge over free-only AI agents.
+              投资 RWA 前，通过 <strong>x402 协议</strong>（HTTP 402）购买 AI 深度风控报告——5 维风险打分、反欺诈审单、估值对比，每份报告签名上链，<strong>PaymentOracle 存证</strong>。你花的每一分钱，都变成可审计的风险评估，直接注入 RWA 发行定价。
             </p>
           </div>
           <div id="x402-status-bar" class="market-stats" aria-live="polite"></div>
         </section>
 
         <section class="market-shell">
-          <aside class="market-rail" aria-label="x402 service catalog">
+          <aside class="market-rail" aria-label="x402 report catalog">
             <div class="market-rail-head">
-              <span class="metric-label" data-i18n="x402_services_heading">Available services</span>
-              <h2 data-i18n="x402_catalog_heading">Paid intel catalog</h2>
+              <span class="metric-label" data-i18n="x402_services_heading">可用报告</span>
+              <h2 data-i18n="x402_catalog_heading">AI 风控报告目录</h2>
             </div>
             <div id="x402-service-list" class="market-summary">
               <!-- Populated by JS -->
@@ -345,8 +342,8 @@
               <div class="x402-step" id="step-challenge">
                 <div class="x402-step-num">1</div>
                 <div class="x402-step-body">
-                  <strong data-i18n="x402_step1_title">HTTP 402 Challenge</strong>
-                  <p class="muted" data-i18n="x402_step1_desc">Server returns 402 Payment Required with payment instructions</p>
+                  <strong data-i18n="x402_step1_title">Request Report</strong>
+                  <p class="muted" data-i18n="x402_step1_desc">Investor requests AI deep risk report — server returns 402 Payment Required</p>
                 </div>
                 <span class="x402-step-status" id="status-challenge">—</span>
               </div>
@@ -354,8 +351,8 @@
               <div class="x402-step" id="step-pay">
                 <div class="x402-step-num">2</div>
                 <div class="x402-step-body">
-                  <strong data-i18n="x402_step2_title">Sign & Pay</strong>
-                  <p class="muted" data-i18n="x402_step2_desc">White Agent signs EIP-3009 TransferWithAuthorization</p>
+                  <strong data-i18n="x402_step2_title">x402 Payment</strong>
+                  <p class="muted" data-i18n="x402_step2_desc">Investor signs EIP-3009, pays USDC via x402 protocol</p>
                 </div>
                 <span class="x402-step-status" id="status-pay">—</span>
               </div>
@@ -363,8 +360,8 @@
               <div class="x402-step" id="step-settle">
                 <div class="x402-step-num">3</div>
                 <div class="x402-step-body">
-                  <strong data-i18n="x402_step3_title">Facilitator Settlement</strong>
-                  <p class="muted" data-i18n="x402_step3_desc">x402 facilitator settles USDC payment on-chain</p>
+                  <strong data-i18n="x402_step3_title">On-chain Settlement</strong>
+                  <p class="muted" data-i18n="x402_step3_desc">Facilitator settles on-chain, PaymentOracle records payment evidence</p>
                 </div>
                 <span class="x402-step-status" id="status-settle">—</span>
               </div>
@@ -372,8 +369,8 @@
               <div class="x402-step" id="step-unlock">
                 <div class="x402-step-num">4</div>
                 <div class="x402-step-body">
-                  <strong data-i18n="x402_step4_title">Intel Unlocked</strong>
-                  <p class="muted" data-i18n="x402_step4_desc">Premium risk intel flows into the AI pricing engine</p>
+                  <strong data-i18n="x402_step4_title">Report Unlocked</strong>
+                  <p class="muted" data-i18n="x402_step4_desc">AI risk report unlocked, risk data flows directly into the RWA pricing engine</p>
                 </div>
                 <span class="x402-step-status" id="status-unlock">—</span>
               </div>
@@ -391,7 +388,7 @@
                   <code id="x402-txhash" class="x402-hash">—</code>
                 </div>
                 <div class="x402-payment-kv">
-                  <span class="metric-label" data-i18n="x402_service_label">Service</span>
+                  <span class="metric-label" data-i18n="x402_service_label">Report type</span>
                   <span id="x402-service">—</span>
                 </div>
                 <div class="x402-payment-kv">
@@ -399,27 +396,27 @@
                   <span id="x402-amount">—</span>
                 </div>
                 <div class="x402-payment-kv">
-                  <span class="metric-label" data-i18n="x402_response_hash">Response hash</span>
+                  <span class="metric-label" data-i18n="x402_response_hash">Report hash</span>
                   <code id="x402-resphash" class="x402-hash">—</code>
                 </div>
               </div>
             </div>
 
-            <!-- Pricing impact: before vs after x402 paid intel -->
+            <!-- Pricing impact: before vs after x402 report -->
             <div id="x402-pricing-impact" class="card" hidden>
               <div class="card-head">
-                <span class="metric-label" data-i18n="x402_hero_eyebrow">x402 Paid Intel Market</span>
-                <strong data-i18n="x402_pricing_impact">Paid intel changes the AI's risk assessment</strong>
+                <span class="metric-label" data-i18n="x402_hero_eyebrow">x402 AI 风控报告市场</span>
+                <strong data-i18n="x402_pricing_impact">Report impact on RWA pricing</strong>
               </div>
               <div class="x402-impact-grid">
                 <div class="x402-impact-cell">
-                  <span class="metric-label" data-i18n="x402_before_label">Before (free intel)</span>
+                  <span class="metric-label" data-i18n="x402_before_label">Before (free overview)</span>
                   <div class="live-price"><span id="x402-price-before">$—</span></div>
                   <span class="badge" id="x402-risk-before">—</span>
                 </div>
                 <div class="x402-impact-arrow">→</div>
                 <div class="x402-impact-cell">
-                  <span class="metric-label" data-i18n="x402_after_label">After (paid intel)</span>
+                  <span class="metric-label" data-i18n="x402_after_label">After (deep report)</span>
                   <div class="live-price"><span id="x402-price-after">$—</span></div>
                   <span class="badge" id="x402-risk-after">—</span>
                 </div>
@@ -430,10 +427,10 @@
             <!-- Action buttons -->
             <div class="x402-actions">
               <button id="x402-smoke-btn" class="btn" data-i18n="x402_smoke_btn">
-                🔥 Run x402 Smoke Test
+                🔥 Run x402 Purchase Demo
               </button>
               <button id="x402-purchase-btn" class="btn primary" data-i18n="x402_purchase_btn">
-                💰 Purchase Premium Intel (0.001 USDC)
+                💰 Buy AI Risk Report (0.001 USDC)
               </button>
             </div>
 
