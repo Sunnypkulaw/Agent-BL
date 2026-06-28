@@ -462,7 +462,7 @@ ${factors ? `\n风险因素：\n${factors}` : ''}`;
       }
 
       state.mint = result;
-      const modeLabel = result.mode === 'chain' ? '⛓️ Sepolia 测试网' : '🔬 模拟交易';
+      const modeLabel = result.mode === 'chain' ? '⛓️ Injective 测试网' : '🔬 模拟交易';
 
       return `**RWA 铸造${result.mode === 'chain' ? '成功' : '（模拟）'}！** ${modeLabel}
 
@@ -500,7 +500,7 @@ ${result.explorerUrl ? `- 浏览器链接：${result.explorerUrl}` : ''}`;
       const isReal = await web3.isRealChainConfigured();
       return `钱包已连接 ✅
 - 地址：\`${addr}\`
-- 网络：${isReal ? 'Sepolia 测试网（合约已部署）' : 'Sepolia 测试网（模拟模式）'}
+- 网络：${isReal ? 'Injective 测试网（合约已部署）' : 'Injective 测试网（模拟模式）'}
 ${isReal ? '- 可执行真实链上铸造' : '- 将使用模拟交易（合约未部署或未连接）'}`;
     }
     return `钱包未连接 ❌

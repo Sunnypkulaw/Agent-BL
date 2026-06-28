@@ -1,7 +1,6 @@
-// Browser web3 integration for AgentBL — multi-chain support.
+// Browser web3 integration for AgentBL.
 //
-// Primary:  Injective Testnet (inEVM, chainId 1439)
-// Fallback: Ethereum Sepolia (chainId 11155111)
+// Target: Injective Testnet (inEVM, chainId 1439)
 //
 // Reads /chain-config.json at runtime to determine the target network.
 // Wallet connection auto-detects the chain and prompts the user to switch.
@@ -27,12 +26,6 @@ const CHAIN_PRESETS = {
     ],
     blockExplorerUrls: ['https://testnet.explorer.injective.network'],
     faucetUrl: 'https://testnet.faucet.injective.network/'
-  },
-  sepolia: {
-    chainName: 'Sepolia test network',
-    nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
-    rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
-    blockExplorerUrls: ['https://sepolia.etherscan.io']
   }
 };
 

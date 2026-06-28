@@ -11,7 +11,7 @@
 [![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
 [![tests](https://img.shields.io/badge/tests-154_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
-[![Sepolia](https://img.shields.io/badge/Sepolia-Live_on--chain-2EA043)](https://sepolia.etherscan.io/address/0xfCA6F1C4d4a1A1340224c111e62cE60F22623A2B)
+[![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
 [![deps](https://img.shields.io/badge/deps-zero-1F6FEB)](#)
 [![offline](https://img.shields.io/badge/demo-offline_ready-1F6FEB)](#)
 [![license](https://img.shields.io/badge/license-MIT-3FB950)](./LICENSE)
@@ -54,7 +54,7 @@ puts an AI agent in charge of the dangerous part: **pricing real-world risk befo
 | 🔭 | **It sees through deceptive signals** | When war spikes the copper price, a price oracle thinks the collateral is *safer*. The agent knows war premium is a **correlated double-edge** (default ↑, insurance void, recovery ↓) and does the opposite: haircut + **PAUSE**. |
 | 🔗 | **Grounded, tool-using, retrieval-backed** | Tool calls for live LME price, regional premium and UN Comtrade historical comparables; a RAG retriever cites macro-risk intel with sources → an auditable **evidence graph**. |
 | 🌐 | **Live real-world risk via xAPI** | Pulls X/Twitter, Google News and prediction-market (Polymarket-style) signals through [xAPI](https://xapi.to), maps them to structured risk events, and folds them into the price — *the AI prices live world events on this cargo*. No key? Offline fixtures keep the demo running. |
-| ⛓️ | **Live on Sepolia, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **154 + 11 tests** guard the invariants. |
+| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **154 + 11 tests** guard the invariants. |
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
 
@@ -140,7 +140,7 @@ So for the same cargo: **more urgency or more risk → lower issue price → hig
    └────────────────────┬───────────┘      └─────────────────────────────────┘
                         │ quote_hash / evidence_hash
         ┌───────────────┴───────────────────────────────────────────────┐
-        │     Solidity contracts (hardhat/)  ·  LIVE on Sepolia          │
+        │     Solidity contracts (hardhat/)  ·  LIVE on Injective Testnet   │
         │  AgentBLRWA · RiskPricingOracle · RWAOfferingPool · …       │
         └───────────────────────────────────────────────────────────────┘
 ```
@@ -149,17 +149,17 @@ So for the same cargo: **more urgency or more risk → lower issue price → hig
 structured `PricingQuote`** (`src/core/pricingSchema.js`), guarded by invariants (redemption exposure ≤
 safe coverage; `base − urgency − risk = indicative`; `final ≥ indicative`).
 
-### ⛓️ Live on Sepolia
+### ⛓️ Live on Injective Testnet
 
 The permissionless demo contract `AgentBLRWA` is **already deployed and verifiable**:
 
 | | |
 |---|---|
-| **Network** | Ethereum Sepolia (chainId `11155111`) |
-| **Contract** | [`0xfCA6F1C4d4a1A1340224c111e62cE60F22623A2B`](https://sepolia.etherscan.io/address/0xfCA6F1C4d4a1A1340224c111e62cE60F22623A2B) |
-| **Deploy tx** | [`0x76bc6213…413d0422`](https://sepolia.etherscan.io/tx/0x76bc6213a880c5b54664543f208e8cca28df790f1a0432afbad6d943413d0422) |
+| **Network** | Injective Testnet (chainId `1439`) |
+| **Contract** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
+| **Deploy tx** | [`0xf1cb0a86…3ef128`](https://testnet.explorer.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
 
-Connect MetaMask (Sepolia) in **View ①** and click **Mint** to produce a real, signed on-chain
+Connect MetaMask (Injective Testnet) in **View ①** and click **Mint** to produce a real, signed on-chain
 transaction. No wallet / not deployed? The demo falls back to a high-fidelity simulated transaction —
 **it never breaks offline.**
 
@@ -190,7 +190,7 @@ deterministic fallback runs the full demo offline).
 ### 🛠️ Operation Manual
 
 Two paths: **A. local zero-config demo** (recommended first; simulated minting, no wallet/keys/network) and
-**B. deploy to Sepolia for real on-chain** transactions.
+**B. deploy to Injective Testnet for real on-chain** transactions.
 
 #### A. Local zero-config demo (5 steps)
 
@@ -200,18 +200,18 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
 4. Open `http://localhost:3000`.
 5. Follow the **two-UI walkthrough** below. The top bar shows `○ Contract not deployed · simulated minting`, and the Mint button produces a **high-fidelity simulated transaction** — the demo is complete and network-independent.
 
-#### B. Deploy to Sepolia for real on-chain (8 steps)
+#### B. Deploy to Injective Testnet for real on-chain (8 steps)
 
-> Goal: the top bar turns `● Contract deployed`; clicking **Mint** in View ① pops MetaMask and produces a **real Sepolia transaction**.
+> Goal: the top bar turns `● Contract deployed`; clicking **Mint** in View ① pops MetaMask and produces a **real Injective transaction**.
 
-1. **Install MetaMask** and enable test networks → Sepolia appears in the network list.
+1. **Install MetaMask** and add Injective Testnet — chain ID `1439`, RPC `https://k8s.testnet.json-rpc.injective.network`.
 2. **Create a throwaway wallet** for deployment — ⚠️ never use a wallet holding real assets.
-3. **Get Sepolia test ETH** (~0.05 ETH is plenty) from a faucet, e.g. [Google Cloud Sepolia Faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia), [sepoliafaucet.com](https://sepoliafaucet.com), [Alchemy Faucet](https://www.alchemy.com/faucets/ethereum-sepolia).
-4. **Prepare an RPC URL** — public node `https://ethereum-sepolia-rpc.publicnode.com`, or an Alchemy/Infura Sepolia HTTPS endpoint.
+3. **Get testnet INJ** (~0.1 INJ is plenty) from the [Injective Testnet Faucet](https://testnet.faucet.injective.network/).
+4. **Prepare an RPC URL** — public node `https://k8s.testnet.json-rpc.injective.network`, or your own endpoint.
 5. **Export the deployer private key** (MetaMask → account details → export). Use it **only** for this test wallet.
 6. **Create `.env`** in the project root (other LLM keys can stay empty — the engine has a deterministic fallback):
    ```bash
-   SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+   INJECTIVE_RPC_URL=https://k8s.testnet.json-rpc.injective.network
    DEPLOYER_PRIVATE_KEY=0xyour_key_from_step_5
    ```
    > `.env` is gitignored. See `.env.example` for all fields.
@@ -219,7 +219,7 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
    ```bash
    cd hardhat
    npm install                          # first time only (~1 min: hardhat + ethers)
-   npm run deploy:agentbl:sepolia   # deploys AgentBLRWA to Sepolia
+   npm run deploy:injective   # deploys AgentBLRWA to Injective Testnet
    ```
    The script **auto-writes the address + ABI into `public/chain-config.json`** — no manual frontend edit.
 8. **Connect the wallet & mint:**
@@ -227,7 +227,7 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
    cd ..          # back to project root
    npm run dev
    ```
-   Open `http://localhost:3000` → top bar shows `● Contract deployed` → **View ①** → "🦊 Connect wallet" (it will prompt to switch to Sepolia) → enter a financing amount → "⛓ Mint RWA on-chain" → **sign in MetaMask** → the result card shows `tx_hash` (Etherscan link), `poolId`, and the on-chain RWA balance read back.
+   Open `http://localhost:3000` → top bar shows `● Contract deployed` → **View ①** → "🦊 Connect wallet" (it will prompt to switch to Injective Testnet) → enter a financing amount → "⛓ Mint RWA on-chain" → **sign in MetaMask** → the result card shows `tx_hash` (explorer link), `poolId`, and the on-chain RWA balance read back.
 
 #### C. The two UIs
 
@@ -251,9 +251,9 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
 |---|---|
 | Top bar stuck on `○ Contract not deployed` | Path B not run, or `contracts.AgentBLRWA` empty in `public/chain-config.json`. Re-run step 7. |
 | "Connect wallet" does nothing | MetaMask not installed (minting falls back to simulated). Install and refresh. |
-| MetaMask "insufficient funds" | Deployer wallet has no Sepolia ETH — back to step 3. |
-| `deploy` errors `Missing SEPOLIA_RPC_URL` | `.env` not in the project root, or field misnamed — recheck step 6. |
-| Mint tx pending forever | Sepolia congestion — wait or speed up in MetaMask. |
+| MetaMask "insufficient funds" | Deployer wallet has no INJ — back to step 3. |
+| `deploy` errors `Missing DEPLOYER_PRIVATE_KEY` | `.env` not in the project root, or field misnamed — recheck step 6. |
+| Mint tx pending forever | Testnet congestion — wait or increase gas in MetaMask. |
 | Want a new contract address | Re-run step 7; it overwrites `chain-config.json`. |
 
 ### ⌨️ CLI tools
@@ -442,7 +442,7 @@ AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent
 | 🔭 | **能看穿欺骗性信号** | 战争推高铜价时，价格预言机以为抵押*更安全*；Agent 知道战争溢价是**相关性双刃剑**（违约↑、保险失效、回收↓），于是反向操作：haircut + **暂停**。 |
 | 🔗 | **有据可查：工具调用 + RAG 检索** | 调用实时 LME 铜价、区域升水、UN Comtrade 历史同类成交价；RAG 检索器带来源引用宏观风险情报 → 一张可审计的**证据图**。 |
 | 🌐 | **xAPI 实时世界风险** | 通过 [xAPI](https://xapi.to) 拉取 X/Twitter、Google 新闻、预测市场（Polymarket 类）信号，映射成结构化风险事件并入定价——*AI 为这批货实时给真实世界事件定价*。无密钥时走离线兜底，demo 永远能跑。 |
-| ⛓️ | **已上链 Sepolia，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**154 + 11 个测试**守护不变量。 |
+| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**154 + 11 个测试**守护不变量。 |
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
 
@@ -527,7 +527,7 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
         └───────────────────┬─────────┘          └─────────────────────────────┘
                             │ quote_hash / evidence_hash
             ┌───────────────┴───────────────────────────────────────────────┐
-            │        Solidity 合约 (hardhat/)  ·  已上链 Sepolia              │
+            │        Solidity 合约 (hardhat/)  ·  已上链 Injective Testnet     │
             │  AgentBLRWA · RiskPricingOracle · RWAOfferingPool · …       │
             └───────────────────────────────────────────────────────────────┘
 ```
@@ -536,17 +536,17 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
 （`src/core/pricingSchema.js`），并由不变量校验（兑付敞口 ≤ 安全覆盖、`base − urgency − risk = indicative`、
 `final ≥ indicative`）保证可信。
 
-### ⛓️ 已上链 Sepolia
+### ⛓️ 已上链 Injective Testnet
 
 许可型 demo 合约 `AgentBLRWA` **已部署、可在浏览器核实**：
 
 | | |
 |---|---|
-| **网络** | Ethereum Sepolia（chainId `11155111`） |
-| **合约地址** | [`0xfCA6F1C4d4a1A1340224c111e62cE60F22623A2B`](https://sepolia.etherscan.io/address/0xfCA6F1C4d4a1A1340224c111e62cE60F22623A2B) |
-| **部署交易** | [`0x76bc6213…413d0422`](https://sepolia.etherscan.io/tx/0x76bc6213a880c5b54664543f208e8cca28df790f1a0432afbad6d943413d0422) |
+| **网络** | Injective Testnet（chainId `1439`） |
+| **合约地址** | [`0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94`](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94) |
+| **部署交易** | [`0xf1cb0a86…3ef128`](https://testnet.explorer.injective.network/tx/0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128) |
 
-在**界面①**连接 MetaMask（Sepolia）点「铸造」即可产生真实、已签名的链上交易。未连钱包 / 未部署时，
+在**界面①**连接 MetaMask（Injective Testnet）点「铸造」即可产生真实、已签名的链上交易。未连钱包 / 未部署时，
 demo 走高保真**模拟交易**——**离线永不中断**。
 
 ### 🚀 快速开始
@@ -575,7 +575,7 @@ AgentBL Agent harness running at http://localhost:3000
 ### 🛠️ 操作手册
 
 两条路线：**A. 本地零配置演示**（推荐先跑，模拟上链，不需要钱包/密钥/网络）与
-**B. 部署到 Sepolia 真实上链**。
+**B. 部署到 Injective Testnet 真实上链**。
 
 #### A. 本地零配置演示（5 步）
 
@@ -585,18 +585,18 @@ AgentBL Agent harness running at http://localhost:3000
 4. 打开 `http://localhost:3000`。
 5. 照下方**两个界面操作步骤**玩。顶栏显示 `○ 合约未部署 · 当前为模拟上链`，铸造按钮产生**高保真模拟交易**——演示完整、不依赖网络。
 
-#### B. 部署到 Sepolia，开启真实上链（8 步）
+#### B. 部署到 Injective Testnet，开启真实上链（8 步）
 
-> 目标：顶栏变 `● 合约已部署`，界面①点「铸造」会弹 MetaMask 签名、产生**真实 Sepolia 交易**。
+> 目标：顶栏变 `● 合约已部署`，界面①点「铸造」会弹 MetaMask 签名、产生**真实 Injective 交易**。
 
-1. **安装 MetaMask** 并开启测试网络 → 网络列表出现 Sepolia。
+1. **安装 MetaMask** 并添加 Injective Testnet——chain ID `1439`，RPC `https://k8s.testnet.json-rpc.injective.network`。
 2. **新建一个「只放测试币」的钱包**做部署账户——⚠️ 不要用有真实资产的钱包。
-3. **领 Sepolia 测试币**（约 0.05 ETH 足够），水龙头如 [Google Cloud Sepolia Faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia)、[sepoliafaucet.com](https://sepoliafaucet.com)、[Alchemy Faucet](https://www.alchemy.com/faucets/ethereum-sepolia)。
-4. **准备 RPC URL**——公共节点 `https://ethereum-sepolia-rpc.publicnode.com`，或 Alchemy/Infura 的 Sepolia HTTPS endpoint。
+3. **领 Injective 测试币**（约 0.1 INJ 足够），水龙头 [Injective Testnet Faucet](https://testnet.faucet.injective.network/)。
+4. **准备 RPC URL**——公共节点 `https://k8s.testnet.json-rpc.injective.network`，或你自己的 endpoint。
 5. **导出部署私钥**（MetaMask → 账户详情 → 导出私钥）。**仅用于这个测试钱包**。
 6. **在项目根目录创建 `.env`**（其余 LLM key 可留空，引擎有确定性 fallback）：
    ```bash
-   SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+   INJECTIVE_RPC_URL=https://k8s.testnet.json-rpc.injective.network
    DEPLOYER_PRIVATE_KEY=0x你第5步导出的私钥
    ```
    > `.env` 已被 gitignore。完整字段见 `.env.example`。
@@ -604,7 +604,7 @@ AgentBL Agent harness running at http://localhost:3000
    ```bash
    cd hardhat
    npm install                          # 首次需要（约 1 分钟：hardhat + ethers）
-   npm run deploy:agentbl:sepolia   # 部署 AgentBLRWA 到 Sepolia
+   npm run deploy:injective   # 部署 AgentBLRWA 到 Injective Testnet
    ```
    脚本会**自动把合约地址 + ABI 写进 `public/chain-config.json`**——前端无需手改。
 8. **连接钱包并铸造：**
@@ -612,7 +612,7 @@ AgentBL Agent harness running at http://localhost:3000
    cd ..          # 回到项目根目录
    npm run dev
    ```
-   打开 `http://localhost:3000` → 顶栏显示 `● 合约已部署` → 进入**界面①** → 「🦊 连接钱包」（提示切到 Sepolia）→ 输入融资金额 → 「⛓ 铸造 RWA 上链」→ **MetaMask 弹窗签名** → 结果卡显示 `tx_hash`（可点开 Etherscan）、`poolId`、链上读回的 RWA 余额。
+   打开 `http://localhost:3000` → 顶栏显示 `● 合约已部署` → 进入**界面①** → 「🦊 连接钱包」（提示切到 Injective Testnet）→ 输入融资金额 → 「⛓ 铸造 RWA 上链」→ **MetaMask 弹窗签名** → 结果卡显示 `tx_hash`（可点开浏览器）、`poolId`、链上读回的 RWA 余额。
 
 #### C. 两个界面的操作步骤
 
@@ -636,9 +636,9 @@ AgentBL Agent harness running at http://localhost:3000
 |---|---|
 | 顶栏一直显示 `○ 合约未部署` | 没跑 B 路线，或 `public/chain-config.json` 里 `contracts.AgentBLRWA` 为空。重跑第 7 步。 |
 | 点连接钱包没反应 | 没装 MetaMask（铸造会走模拟交易），装好后刷新。 |
-| MetaMask 报 `insufficient funds` | 部署账户没有 Sepolia 测试币，回到第 3 步。 |
-| `deploy` 报 `Missing SEPOLIA_RPC_URL` | `.env` 没建在项目根目录或字段名写错，检查第 6 步。 |
-| 铸造交易很久不确认 | Sepolia 偶尔拥堵，等待或在 MetaMask 加速。 |
+| MetaMask 报 `insufficient funds` | 部署账户没有 INJ 测试币，回到第 3 步。 |
+| `deploy` 报 `Missing DEPLOYER_PRIVATE_KEY` | `.env` 没建在项目根目录或字段名写错，检查第 6 步。 |
+| 铸造交易很久不确认 | 测试网偶尔拥堵，等待或在 MetaMask 加速。 |
 | 想换合约地址 | 重跑第 7 步，覆盖 `chain-config.json`。 |
 
 ### ⌨️ 命令行工具

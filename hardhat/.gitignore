@@ -2,4 +2,4 @@ node_modules
 artifacts
 cache
 package-lock.json
-deployments/sepolia.json
+deployments/*.json

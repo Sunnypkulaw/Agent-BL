@@ -152,7 +152,7 @@ recovery down. So it does the opposite — haircut 21%, risk 1410bps, and PAUSE.
 > 一句话钉死：**1 美元是目标、不是保本；那 0.20 的折价，正是 AI 为违约尾部预收的保费。**
 
 ### [3:05–3:30] 安全闭环：上链存证 + 为什么必须「事前」定准
-**【画面】** 界面① 点「⛓ 铸造 RWA 上链」（MetaMask 签名 / Sepolia 真实交易）→ 结果卡显示 `tx_hash` / `quote_hash` / `evidence_hash`；或合约时间线 `Funded → InTransit`
+**【画面】** 界面① 点「⛓ 铸造 RWA 上链」（MetaMask 签名 / Injective 真实交易）→ 结果卡显示 `tx_hash` / `quote_hash` / `evidence_hash`；或合约时间线 `Funded → InTransit`
 **【口播】**
 > 最后，安全闭环落在链上。Agent 的**每一次定价决策，连同它依据的证据哈希**，都写进链上的
 > **RiskPricingOracle**——可审计、防篡改、谁都改不了。
@@ -209,7 +209,7 @@ anchored on-chain.*
 - **兜底**：网页若出问题，全程可用终端讲完——
   `npm run agent:value`（工具调用轨迹）、`npm run price`（一份定价）、`npm run demo:default`（三种结算）、
   `npm run qa`（评委问答），逻辑不缺一环。
-- **真实上链加分**：若已部署 Sepolia（顶栏显示 `● 合约已部署`），亮点上链段落务必现场点 MetaMask 签名，
+- **真实上链加分**：若已部署 Injective Testnet（顶栏显示 `● 合约已部署`），亮点上链段落务必现场点 MetaMask 签名，
   展示真实 `tx_hash` + Etherscan，比模拟交易更有说服力。
 
 ---

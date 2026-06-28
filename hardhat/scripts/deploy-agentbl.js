@@ -9,16 +9,13 @@
  *
  * Supported networks:
  *   injective_testnet — Injective Testnet (inEVM, chainId 1439)
- *   sepolia           — Ethereum Sepolia (legacy fallback, chainId 11155111)
  *
  * Required in project-root .env:
  *   DEPLOYER_PRIVATE_KEY=0x...
  *   INJECTIVE_RPC_URL=https://k8s.testnet.json-rpc.injective.network  (for Injective)
- *   SEPOLIA_RPC_URL=https://...                                       (for Sepolia)
  *
  * Run:
- *   npm run deploy:agentbl:injective      (Injective Testnet)
- *   npm run deploy:agentbl:sepolia        (Ethereum Sepolia)
+ *   npm run deploy:injective      (Injective Testnet)
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -33,13 +30,6 @@ const NETWORK_META = {
     explorerAddressPath: '/address/',
     explorerTxPath: '/tx/',
     gasToken: 'INJ'
-  },
-  sepolia: {
-    name: 'sepolia',
-    explorerBase: 'https://sepolia.etherscan.io',
-    explorerAddressPath: '/address/',
-    explorerTxPath: '/tx/',
-    gasToken: 'ETH'
   }
 };
 
@@ -49,8 +39,7 @@ async function main() {
   if (!SUPPORTED.includes(network.name)) {
     throw new Error(
       `Refusing to deploy on "${network.name}".\n` +
-      `  Use: npm run deploy:agentbl:injective  (Injective Testnet)\n` +
-      `   or: npm run deploy:agentbl:sepolia    (Ethereum Sepolia)`
+      `  Use: npm run deploy:injective  (Injective Testnet)`
     );
   }
 

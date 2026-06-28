@@ -140,7 +140,7 @@ function settle(uint256 poolId) external;                            // 进口�
 不要一开始追求复杂多链。优先：
 
 1. 本地 Hardhat：保证合约测试稳定。
-2. Sepolia 或 Base Sepolia：部署 `RiskPricingOracle` + `RWAOfferingPool`。
+2. Injective Testnet：部署 `RiskPricingOracle` + `RWAOfferingPool`。
 3. 前端只需展示合约地址、交易 hash、`PricingUpdated` event（issue price 从 0.85 改到 0.78）。
 
 目录可借鉴常见 Hardhat + Next.js 结构：

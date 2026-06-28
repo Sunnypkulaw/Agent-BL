@@ -66,7 +66,7 @@ AgentBL 是 ETHBeijing 2026 黑客松获奖项目，已具备核心能力：
 | **世界风险情报** | ✅ 完整：xAPI 集成（X/Twitter + 新闻 + 预测市场） |
 | **AI 对话助手** | ✅ 完整：popup-assistant.js，9 个 Function Calling 工具 |
 | **文档一致性检查** | ✅ 完整：7 维度交叉核验 |
-| **区块链部署** | ⚠️ Ethereum Sepolia，非 Injective |
+| **区块链部署** | ✅ Injective Testnet (inEVM) |
 | **自主 AI Agent** | ❌ 缺失：当前 AI 为"按需调用"，非自主持续决策 |
 | **eBL 完整流转** | ❌ 缺失：无 transfer/endorse，无 cargoHash 防双花 |
 | **AI 文档解析** | ❌ 缺失：无 OCR/NLP 从扫描件提取字段 |
@@ -79,7 +79,7 @@ AgentBL 是 ETHBeijing 2026 黑客松获奖项目，已具备核心能力：
 
 #### 当前状态
 
-所有合约部署在 Ethereum Sepolia（Solidity），前端仅支持 MetaMask。
+所有合约部署在 Injective Testnet (inEVM/Solidity)，前端支持 MetaMask。
 
 #### 需要开发的内容
 
@@ -536,7 +536,7 @@ AI 不关心出口商是谁。它只回答三个问题：
 
 | 风险 | 概率 | 影响 | 应对 |
 |------|------|------|------|
-| inEVM 测试网不稳定 | 中 | 高 | 保留 Ethereum Sepolia 作为备用演示链 |
+| inEVM 测试网不稳定 | 中 | 高 | 保留本地模拟模式作为备用演示方案 |
 | LLM API 在比赛期间限流 | 中 | 中 | 确定性 fallback 引擎已就绪（全离线可跑） |
 | ENI API 对接不及预期 | 低 | 中 | eBL 功能自包含，可独立演示 ENI 价值 |
 | 时间不足 | 高 | 高 | 严格按 P0→P1→P2 优先级执行 |

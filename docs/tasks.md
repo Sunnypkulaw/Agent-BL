@@ -105,7 +105,7 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 | WEB3-7 | 实现最小 Solidity `RiskPricingOracle` 并 emit `PricingUpdated` | Sage | Done | `hardhat test` | `hardhat/contracts/RiskPricingOracle.sol`，`hardhat test` 6 passing |
 | WEB3-8 | 实现最小 Solidity `RWAOfferingPool` | Sage | Done | `hardhat test` | `hardhat/contracts/RWAOfferingPool.sol`（+ EBLRegistry/RWAToken），`hardhat test` 6 passing |
 | WEB3-9 | 把 `quote_hash` / `evidence_hash` 写入合约事件 | Sage | Done | contract event test | `PricingUpdated` + `OfferingRepriced` 含 evidence/quote hash，`latestQuoteHash/latestEvidenceHash` 持久化，测试已验证 |
-| WEB3-10 | 部署到 Sepolia 测试网 | Sage | Todo | 部署地址 + tx hash | - |
+| WEB3-10 | 部署到 Injective Testnet | Sage | Done | 部署地址 + tx hash | - |
 | WEB3-11 | 前端展示合约地址和 PricingUpdated event | Sage | Todo | 手动演示 | - |
 
 ## 7. MCP / RAG / Skill

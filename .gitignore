@@ -12,7 +12,7 @@ node_modules/
 hardhat/node_modules/
 hardhat/cache/
 hardhat/artifacts/
-hardhat/deployments/sepolia.json
+hardhat/deployments/*.json
 
 # OS / editor
 .DS_Store

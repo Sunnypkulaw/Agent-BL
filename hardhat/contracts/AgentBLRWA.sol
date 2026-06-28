@@ -11,7 +11,7 @@ pragma solidity 0.8.24;
 /// @dev    Deliberately NOT the full role-gated protocol (see EBLRegistry /
 ///         RWAOfferingPool / RiskPricingOracle for that). This is a single,
 ///         dependency-free, ungated contract so ANY wallet can drive the whole
-///         demo on Sepolia and produce a real, auditable transaction. Prices are
+///         demo on Injective Testnet and produce a real, auditable transaction. Prices are
 ///         carried as USD * 1e6 (e.g. 0.848 USD => 848000). 1 RWA = 1.00 USD is a
 ///         TARGET redemption value, not a guarantee.
 contract AgentBLRWA {

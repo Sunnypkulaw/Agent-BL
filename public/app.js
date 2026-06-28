@@ -5,7 +5,7 @@
 //           eBL-backed RWA deal stickers with voyage + funding progress.
 //   View ① "Pricing & Mint" — AI cargo valuation + route risk (with sources &
 //           scores), the AI pricing waterfall, and a financing→mint module that
-//           tokenizes the eBL into RWA on real Sepolia (or a simulated fallback).
+//           tokenizes the eBL into RWA on Injective Testnet (or a simulated fallback).
 //   View ② "Voyage Risk" — lives in voyage.js.
 // UI chrome is bilingual via i18n.js; the engine's own prose stays as returned.
 
@@ -24,7 +24,7 @@ const MARKET_PLAY_MS = 90000;
 const marketClock = { timer: 0, startedAt: 0 };
 
 /** Resolve the human-readable network name from chain-config. */
-const NETWORK_LABELS = { injective_testnet: 'Injective Testnet', sepolia: 'Sepolia' };
+const NETWORK_LABELS = { injective_testnet: 'Injective Testnet' };
 let _cachedNetworkName = null;
 async function networkName() {
   if (_cachedNetworkName) return _cachedNetworkName;
@@ -73,8 +73,8 @@ function visibleCases() {
     });
   }
 
-  // Keyword search
-  if (state.searchQuery.trim()) {
+  // Keyword search (skip when AI filter is active — AI already understands intent)
+  if (!state._aiMatchedIds && state.searchQuery.trim()) {
     const q = state.searchQuery.trim().toLowerCase();
     cases = cases.filter(c => {
       const bl = c.case?.bill_of_lading ?? {};

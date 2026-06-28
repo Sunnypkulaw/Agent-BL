@@ -22,7 +22,7 @@ AgentBL-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能力�
 | **RWA 生命周期模拟** | ✅ 完整：12 个状态的状态机 |
 | **世界风险情报** | ✅ 完整：xAPI 集成（X/Twitter + 新闻 + 预测市场） |
 | **前端 Dashboard** | ✅ 完整：两视图（铸造 RWA + 航运追踪） |
-| **区块链部署** | ⚠️ Ethereum Sepolia，非 Injective |
+| **区块链部署** | ✅ Injective Testnet (inEVM) |
 | **自主 AI Agent** | ❌ 缺失：当前 AI 为"按需调用"，非自主决策 |
 | **供应链金融产品** | ⚠️ 仅有 RWA 折价发行，缺少应收账款、信用评分等 |
 | **多角色系统** | ❌ 缺失：无出口商/银行/投资者角色区分 |
@@ -36,7 +36,7 @@ AgentBL-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能力�
 
 #### 当前状态
 
-所有合约部署在 Ethereum Sepolia（Solidity），前端仅支持 MetaMask。
+所有合约部署在 Injective Testnet (inEVM/Solidity)，前端支持 MetaMask。
 
 #### 需要开发的内容
 
@@ -94,13 +94,6 @@ AgentBL-AI 是一个已完成的 ETHBeijing 2026 黑客松项目，核心能力�
       "contracts": {
         "AgentBLRWA": { "address": "0x...", "abi": [...] },
         "RiskPricingOracle": { "address": "0x...", "abi": [...] }
-      }
-    },
-    "sepolia": {
-      "chainId": "11155111",
-      "rpcUrl": "https://ethereum-sepolia-rpc.publicnode.com",
-      "contracts": {
-        "AgentBLRWA": { "address": "0xfCA6F1C4...", "abi": [...] }
       }
     }
   },
@@ -615,7 +608,7 @@ contract EBLRegistryV2 {
 
 | 风险 | 概率 | 影响 | 应对 |
 |------|------|------|------|
-| inEVM 测试网不稳定 | 中 | 高 | 保留 Ethereum Sepolia 作为备用演示链 |
+| inEVM 测试网不稳定 | 中 | 高 | 保留本地模拟模式作为备用演示方案 |
 | LLM API 在比赛期间限流 | 中 | 中 | 确定性 fallback 引擎已就绪（全离线可跑） |
 | ENI API 对接不及预期 | 低 | 中 | eBL 功能自包含，可独立演示 ENI 的价值 |
 | 时间不足 | 高 | 高 | 严格按 P0→P1→P2 优先级执行，每阶段有可演示产出 |

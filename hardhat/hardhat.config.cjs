@@ -28,12 +28,7 @@ module.exports = {
     artifacts: './artifacts'
   },
   networks: {
-    // Ethereum Sepolia (legacy / fallback)
-    sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || '',
-      accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY.trim()] : []
-    },
-    // Injective Testnet (inEVM) — primary deployment target
+    // Injective Testnet (inEVM)
     injective_testnet: {
       url: process.env.INJECTIVE_RPC_URL || 'https://k8s.testnet.json-rpc.injective.network',
       chainId: 1439,
@@ -44,10 +39,6 @@ module.exports = {
 
 // Validate when user explicitly targets a network via CLI flag.
 const targetNetwork = process.argv.includes('--network') ? process.argv[process.argv.indexOf('--network') + 1] : null;
-if (targetNetwork === 'sepolia') {
-  requireEnv('SEPOLIA_RPC_URL');
-  requireEnv('DEPLOYER_PRIVATE_KEY');
-}
 if (targetNetwork === 'injective_testnet') {
   requireEnv('DEPLOYER_PRIVATE_KEY');
 }
