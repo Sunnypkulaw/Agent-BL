@@ -20,7 +20,10 @@
     "intel": "node scripts/world-intel.mjs",
     "mcp": "node scripts/mcp.mjs",
     "smoke:x402": "node scripts/smoke-x402.mjs",
-    "x402:intel": "node scripts/x402-intel.mjs"
+    "x402:intel": "node scripts/x402-intel.mjs",
+    "mcp:serve": "node src/mcp/standalone-server.js",
+    "demo:once": "node scripts/demo-once.mjs",
+    "preflight": "node scripts/preflight.mjs"
   },
   "engines": {
     "node": ">=18.18.0"

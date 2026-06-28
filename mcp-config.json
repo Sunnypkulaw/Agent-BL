@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "agentbl": {
+      "command": "node",
+      "args": ["src/mcp/standalone-server.js"],
+      "description": "AgentBL AI Pricing & Risk Agent — real-time trade finance pricing engine with x402 paid intel"
+    }
+  }
+}

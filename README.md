@@ -6,12 +6,16 @@
 
 **The AI prices the risk. The chain enforces it. · AI 定价风险，链上强制执行。**
 
+**🏆 你的货在海上漂，钱还要等 45 天。谁来替你盯风险？AgentBL 的 AI 风控 Agent。**
+
 [![ETH Beijing](https://img.shields.io/badge/ETH_Beijing-2026-635BFF)](https://ethbeijing.xyz)
 [![Track](https://img.shields.io/badge/Track-AI_Agent_x_Blockchain-5A45FF)](#)
 [![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
 [![tests](https://img.shields.io/badge/tests-174_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
 [![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.explorer.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
+[![MCP](https://img.shields.io/badge/MCP-Server-1F6FEB)](#)
+[![x402](https://img.shields.io/badge/x402-Enabled-D6336C)](#)
 [![deps](https://img.shields.io/badge/deps-zero-1F6FEB)](#)
 [![offline](https://img.shields.io/badge/demo-offline_ready-1F6FEB)](#)
 [![license](https://img.shields.io/badge/license-MIT-3FB950)](./LICENSE)
