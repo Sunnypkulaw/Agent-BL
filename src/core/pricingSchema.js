@@ -179,7 +179,10 @@ export function assertPricingQuote(quote, caseData) {
       errors.push('indicative_issue_price_usd must equal base - urgency - risk discount');
     }
     // The collateral floor only ever lifts the price, never lowers it.
-    if (quote.final_issue_price_usd < quote.indicative_issue_price_usd - 0.0005) {
+    // When the absolute MIN_PRICE / MAX_PRICE cap binds, the final price may be
+    // clamped below the indicative price — that is an intentional price ceiling.
+    if (quote.final_issue_price_usd < quote.indicative_issue_price_usd - 0.0005
+        && quote.binding_constraint !== 'PRICE_CLAMP') {
       errors.push('final_issue_price_usd must be >= indicative_issue_price_usd');
     }
   }

@@ -43,15 +43,21 @@ export async function getCases() {
   }];
 }
 
+/** Unwrap a catalog entry to its raw case object. /api/cases returns { case_id, label, …, case: rawCase },
+ *  but the pricing endpoints expect the raw case (with bill_of_lading, financing, etc.) directly. */
+function rawCase(caseData) {
+  return caseData?.case ?? caseData;
+}
+
 /** BE-3: all three payout-speed quotes + a recommendation for a case. */
 export function compareSpeeds(caseData) {
-  return postJson('/api/pricing/quote', { case: caseData, compare: true });
+  return postJson('/api/pricing/quote', { case: rawCase(caseData), compare: true });
 }
 
 /** BE-4: full RWA offering lifecycle. Pass speed, subscription, and in-transit events. */
 export function simulateOffering(caseData, { payout_speed, subscription_usd, events } = {}) {
   return postJson('/api/offering/simulate', {
-    case: caseData,
+    case: rawCase(caseData),
     payout_speed,
     subscription_usd,
     events: events && events.length ? events : undefined
@@ -60,7 +66,7 @@ export function simulateOffering(caseData, { payout_speed, subscription_usd, eve
 
 /** BE-8: on-chain RiskPricingOracle.updatePricing payload (issue price + hashes). */
 export function oracleUpdate(caseData, { payout_speed, pool_id } = {}) {
-  return postJson('/api/oracle/pricing-update', { case: caseData, payout_speed, pool_id });
+  return postJson('/api/oracle/pricing-update', { case: rawCase(caseData), payout_speed, pool_id });
 }
 
 /** MCP-5: mock/real push of the quote to the oracle — returns a tx + PricingUpdated event. */
@@ -84,11 +90,11 @@ export async function getJudgeQA() {
 
 /** RAG: full sourced risk sweep for a case (route/weather/war/port/price/fx/buyer). */
 export function riskSweep(caseData) {
-  return postJson('/api/rag/risk-sweep', caseData);
+  return postJson('/api/rag/risk-sweep', rawCase(caseData));
 }
 
 /** INTEL: live real-world risk via xAPI (tweets / officials / news / prediction markets)
  *  → structured events + signals + before/after re-priced quote. Offline-safe (fixtures w/o key). */
 export function worldRisk(caseData) {
-  return postJson('/api/intel/world-risk', { case: caseData });
+  return postJson('/api/intel/world-risk', { case: rawCase(caseData) });
 }
