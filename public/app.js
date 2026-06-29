@@ -2067,12 +2067,49 @@ function wireX402Handlers() {
 
   document.querySelectorAll('#x402-service-list .x402-service-item').forEach((item) => {
     item.addEventListener('click', function () {
+      const idx = parseInt(this.dataset.idx);
+      const service = x402Services[idx];
+      if (!service) return;
+
+      // Highlight selected item
       document.querySelectorAll('#x402-service-list .x402-service-item').forEach((i) => {
         i.style.borderColor = 'var(--border)';
       });
       this.style.borderColor = '#D6336C';
+
+      // Show service details
+      showX402ServiceDetail(service, idx);
     });
   });
+
+  function showX402ServiceDetail(service, idx) {
+    const log = $('#x402-log');
+    if (!log) return;
+
+    log.innerHTML = `
+      <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);">
+        <h3 style="margin:0 0 12px;color:var(--accent);">${service.title}</h3>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--muted);">${service.description}</p>
+        <div style="margin:12px 0;padding:12px;background:var(--bg);border-radius:var(--radius);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:var(--muted);">Price:</span>
+            <strong style="color:var(--accent);">${service.priceUSDC} USDC</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:var(--muted);">Status:</span>
+            <span class="badge">${service.status}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--muted);">Service ID:</span>
+            <code style="font-size:11px;">${service.serviceId}</code>
+          </div>
+        </div>
+        <p style="margin:12px 0 0;font-size:12px;color:var(--muted);">
+          ${t('x402_detail_hint') || 'Click "Run x402 Smoke Test" to purchase and unlock this premium report.'}
+        </p>
+      </div>
+    `;
+  }
 }
 
 // ===========================================================================
