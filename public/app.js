@@ -1607,6 +1607,76 @@ async function renderProtocolEvidence() {
 let x402Services = [];
 let x402Configured = false;
 let x402Network = 'eip155:1439';
+let selectedX402ServiceId = 'premium-risk';
+let x402HandlersWired = false;
+
+function html(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function selectedCaseEntry() {
+  return state.cases.find((entry) => entry.case_id === state.caseId) ?? null;
+}
+
+function currentX402Service() {
+  return x402Services.find((service) => service.serviceId === selectedX402ServiceId)
+    ?? x402Services[0]
+    ?? {
+      serviceId: 'premium-risk',
+      endpoint: '/api/x402/intel/premium-risk',
+      priceUSDC: 0.001,
+      title: 'Premium Risk Intelligence',
+      description: 'Live xAPI world-risk signals + RAG deep analysis with full source citations',
+      status: 'available'
+    };
+}
+
+function formatUsd(value, digits = 0) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits
+  }).format(n);
+}
+
+function formatMaybeNumber(value, digits = 2) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(digits) : '—';
+}
+
+function shortHash(value, chars = 14) {
+  if (!value) return '—';
+  const s = String(value);
+  return s.length > chars * 2 ? `${s.slice(0, chars)}…${s.slice(-8)}` : s;
+}
+
+function updateX402ActionButtons(service = currentX402Service()) {
+  const price = service?.priceUSDC ?? 0.001;
+  const title = service?.title ?? 'AI Risk Report';
+  const smokeBtn = $('#x402-smoke-btn');
+  if (smokeBtn) smokeBtn.textContent = `🔥 Run Demo: ${title}`;
+  const purchaseBtn = $('#x402-purchase-btn');
+  if (purchaseBtn) purchaseBtn.textContent = `💰 Buy ${title} (${price} USDC)`;
+}
+
+function reportCountSummary(data) {
+  if (data.service === 'premium-valuation') {
+    return `${data.historical_comparables?.length || 0} comparables, ${data.tool_trace?.length || 0} tool calls`;
+  }
+  if (data.service === 'fraud-review') {
+    return `${data.checks?.length || 0} checks, ${data.issues?.length || 0} issues`;
+  }
+  return `${data.events?.length || data.intel_preview?.events_count || 0} risk events, ${data.deepIntel?.length || data.intel_preview?.deep_intel_count || 0} RAG entries`;
+}
 
 async function loadX402Config() {
   try {
@@ -1701,12 +1771,15 @@ async function restoreX402Purchases() {
 // without re-running the 402 flow.
 function reopenX402Report(data) {
   renderX402FlowReset();
+  if (data.service) selectedX402ServiceId = data.service;
+  highlightX402ServiceSelection();
   setX402Step('challenge', 'done', t('x402_challenge_status'));
   setX402Step('pay', 'done', t('x402_signed'));
   setX402Step('settle', 'done', t('x402_settled'));
   setX402Step('unlock', 'done', t('x402_unlocked'));
   updateX402PaymentCard(data);
   updateX402PricingImpact(data);
+  renderX402ReportDetail(data, { source: 'cache' });
   const log = $('#x402-log');
   if (log) log.innerHTML = `<p>• <span style="color:#2EA043;">${t('x402_purchased_reread')} — ${data.report_envelope?.report_id?.slice(0, 18) || ''}…</span></p>`;
 }
@@ -1720,6 +1793,7 @@ function renderIntelMarket() {
     renderX402FlowReset();
     wireX402Handlers();
     restoreX402Purchases();
+    showX402ServiceDetail(currentX402Service());
   });
 }
 
@@ -1739,18 +1813,21 @@ function renderX402ServiceList() {
   const el = $('#x402-service-list');
   if (!el) return;
   if (!x402Services.length) {
-    el.innerHTML = `<p class="muted">${t('x402_loading')}</p>`;
+    el.innerHTML = '<p class="muted">' + html(t('x402_loading')) + '</p>';
     return;
   }
+  if (!x402Services.some((service) => service.serviceId === selectedX402ServiceId)) {
+    selectedX402ServiceId = x402Services[0].serviceId;
+  }
   el.innerHTML = x402Services.map((s, i) => [
-    `<div class="x402-service-item" style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;" data-idx="${i}">`,
-    `<div style="display:flex;justify-content:space-between;align-items:center;">`,
-    `<strong style="font-size:14px;">${s.title}</strong>`,
-    `<span class="badge" style="background:#1F6FEB22;color:#1F6FEB;font-size:11px;">${s.priceUSDC} USDC</span>`,
-    `</div>`,
-    `<p class="muted" style="font-size:12px;margin:4px 0 0;">${s.description}</p>`,
-    `<span class="badge" style="font-size:10px;margin-top:4px;display:inline-block;">${s.status}</span>`,
-    `</div>`
+    '<button type="button" class="x402-service-item' + (s.serviceId === selectedX402ServiceId ? ' active' : '') + '" data-idx="' + i + '" data-service-id="' + html(s.serviceId) + '">',
+    '<div class="x402-service-main">',
+    '<strong>' + html(s.title) + '</strong>',
+    '<span class="badge violet sm">' + html(s.priceUSDC) + ' USDC</span>',
+    '</div>',
+    '<p class="muted">' + html(s.description) + '</p>',
+    '<span class="badge sm">' + html(s.status) + '</span>',
+    '</button>'
   ].join('')).join('');
 
   // Bind click events after rendering
@@ -1760,45 +1837,275 @@ function renderX402ServiceList() {
       const service = x402Services[idx];
       if (!service) return;
 
-      // Highlight selected item
-      document.querySelectorAll('#x402-service-list .x402-service-item').forEach((i) => {
-        i.style.borderColor = 'var(--border)';
-      });
-      this.style.borderColor = '#D6336C';
-
-      // Show service details
+      selectedX402ServiceId = service.serviceId;
+      highlightX402ServiceSelection();
       showX402ServiceDetail(service);
     });
   });
+  updateX402ActionButtons(currentX402Service());
 }
 
 function showX402ServiceDetail(service) {
+  if (!service) return;
+  updateX402ActionButtons(service);
+  renderX402ReportPreview(service);
   const log = $('#x402-log');
-  if (!log) return;
+  if (log) {
+    log.innerHTML = '<p>• <span style="color:#D6336C;">Selected report: ' + html(service.title) + ' — click Run Demo or Buy to unlock the full report body.</span></p>';
+  }
+}
 
-  log.innerHTML = `
-    <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);">
-      <h3 style="margin:0 0 12px;color:var(--accent);">${service.title}</h3>
-      <p style="margin:0 0 8px;font-size:13px;color:var(--muted);">${service.description}</p>
-      <div style="margin:12px 0;padding:12px;background:var(--bg);border-radius:var(--radius);">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="color:var(--muted);">Price:</span>
-          <strong style="color:var(--accent);">${service.priceUSDC} USDC</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="color:var(--muted);">Status:</span>
-          <span class="badge">${service.status}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="color:var(--muted);">Service ID:</span>
-          <code style="font-size:11px;">${service.serviceId}</code>
-        </div>
-      </div>
-      <p style="margin:12px 0 0;font-size:12px;color:var(--muted);">
-        ${t('x402_detail_hint') || 'Click "Run x402 Smoke Test" to purchase and unlock this premium report.'}
-      </p>
-    </div>
-  `;
+function highlightX402ServiceSelection() {
+  document.querySelectorAll('#x402-service-list .x402-service-item').forEach((item) => {
+    item.classList.toggle('active', item.dataset.serviceId === selectedX402ServiceId);
+  });
+  updateX402ActionButtons(currentX402Service());
+}
+
+function x402ServiceBullets(serviceId) {
+  if (serviceId === 'premium-valuation') {
+    return [
+      'AI-verified collateral value and max safe redemption exposure',
+      'Live landed price, historical comparables, volatility haircut',
+      'Tool trace showing how the valuation agent reached the number'
+    ];
+  }
+  if (serviceId === 'fraud-review') {
+    return [
+      'Five-dimension eBL / invoice / insurance consistency review',
+      'Document issues, severity, penalty bps and lifecycle impact',
+      'Final verdict plus the pricing quote hash that can be audited on-chain'
+    ];
+  }
+  return [
+    'Live world-risk events from xAPI / offline fallback fixtures',
+    'RAG evidence snippets with source labels and relevance scores',
+    'Before-vs-after RWA issue price, risk level and evidence hash'
+  ];
+}
+
+function renderX402ReportPreview(service) {
+  const detail = $('#x402-report-detail');
+  if (!detail || !service) return;
+  const entry = selectedCaseEntry();
+  detail.hidden = false;
+  detail.dataset.state = 'preview';
+  detail.innerHTML = [
+    '<div class="x402-report-head">',
+    '<div>',
+    '<span class="metric-label">Selected report</span>',
+    '<h3>' + html(service.title) + '</h3>',
+    '<p class="muted">' + html(service.description) + '</p>',
+    '</div>',
+    '<span class="badge violet">' + html(service.priceUSDC) + ' USDC</span>',
+    '</div>',
+    '<div class="x402-report-kpis">',
+    '<div><span>Case</span><strong>' + html(entry ? shortLabel(entry) : state.caseId || '—') + '</strong></div>',
+    '<div><span>Service ID</span><strong><code>' + html(service.serviceId) + '</code></strong></div>',
+    '<div><span>Status</span><strong>' + html(service.status || 'available') + '</strong></div>',
+    '</div>',
+    '<div class="x402-report-section">',
+    '<h4>Unlock contents</h4>',
+    '<ul class="x402-report-list">' + x402ServiceBullets(service.serviceId).map((item) => '<li>' + html(item) + '</li>').join('') + '</ul>',
+    '<p class="muted">点击目录项后这里会固定展示该报告。点击 Run Demo 或 Buy 后，会在这里展开完整 AI 风控报告正文和链上存证。</p>',
+    '</div>'
+  ].join('');
+}
+
+function badgeTone(value) {
+  const v = String(value || '').toUpperCase();
+  if (['LOW', 'PASS', 'OPEN', 'APPROVE', 'APPROVED'].includes(v)) return 'green';
+  if (['MEDIUM', 'WARNING', 'REVIEW', 'REPRICE'].includes(v)) return 'yellow';
+  if (['HIGH', 'CRITICAL', 'BLOCK', 'PAUSE_OFFERING', 'FREEZE_POOL'].includes(v)) return 'red';
+  return 'violet';
+}
+
+function reportKpis(items) {
+  return '<div class="x402-report-kpis">' + items
+    .filter((item) => item && item.value !== undefined && item.value !== null && item.value !== '')
+    .map((item) => '<div><span>' + html(item.label) + '</span><strong>' + item.value + '</strong></div>')
+    .join('') + '</div>';
+}
+
+function reportSection(title, body) {
+  if (!body) return '';
+  return '<div class="x402-report-section"><h4>' + html(title) + '</h4>' + body + '</div>';
+}
+
+function objectSummary(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return '<p>' + html(value) + '</p>';
+  if (Array.isArray(value)) return '<ul class="x402-report-list">' + value.map((item) => '<li>' + html(item) + '</li>').join('') + '</ul>';
+  if (typeof value === 'object') {
+    return '<div class="x402-object-grid">' + Object.entries(value).map(([key, val]) =>
+      '<div><span>' + html(key.replace(/_/g, ' ')) + '</span><strong>' + html(Array.isArray(val) ? val.join(', ') : String(val)) + '</strong></div>'
+    ).join('') + '</div>';
+  }
+  return '<p>' + html(value) + '</p>';
+}
+
+function renderEventList(events) {
+  if (!events?.length) return '<p class="muted">No material events returned for this case.</p>';
+  return '<div class="x402-report-listcards">' + events.map((event) => {
+    const title = event.title || event.type || event.category || 'risk event';
+    const severity = event.severity || event.level || event.status || 'signal';
+    const meta = [event.region, event.source, event.as_of].filter(Boolean).join(' · ');
+    return [
+      '<article class="x402-report-card">',
+      '<div class="x402-report-card-head"><strong>' + html(title) + '</strong><span class="badge sm ' + badgeTone(severity) + '">' + html(severity) + '</span></div>',
+      meta ? '<p class="muted">' + html(meta) + '</p>' : '',
+      '<p>' + html(event.description || event.text || event.snippet || event.detail || 'Signal captured by the risk agent.') + '</p>',
+      '</article>'
+    ].join('');
+  }).join('') + '</div>';
+}
+
+function renderIntelList(entries) {
+  if (!entries?.length) return '<p class="muted">No RAG evidence entries returned.</p>';
+  return '<div class="x402-report-listcards">' + entries.map((entry) => [
+    '<article class="x402-report-card">',
+    '<div class="x402-report-card-head"><strong>' + html(entry.type || entry.id || 'evidence') + '</strong><span class="badge sm">' + html(formatMaybeNumber(entry.score, 2)) + '</span></div>',
+    '<p class="muted">' + html([entry.region, entry.source, entry.severity].filter(Boolean).join(' · ')) + '</p>',
+    '<p>' + html(entry.snippet || entry.detail || entry.text || '') + '</p>',
+    '</article>'
+  ].join('')).join('') + '</div>';
+}
+
+function traceValue(value) {
+  if (value == null) return '—';
+  if (typeof value === 'object') {
+    try { return JSON.stringify(value, null, 2); } catch { return String(value); }
+  }
+  return String(value);
+}
+
+function renderToolTraceList(trace = []) {
+  if (!trace.length) return '<p class="muted">No tool calls returned.</p>';
+  return '<div class="x402-report-listcards">' + trace.map((item, index) => {
+    const title = item.tool || item.name || `tool call #${index + 1}`;
+    const status = item.status || item.provider || item.source || 'called';
+    const fields = Object.entries(item)
+      .filter(([key]) => !['tool', 'name', 'status'].includes(key))
+      .map(([key, value]) => [
+        '<div>',
+        '<span>' + html(key.replace(/_/g, ' ')) + '</span>',
+        '<code class="x402-trace-value">' + html(traceValue(value)) + '</code>',
+        '</div>'
+      ].join(''))
+      .join('');
+    return [
+      '<article class="x402-report-card x402-tool-card">',
+      '<div class="x402-report-card-head"><strong>' + html(title) + '</strong><span class="badge sm ' + badgeTone(status) + '">' + html(status) + '</span></div>',
+      fields ? '<div class="x402-trace-grid">' + fields + '</div>' : '<p class="muted">Tool call completed.</p>',
+      '</article>'
+    ].join('');
+  }).join('') + '</div>';
+}
+
+function renderQuotePair(data) {
+  const before = data.before_quote || {};
+  const after = data.after_quote || {};
+  if (!before.final_issue_price_usd && !after.final_issue_price_usd) return '';
+  return '<div class="x402-quote-pair">' +
+    '<div><span class="metric-label">Before</span><strong>' + formatUsd(before.final_issue_price_usd, 3) + '</strong><small>' + html(before.risk_level || '—') + ' · ' + html(before.pricing_action || '—') + '</small></div>' +
+    '<div class="x402-impact-arrow">→</div>' +
+    '<div><span class="metric-label">After</span><strong>' + formatUsd(after.final_issue_price_usd, 3) + '</strong><small>' + html(after.risk_level || '—') + ' · ' + html(after.pricing_action || '—') + '</small></div>' +
+    '</div>';
+}
+
+function renderRiskIntelReport(data) {
+  const before = data.before_quote || {};
+  const after = data.after_quote || {};
+  const delta = data.delta || {};
+  return [
+    reportKpis([
+      { label: 'Before price', value: formatUsd(before.final_issue_price_usd, 3) },
+      { label: 'After price', value: formatUsd(after.final_issue_price_usd, 3) },
+      { label: 'Price delta', value: formatUsd(delta.issue_price_delta_usd ?? delta.issue_price_usd, 3) },
+      { label: 'Risk level', value: '<span class="badge ' + badgeTone(after.risk_level || before.risk_level) + '">' + html(after.risk_level || before.risk_level || '—') + '</span>' },
+      { label: 'Evidence hash', value: '<code>' + html(shortHash(data.evidence_hash || data.report_envelope?.evidence_hash)) + '</code>' }
+    ]),
+    reportSection('AI summary', objectSummary(data.summary)),
+    reportSection('Before / after pricing decision', renderQuotePair(data)),
+    reportSection('World-risk events', renderEventList(data.events)),
+    reportSection('RAG evidence', renderIntelList(data.deepIntel)),
+    reportSection('Sources', data.sources?.length ? '<ul class="x402-report-list">' + data.sources.map((source) => '<li>' + html(source.label || source.url || source) + '</li>').join('') + '</ul>' : '')
+  ].join('');
+}
+
+function renderValuationReport(data) {
+  return [
+    reportKpis([
+      { label: 'Collateral value', value: formatUsd(data.cargo_value, 0) },
+      { label: 'Max exposure', value: formatUsd(data.max_safe_redemption_exposure_usd, 0) },
+      { label: 'Unit price', value: formatUsd(data.unit_price, 2) + ' / MT' },
+      { label: 'Haircut', value: data.volatility_haircut_pct == null ? '—' : html(data.volatility_haircut_pct) + '%' }
+    ]),
+    reportSection('AI valuation explanation', '<p>' + html(data.explanation || 'No explanation returned.') + '</p>'),
+    reportSection('Live market snapshot', objectSummary(data.live_market)),
+    reportSection('Historical comparables', renderEventList((data.historical_comparables || []).map((item) => ({
+      title: item.basis || item.source || item.commodity || 'Comparable transaction',
+      severity: item.confidence || 'comparable',
+      description: Object.entries(item).map(([k, v]) => k + ': ' + v).join(' · ')
+    })))),
+    reportSection('Risk comparables', renderIntelList(data.risk_comparables)),
+    reportSection('Tool trace', renderToolTraceList(data.tool_trace || [])),
+    reportSection('Data sources', data.data_sources?.length ? '<ul class="x402-report-list">' + data.data_sources.map((source) => '<li>' + html(source) + '</li>').join('') + '</ul>' : '')
+  ].join('');
+}
+
+function renderFraudReport(data) {
+  const pricing = data.pricing_result || {};
+  return [
+    reportKpis([
+      { label: 'Verdict', value: '<span class="badge ' + badgeTone(data.verdict) + '">' + html(data.verdict || '—') + '</span>' },
+      { label: 'Document penalty', value: html(data.document_penalty_bps ?? 0) + ' bps' },
+      { label: 'Issue price', value: formatUsd(pricing.issue_price_usd, 3) },
+      { label: 'Risk score', value: html(pricing.risk_score_bps ?? '—') + ' bps' },
+      { label: 'Quote hash', value: '<code>' + html(shortHash(pricing.quote_hash)) + '</code>' }
+    ]),
+    reportSection('Document issues', data.issues?.length ? '<ul class="x402-report-list">' + data.issues.map((issue) => '<li>' + html(typeof issue === 'string' ? issue : JSON.stringify(issue)) + '</li>').join('') + '</ul>' : '<p class="muted">No critical document issue found.</p>'),
+    reportSection('Consistency checks', renderEventList((data.checks || []).map((check) => ({
+      title: check.id || check.name || 'document check',
+      severity: check.status || (check.ok ? 'PASS' : 'REVIEW'),
+      description: check.message || check.description || JSON.stringify(check)
+    })))),
+    reportSection('Five-dimension summary', objectSummary(data.five_dimension_summary)),
+    reportSection('Scenario outcome', objectSummary(data.scenario))
+  ].join('');
+}
+
+function renderX402ReportDetail(data, options = {}) {
+  const detail = $('#x402-report-detail');
+  if (!detail || !data) return;
+  const service = x402Services.find((entry) => entry.serviceId === data.service) ?? currentX402Service();
+  const envelope = data.report_envelope || {};
+  const body = data.service === 'premium-valuation'
+    ? renderValuationReport(data)
+    : data.service === 'fraud-review'
+      ? renderFraudReport(data)
+      : renderRiskIntelReport(data);
+
+  detail.hidden = false;
+  detail.dataset.state = 'unlocked';
+  detail.innerHTML = [
+    '<div class="x402-report-head">',
+    '<div>',
+    '<span class="metric-label">Unlocked AI report' + (options.source === 'cache' ? ' · cached reread' : '') + '</span>',
+    '<h3>' + html(service.title || data.service || 'AI risk report') + '</h3>',
+    '<p class="muted">' + html(data.case_id || state.caseId || '—') + ' · ' + html(reportCountSummary(data)) + '</p>',
+    '</div>',
+    '<span class="badge green">UNLOCKED</span>',
+    '</div>',
+    body,
+    reportSection('On-chain / x402 evidence', reportKpis([
+      { label: 'Report ID', value: '<code>' + html(shortHash(envelope.report_id)) + '</code>' },
+      { label: 'Report hash', value: '<code>' + html(shortHash(envelope.report_hash)) + '</code>' },
+      { label: 'Payment tx', value: '<code>' + html(shortHash(envelope.payment_tx || data.payment?.txHash)) + '</code>' },
+      { label: 'Expires at', value: html(envelope.expires_at || data.expires_at || '—') }
+    ]))
+  ].join('');
+  pulseClass(detail, 'x402-impact-pop');
 }
 
 /** True when the user has asked the OS to minimise non-essential motion. */
@@ -1854,7 +2161,7 @@ function updateX402PaymentCard(data) {
   const tx = $('#x402-txhash');
   if (tx && pay.txHash) tx.textContent = pay.txHash.slice(0, 42) + '…';
   const svc = $('#x402-service');
-  if (svc && serviceId) svc.textContent = serviceId;
+  if (svc) svc.textContent = serviceId || data.service || data.kind || '—';
   const amt = $('#x402-amount');
   if (amt && amountUSDC !== undefined) amt.textContent = amountUSDC + ' USDC';
   const rh = $('#x402-resphash');
@@ -1864,12 +2171,21 @@ function updateX402PaymentCard(data) {
 
 function updateX402PricingImpact(data) {
   const impact = $('#x402-pricing-impact');
-  if (!impact || !data.intel_preview) return;
+  const preview = data.intel_preview ?? (
+    data.before_quote || data.after_quote
+      ? {
+        before_price: data.before_quote?.final_issue_price_usd,
+        after_price: data.after_quote?.final_issue_price_usd,
+        price_delta: data.delta?.issue_price_delta_usd ?? data.delta?.issue_price_usd
+      }
+      : null
+  );
+  if (!impact || !preview || (preview.before_price === undefined && preview.after_price === undefined)) return;
   impact.hidden = false;
   pulseClass(impact, 'x402-impact-pop');
-  const before = data.intel_preview.before_price;
-  const after = data.intel_preview.after_price;
-  const delta = data.intel_preview.price_delta;
+  const before = preview.before_price;
+  const after = preview.after_price;
+  const delta = preview.price_delta;
   if (before !== undefined) $('#x402-price-before').textContent = '$' + before.toFixed(3);
   if (after !== undefined) {
     const afterEl = $('#x402-price-after');
@@ -1897,6 +2213,7 @@ async function runX402Smoke() {
   // Legacy: no-wallet demo mode — calls /api/x402/smoke directly
   const log = $('#x402-log');
   if (!log) return;
+  const service = currentX402Service();
   log.innerHTML = `<p class="muted">${t('x402_running')}</p>`;
   renderX402FlowReset();
 
@@ -1914,7 +2231,7 @@ async function runX402Smoke() {
     const res = await fetch('/api/x402/smoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ locale: 'en' })
+      body: JSON.stringify({ locale: 'en', serviceId: service.serviceId, case: state.caseData })
     });
     const data = await res.json();
 
@@ -1924,7 +2241,10 @@ async function runX402Smoke() {
       setX402Step('unlock', 'done', t('x402_unlocked'));
       updateX402PaymentCard(data);
       updateX402PricingImpact(data);
-      log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.intel_preview?.events_count || 0, intel: data.intel_preview?.deep_intel_count || 0 })}</span></p>`;
+      if (data.service) selectedX402ServiceId = data.service;
+      highlightX402ServiceSelection();
+      renderX402ReportDetail(data);
+      log.innerHTML += '<p>• <span style="color:#2EA043;">Report unlocked — ' + html(reportCountSummary(data)) + '</span></p>';
       if (data.payment?.txHash) {
         const isLive = data.payment.live;
         const liveLabel = isLive ? '⛓️ On-chain' : '🔬 Mock hash (not on chain)';
@@ -2053,7 +2373,12 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
           'X402-BlockNumber': String(paymentResult.blockNumber)
         } : {})
       },
-      body: JSON.stringify({ nonce, txHash: useDirectChain ? paymentResult.txHash : undefined })
+      body: JSON.stringify({
+        nonce,
+        txHash: useDirectChain ? paymentResult.txHash : undefined,
+        case: state.caseData,
+        case_id: state.caseId
+      })
     });
 
     if (!paidRes.ok) {
@@ -2069,6 +2394,9 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
     setX402Step('unlock', 'done', t('x402_unlocked'));
     updateX402PaymentCard(data);
     updateX402PricingImpact(data);
+    if (data.service) selectedX402ServiceId = data.service;
+    highlightX402ServiceSelection();
+    renderX402ReportDetail(data);
 
     // Remember this report so a refresh can re-open it within its TTL.
     if (data.report_envelope) {
@@ -2076,7 +2404,7 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
       restoreX402Purchases();
     }
 
-    log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.events?.length || 0, intel: data.deepIntel?.length || 0 })}</span></p>`;
+    log.innerHTML += '<p>• <span style="color:#2EA043;">Report unlocked — ' + html(reportCountSummary(data)) + '</span></p>';
 
     // Show the ACTUAL on-chain tx hash from user's wallet
     const displayTx = useDirectChain ? paymentResult : data.payment;
@@ -2100,6 +2428,8 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
 }
 
 function wireX402Handlers() {
+  if (x402HandlersWired) return;
+  x402HandlersWired = true;
   const smokeBtn = $('#x402-smoke-btn');
   if (smokeBtn) {
     smokeBtn.addEventListener('click', runX402Smoke);
@@ -2108,7 +2438,8 @@ function wireX402Handlers() {
   const purchaseBtn = $('#x402-purchase-btn');
   if (purchaseBtn) {
     purchaseBtn.addEventListener('click', () => {
-      purchaseWithWallet('premium-risk', 0.001, '/api/x402/intel/premium-risk');
+      const service = currentX402Service();
+      purchaseWithWallet(service.serviceId, Number(service.priceUSDC), service.endpoint);
     });
   }
 }

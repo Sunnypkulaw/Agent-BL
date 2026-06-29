@@ -692,18 +692,24 @@ export async function handleRequest(request, response) {
         }
         const body = await readJsonBody(request);
         const caseData = looksLikeCase(body) ? body : (isRecord(body) && body.case ? body.case : await loadDemoCase());
-        const { buildPremiumRiskIntel } = await import('../x402/server.js');
-        const { fetchPaidIntel } = await import('../x402/client.js');
+        const requestedServiceId = isRecord(body) && body.serviceId ? String(body.serviceId) : 'premium-risk';
+        const service = X402_SERVICES.find((entry) => entry.serviceId === requestedServiceId);
+        if (!service) {
+          sendJson(response, 400, { ok: false, error: 'Unknown x402 serviceId', serviceId: requestedServiceId });
+          return;
+        }
+        const { PAID_REPORT_BUILDERS } = await import('../x402/endpoints.js');
         const { recordPaymentEvidence } = await import('../x402/settlement.js');
 
         try {
-          // Step 1: simulate fetching premium intel with payment
-          const intelResult = await buildPremiumRiskIntel(caseData);
+          // Step 1: simulate fetching premium report with payment
+          const reportBuilder = PAID_REPORT_BUILDERS[service.serviceId];
+          const intelResult = await reportBuilder(caseData);
 
           // Step 2: record payment evidence (on-chain in production)
           const paymentResult = await recordPaymentEvidence({
-            serviceId: 'premium-risk',
-            amountUSDC: 0.001,
+            serviceId: service.serviceId,
+            amountUSDC: service.priceUSDC,
             responseData: intelResult
           });
 
@@ -722,15 +728,16 @@ export async function handleRequest(request, response) {
             action: 'settlement',
             status: 'settled',
             txHash: paymentResult.payment.txHash,
-            detail: `Facilitator settled ${0.001} USDC`
+            detail: 'Facilitator settled ' + service.priceUSDC + ' USDC'
           }, {
             step: 4,
             action: 'intel_unlocked',
             status: 'unlocked',
-            detail: `Premium risk intel returned — ${intelResult.events?.length || 0} risk events, ${intelResult.deepIntel?.length || 0} deep intel entries`
+            detail: service.title + ' returned — ' + (intelResult.events?.length || 0) + ' risk events, ' + (intelResult.deepIntel?.length || 0) + ' evidence entries'
           }];
 
           sendJson(response, 200, {
+            ...intelResult,
             ok: true,
             steps,
             payment: paymentResult.payment,
