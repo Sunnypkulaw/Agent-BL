@@ -14,9 +14,9 @@
   --text-2: #a1a1aa;
   --text-3: #71717a;
 
-  --accent: #4f8cff;
-  --accent-2: #22d3ee;
-  --violet: #a78bfa;
+  --accent: #00f2fe; /* Injective Cyan */
+  --accent-2: #4e20dd; /* Injective Purple */
+  --violet: #8b5cf6;
 
   --ok: #34d399;
   --info: #38bdf8;

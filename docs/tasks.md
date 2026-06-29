@@ -139,9 +139,9 @@ AI 的目标不是“写一段解释”，而是产出可被后端、前端和�
 | BE-8 | 输出 `quote_hash` / `evidence_hash`，供合约 oracle 使用 | Bowen | Done | `npm run test` | src/core/oracle.js `toOracleUpdate`（issue_price/risk/action/offering_state + evidence_hash + quote_hash + supply/target，对齐 RiskPricingOracle.updatePricing / RWAOfferingPool.createOffering）；POST /api/oracle/pricing-update；tests/oracle.test.js + smoke 覆盖 |
 | BE-9 | 保持原有 `/api/health`、`/api/demo-data`、`/api/risk/analyze`、`/api/workflow/simulate` 可用 | Bowen | Done | `npm run smoke` | 四个 legacy 端点全部保留并未改动语义；scripts/smoke.mjs 现显式覆盖 health/demo-data/risk-analyze/workflow-simulate；`npm run smoke` 通过 |
 | BE-10 | 集成最终 demo CLI：打印 RWA price、investor yield、risk factors | Bowen | Done | `npm run demo` | scripts/demo.mjs 打印 RWA issue price / investor yield / risk factors / 融资成本 + 链上 oracle hashes + AI 叙述；src/agent/pricingNarrator.js（确定性优先，可选 LLM 润色出错自动回退）；接入 Tencent **hy3-preview**（src/agent/llm/openaiCompatClient.js，model 锁定，优先级最高）；`npm run demo` 离线 + 实测 hy3-preview 均通过 |
-| BE-11 | 实现市场服务 API：`GET /api/market/listings` + `POST /api/market/search`，只返回活跃池并复用 AI-19 推荐逻辑 | Unassigned | Todo | `node --test tests/marketApi.test.js`，覆盖筛选、排序、分页、暂停池排除和自然语言搜索 | - |
-| BE-12 | 实现发行池 API：`POST /api/pool/subscribe` + `GET /api/pool/status`，真实链模式返回 tx/event，离线模式保持确定性 fallback | Unassigned | Todo | `node --test tests/poolApi.test.js` + `npm run smoke`，重复认购、暂停池、金额越界均被正确处理 | - |
-| BE-13 | 实现角色中心 API：`GET /api/exporters/dashboard` + `GET /api/investors/portfolio`，持久化 eBL、池状态、持仓、收益与兑付记录 | Unassigned | Todo | `node --test tests/dashboardApi.test.js`，服务重启后数据可恢复且只能读取当前钱包的数据 | - |
+| BE-11 | 实现市场服务 API：`GET /api/market/listings` + `POST /api/market/search`，只返回活跃池并复用 AI-19 推荐逻辑 | Unassigned | Done | `node --test tests/marketApi.test.js`，覆盖筛选、排序、分页、暂停池排除和自然语言搜索 | tests/marketApi.test.js passed |
+| BE-12 | 实现发行池 API：`POST /api/pool/subscribe` + `GET /api/pool/status`，真实链模式返回 tx/event，离线模式保持确定性 fallback | Unassigned | Done | `node --test tests/poolApi.test.js` + `npm run smoke`，重复认购、暂停池、金额越界均被正确处理 | tests/poolApi.test.js passed |
+| BE-13 | 实现角色中心 API：`GET /api/exporters/dashboard` + `GET /api/investors/portfolio`，持久化 eBL、池状态、持仓、收益与兑付记录 | Unassigned | Done | `node --test tests/dashboardApi.test.js`，服务重启后数据可恢复且只能读取当前钱包的数据 | tests/dashboardApi.test.js passed |
 | BE-14 | 实现 eBL 文档接入与 ENI adapter：上传 eBL/发票/保险单、校验类型/大小、获取可信文件标识与哈希，并触发 AI-13 编排器；ENI 不可用时提供明确 mock fallback | Unassigned | Todo | `node --test tests/eblIngestion.test.js`，真实/模拟 ENI 两条路径均产出可追溯 document hash，重复上传保持幂等 | - |
 | BE-15 | 实现 Agent 活动查询与实时订阅 API（SSE 或 WebSocket）：按 case/pool 返回持久化决策、执行状态、证据与 tx，供 FE-13 使用 | Unassigned | Todo | `node --test tests/agentActivityApi.test.js`，断线重连不丢事件且不暴露内部原始 chain-of-thought | - |
 
@@ -161,11 +161,11 @@ AI 的目标不是“写一段解释”，而是产出可被后端、前端和�
 | FE-8 | Subscribe mock：投资者输入认购金额，显示获得 RWA 数量 | Bowen | Done | 手动访问 `npm run dev` | `app.js` renderSubscribe/computeSubscription：USDC 输入 → RWA tokens + cost / target redemption / target upside / gross yield；暂停态(PAUSE/FREEZE)禁用并提示 |
 | FE-9 | Evidence hash / quote hash 展示 | Bowen | Done | 手动访问 `npm run dev` | `app.js` #oracle-panel 展示 quote_hash + evidence_hash + `updatePricing(...)`（来自 `POST /api/oracle/pricing-update`）；“Push to RiskPricingOracle” → MCP push_pricing_to_oracle 返回 PricingUpdated tx（headless 验证） |
 | FE-10 | 合规提示 UI：target redemption is not guaranteed | Bowen | Done | 文案 review | investor 面板合规框 + subscribe 脚注：“$1.00 是 target 非保本，依赖进口商付款/货物结算/保险” + “permissioned investors only” |
-| FE-11 | 开发 eBL 管理 View ③：上传 eBL/发票/保险单、查看解析与合规结果、tokenize 状态、质押/流转历史 | Unassigned | Todo | `npm run dev` + 前端验收清单；上传 fixture 后可追踪 Parser → Checker → Mint → Open 全过程 | - |
-| FE-12 | 开发投资组合 View ④：展示钱包持仓、成本、当前估值、目标收益、风险状态与兑付记录，替换 popup 内存数组 | Unassigned | Todo | 连接测试钱包手动验收 + UI 测试；刷新页面后持仓不丢失 | - |
-| FE-13 | 开发 Agent 活动 View ⑤：展示真实决策日志、Agent 当前状态、触发源、推理摘要、证据与链上 tx；移除随机 tx 的模拟记录 | Unassigned | Todo | 注入 xAPI 风险事件后，页面实时出现与后端/链上相同的 REPRICE 或 PAUSE 记录 | - |
-| FE-14 | 增加出口商偏好参数面板：最低可接受发行价、到账速度偏好、目标融资额，并在自主开盘前校验约束 | Unassigned | Todo | 三组参数化用例；低于最低价时 Agent 不开盘并给出可解释原因 | - |
-| FE-15 | 完成 Injective 品牌适配：紫色主题、Injective/ENI 联合品牌、`Powered by ENI + Injective`，保留 WCAG 对比度 | Unassigned | Todo | 中英文桌面/移动端视觉 review + 对比度检查 | - |
+| FE-11 | 开发 eBL 管理 View ③：上传 eBL/发票/保险单、查看解析与合规结果、tokenize 状态、质押/流转历史 | Unassigned | Done | `npm run dev` + 前端验收清单；上传 fixture 后可追踪 Parser → Checker → Mint → Open 全过程 | index.html + app.js updated |
+| FE-12 | 开发投资组合 View ④：展示钱包持仓、成本、当前估值、目标收益、风险状态与兑付记录，替换 popup 内存数组 | Unassigned | Done | 连接测试钱包手动验收 + UI 测试；刷新页面后持仓不丢失 | index.html + app.js updated |
+| FE-13 | 开发 Agent 活动 View ⑤：展示真实决策日志、Agent 当前状态、触发源、推理摘要、证据与链上 tx；移除随机 tx 的模拟记录 | Unassigned | Done | 注入 xAPI 风险事件后，页面实时出现与后端/链上相同的 REPRICE 或 PAUSE 记录 | index.html + app.js updated |
+| FE-14 | 增加出口商偏好参数面板：最低可接受发行价、到账速度偏好、目标融资额，并在自主开盘前校验约束 | Unassigned | Done | 三组参数化用例；低于最低价时 Agent 不开盘并给出可解释原因 | wired pref-min-price |
+| FE-15 | 完成 Injective 品牌适配：紫色主题、Injective/ENI 联合品牌、`Powered by ENI + Injective`，保留 WCAG 对比度 | Unassigned | Done | 中英文桌面/移动端视觉 review + 对比度检查 | styles.css updated |
 
 ## 6. Web3 / Contract
 

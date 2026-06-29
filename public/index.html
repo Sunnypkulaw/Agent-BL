@@ -20,7 +20,7 @@
           <span class="brand-mark">◈</span>
           <div class="brand-text">
             <strong>AgentBL</strong>
-            <span class="brand-tag" data-i18n="brand_tag">AI-priced eBL-backed RWA · enforced on-chain</span>
+            <span class="brand-tag" data-i18n="brand_tag">AI-priced eBL-backed RWA · Powered by ENI + Injective</span>
           </div>
         </div>
 
@@ -100,6 +100,17 @@
               </select>
             </div>
             <div id="market-summary" class="market-summary"></div>
+            <!-- FE-12: Investor Portfolio View -->
+            <div id="investor-portfolio" class="market-portfolio card" style="margin-top: 16px;">
+              <h3 class="card-head-line" data-i18n="portfolio_h">My Portfolio</h3>
+              <div id="portfolio-stats" class="portfolio-stats" style="margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <div><span class="muted">Invested:</span> <strong id="portfolio-total">$0</strong></div>
+                <div><span class="muted">Avg Yield:</span> <strong id="portfolio-yield">0%</strong></div>
+              </div>
+              <div id="portfolio-list" class="portfolio-list" style="max-height: 200px; overflow-y: auto;">
+                <p class="muted" style="text-align: center;">No investments yet.</p>
+              </div>
+            </div>
           </aside>
 
           <section class="market-board" aria-label="Investment projects">
@@ -184,6 +195,16 @@
           <div id="speed-cards" class="speed-cards"></div>
 
           <div class="mint-grid">
+            <!-- FE-11: eBL Management & Upload -->
+            <div class="card ebl-management" style="grid-column: span 2;">
+              <h3 class="card-head-line" data-i18n="ebl_upload_h">eBL Document Management</h3>
+              <div class="ebl-upload-zone" id="ebl-upload-zone" style="border: 1px dashed var(--border); padding: 24px; text-align: center; border-radius: var(--radius); cursor: pointer; transition: background 0.2s;">
+                <p class="muted">Drag & Drop your eBL, Invoice, and Insurance policies here, or click to browse.</p>
+                <input type="file" id="ebl-file-input" multiple style="display:none;" />
+                <button class="btn ghost" id="ebl-browse-btn">Select Files</button>
+              </div>
+              <div id="ebl-upload-status" class="muted" style="margin-top:12px; font-family: var(--mono); font-size: 13px;"></div>
+            </div>
             <div class="card mint-form">
               <label class="control-label" data-i18n="exporter_preferences">Exporter Preferences (Autonomous Agent Constraints)</label>
               <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
@@ -482,6 +503,17 @@
         <span data-i18n="footer_left">AgentBL Agent</span>
         <span class="muted" data-i18n="footer_right">Every number is produced live by the local AI pricing engine · valuation, risk scoring, and hashes are deterministic and offline-reproducible.</span>
       </footer>
+      <!-- FE-13: Agent Activity View -->
+      <section class="agent-activity-console" id="agent-activity-console" style="position: fixed; bottom: 0; left: 0; right: 0; height: 160px; background: var(--bg-2); border-top: 1px solid var(--line); z-index: 100; font-family: var(--mono); padding: 12px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: var(--accent); font-weight: 600;">AgentBL Activity Logs</span>
+          <button id="toggle-activity-console" class="btn ghost" style="padding: 2px 8px; font-size: 12px;">Toggle</button>
+        </div>
+        <div id="agent-logs-container" style="flex: 1; overflow-y: auto; font-size: 12px; color: var(--text-2);">
+          <div class="log-entry">System ready. Awaiting autonomous agent execution...</div>
+        </div>
+      </section>
+      
     </main>
 
     <div id="toast" class="toast" hidden></div>

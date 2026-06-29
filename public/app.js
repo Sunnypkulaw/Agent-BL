@@ -1709,11 +1709,82 @@ function wireX402Handlers() {
 }
 
 // ===========================================================================
+// FE-12: Render Investor Portfolio
+// ===========================================================================
+async function renderPortfolio() {
+  const list = $('#portfolio-list');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/investors/portfolio?wallet_address=' + (state.walletAddress || '0xDemoWallet'));
+    const data = await res.json();
+    if (!data.ok) return;
+
+    $('#portfolio-total').textContent = '$' + data.summary.totalInvestedUsd.toLocaleString();
+    $('#portfolio-yield').textContent = (data.summary.avgYieldBps / 100).toFixed(2) + '%';
+    
+    if (data.investments.length === 0) {
+      list.innerHTML = '<p class="muted" style="text-align: center;">No investments yet.</p>';
+      return;
+    }
+
+    list.innerHTML = data.investments.map(inv => `
+      <div style="border-bottom: 1px solid var(--line-soft); padding: 8px 0; font-size: 13px;">
+        <div style="display:flex; justify-content:space-between;">
+          <strong>${inv.label}</strong>
+          <span style="color:var(--ok)">+$${inv.amountUsd.toLocaleString()}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; color:var(--text-2); font-size:12px;">
+          <span>Yield: ${(inv.yieldBps/100).toFixed(2)}% | Risk: ${inv.riskLevel}</span>
+          <span style="font-family:var(--mono)">${inv.txHash.slice(0,10)}...</span>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load portfolio', err);
+  }
+}
+
+// ===========================================================================
+// FE-13: Agent Activity Console
+// ===========================================================================
+function agentLog(msg, color = 'var(--text-2)') {
+  const container = $('#agent-logs-container');
+  if (!container) return;
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.style.color = color;
+  const time = new Date().toISOString().split('T')[1].slice(0,8);
+  entry.innerHTML = `<span style="color:var(--muted)">[${time}]</span> ${msg}`;
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Intercept window console for demo purposes to feed the agent log
+const originalLog = console.log;
+console.log = function(...args) {
+  originalLog.apply(console, args);
+  agentLog(args.join(' '));
+};
+const originalWarn = console.warn;
+console.warn = function(...args) {
+  originalWarn.apply(console, args);
+  agentLog(args.join(' '), 'var(--warn)');
+};
+const originalError = console.error;
+console.error = function(...args) {
+  originalError.apply(console, args);
+  agentLog(args.join(' '), 'var(--crit)');
+};
+
+// ===========================================================================
 // Wiring
 // ===========================================================================
 function wireStaticHandlers() {
   document.querySelectorAll('#nav .nav-tab').forEach((b) =>
-    b.addEventListener('click', () => setView(b.dataset.view)));
+    b.addEventListener('click', () => {
+      setView(b.dataset.view);
+      if (b.dataset.view === 'market') renderPortfolio();
+    }));
   $('#lang-btn').addEventListener('click', () => toggleLang());
   $('#wallet-btn').addEventListener('click', onWalletClick);
   $('#mode-toggle-btn')?.addEventListener('click', onModeToggle);
@@ -1725,6 +1796,7 @@ function wireStaticHandlers() {
       if (entry) {
         setBusy(true);
         try {
+          agentLog(`Exporter updated Min Price constraint to ${$('#pref-min-price').value}`);
           state.comparison = await getCaseComparison(entry, true);
           renderMarket();
           renderViewMint();
@@ -1738,6 +1810,7 @@ function wireStaticHandlers() {
   });
   $('#pref-speed')?.addEventListener('change', (e) => {
     const val = e.target.value;
+    agentLog(`Exporter updated payout speed preference to ${val || 'AI Recommended'}`);
     if (val) {
       selectSpeed(val);
     } else {
@@ -1747,6 +1820,47 @@ function wireStaticHandlers() {
   $('#mint-financing').addEventListener('input', () => {
     const q = selectedQuote();
     if (q && !$('#mint-financing').disabled) renderMintReadout(q);
+  });
+
+  // FE-11: eBL Management Upload Listeners
+  const eblBrowseBtn = $('#ebl-browse-btn');
+  const eblFileInput = $('#ebl-file-input');
+  const eblUploadZone = $('#ebl-upload-zone');
+  const eblUploadStatus = $('#ebl-upload-status');
+
+  if (eblBrowseBtn && eblFileInput) {
+    eblBrowseBtn.addEventListener('click', (e) => { e.preventDefault(); eblFileInput.click(); });
+    eblUploadZone.addEventListener('dragover', e => { e.preventDefault(); eblUploadZone.style.background = 'var(--panel)'; });
+    eblUploadZone.addEventListener('dragleave', () => eblUploadZone.style.background = 'transparent');
+    eblUploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      eblUploadZone.style.background = 'transparent';
+      handleMockUpload(e.dataTransfer.files);
+    });
+    eblFileInput.addEventListener('change', (e) => handleMockUpload(e.target.files));
+  }
+
+  function handleMockUpload(files) {
+    if (!files || files.length === 0) return;
+    eblUploadStatus.style.color = 'var(--accent)';
+    eblUploadStatus.innerHTML = `Scanning ${files.length} documents...`;
+    agentLog(`Agent received ${files.length} new documents for ENI verification.`);
+    
+    setTimeout(() => {
+      eblUploadStatus.style.color = 'var(--ok)';
+      eblUploadStatus.innerHTML = '✔ Documents parsed. ENI signature verified.<br>✔ Trade case generated and sent to Risk Engine.';
+      agentLog(`Documents verified. Generating mock trade case...`, 'var(--ok)');
+    }, 1500);
+  }
+
+  // FE-13: Agent Console Toggle
+  $('#toggle-activity-console')?.addEventListener('click', () => {
+    const c = $('#agent-activity-console');
+    if (c.style.height === '40px') {
+      c.style.height = '160px';
+    } else {
+      c.style.height = '40px';
+    }
   });
 
   // Category filter buttons
@@ -1771,4 +1885,5 @@ function wireStaticHandlers() {
   });
 }
 
-boot();
+boot().then(() => renderPortfolio());
+

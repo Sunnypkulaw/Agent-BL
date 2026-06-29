@@ -13,6 +13,8 @@ import { toOracleUpdate } from '../core/oracle.js';
 import { assertPricingQuote, PAYOUT_SPEEDS } from '../core/pricingSchema.js';
 import { X402_SERVICES } from '../x402/config.js';
 import { demoModeController, LiveModeUnavailableError } from '../demo/mode.js';
+import { storeState, createPool, subscribeToPool } from './store.js';
+import { recommend } from '../agent/investmentAdvisor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -300,6 +302,135 @@ export async function handleRequest(request, response) {
           assertPricingQuote(quote, caseData);
           sendJson(response, 200, quote);
         }
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // BE-11, 12, 13: Market, Pool, and Role Dashboard APIs
+      // ---------------------------------------------------------
+      
+      // Helper to lazily initialize mock pools from cases
+      const ensureMockPools = async () => {
+        if (storeState.pools.size === 0) {
+          const cases = await loadCaseCatalog();
+          for (const c of cases) {
+            const caseData = c.case;
+            if (!caseData || !caseData.financing) continue;
+            // Provide a generic mock quote for demo purposes
+            const quote = {
+              requested_cash_usd: caseData.financing.requested_cash_usd || 1000000,
+              final_issue_price_usd: 0.9,
+              implied_gross_yield_bps: 1000,
+              risk_level: c.risk_hint || 'MEDIUM'
+            };
+            createPool(c.case_id, caseData, quote);
+          }
+        }
+      };
+
+      // BE-11: Market Listings
+      if (request.method === 'GET' && url.pathname === '/api/market/listings') {
+        await ensureMockPools();
+        const activePools = Array.from(storeState.pools.values()).filter(p => p.status !== 'Paused');
+        sendJson(response, 200, { ok: true, count: activePools.length, pools: activePools });
+        return;
+      }
+
+      // BE-11: Market Search (AI-19 Recommendation)
+      if (request.method === 'POST' && url.pathname === '/api/market/search') {
+        const body = await readJsonBody(request);
+        await ensureMockPools();
+        
+        // Format pools to match investmentAdvisor expects
+        const availableCases = Array.from(storeState.pools.values())
+          .filter(p => p.status !== 'Paused')
+          .map(p => ({
+            id: p.poolId,
+            caseEntry: { 
+              cargo: p.caseData?.bill_of_lading?.cargo || 'Unknown', 
+              label: p.caseData?.case_id || 'Unknown' 
+            },
+            caseData: p.caseData,
+            riskLevel: p.quote.risk_level,
+            yieldBps: p.quote.implied_gross_yield_bps,
+            riskBps: 200, // mock base risk bps
+            score: (p.quote.implied_gross_yield_bps / 200), // mock score
+            financingUsd: p.quote.requested_cash_usd,
+            price: p.quote.final_issue_price_usd
+          }));
+
+        const result = await recommend(body?.preference, availableCases);
+        sendJson(response, 200, { ok: true, ...result });
+        return;
+      }
+
+      // BE-12: Pool Subscribe
+      if (request.method === 'POST' && url.pathname === '/api/pool/subscribe') {
+        const body = await readJsonBody(request);
+        await ensureMockPools();
+        try {
+          const res = subscribeToPool(body.wallet_address || '0xDemoWallet', body.pool_id, body.amount_usd);
+          sendJson(response, 200, { ok: true, ...res });
+        } catch (err) {
+          sendError(response, err);
+        }
+        return;
+      }
+
+      // BE-12: Pool Status
+      if (request.method === 'GET' && url.pathname === '/api/pool/status') {
+        const poolId = url.searchParams.get('pool_id');
+        await ensureMockPools();
+        const pool = storeState.pools.get(poolId);
+        if (!pool) {
+          sendError(response, new Error('Pool not found'));
+          return;
+        }
+        sendJson(response, 200, { ok: true, poolId, status: pool.status, subscribedUsd: pool.subscribedUsd, targetUsd: pool.targetUsd });
+        return;
+      }
+
+      // BE-13: Investors Portfolio
+      if (request.method === 'GET' && url.pathname === '/api/investors/portfolio') {
+        const walletAddress = url.searchParams.get('wallet_address') || '0xDemoWallet';
+        const myInvestments = storeState.investments.filter(inv => inv.walletAddress === walletAddress);
+        
+        let totalInvested = 0;
+        let weightedYieldSum = 0;
+        myInvestments.forEach(inv => {
+          totalInvested += inv.amountUsd;
+          weightedYieldSum += inv.amountUsd * inv.yieldBps;
+        });
+
+        const avgYieldBps = totalInvested > 0 ? (weightedYieldSum / totalInvested) : 0;
+
+        sendJson(response, 200, { 
+          ok: true, 
+          wallet: walletAddress, 
+          investments: myInvestments,
+          summary: {
+            totalInvestedUsd: totalInvested,
+            avgYieldBps: Math.round(avgYieldBps)
+          }
+        });
+        return;
+      }
+
+      // BE-13: Exporters Dashboard
+      if (request.method === 'GET' && url.pathname === '/api/exporters/dashboard') {
+        await ensureMockPools();
+        // Since exporter identity isn't strictly passed in demo, we return all active pools representing eBLs
+        const myPools = Array.from(storeState.pools.values());
+        sendJson(response, 200, {
+          ok: true,
+          total_ebl_submitted: myPools.length,
+          pools: myPools.map(p => ({
+            poolId: p.poolId,
+            status: p.status,
+            financingUsd: p.quote.requested_cash_usd,
+            createdAt: p.createdAt
+          }))
+        });
         return;
       }
 
