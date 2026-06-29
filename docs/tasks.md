@@ -16,7 +16,7 @@
 | Injective Testnet | 🟡 已有单合约真实交易 | 已有 chainId `1439`、合约地址和 explorer；仍需完整协议部署与事件回读 |
 | MCP Server | 🟡 只有 5-tool mock | 当前是自定义 handler + HTTP mock，不是标准 MCP stdio server；没有 resources，不能宣称“7 工具 + 3 资源” |
 | Demo Mode | ✅ 已完成 | `DEMO_MODE=true` 默认、顶部常驻 banner、Live toggle、一键 reset；Live 配置不足时显式失败，不伪造链上 tx |
-| x402 | ✅ Live 支付闭环已验证 | X402-1/2/3/4/6/7/8/9/10/13/14/15 已完成；真实 V2/EIP-3009 支付、PaidReportEnvelope 与 PaymentAttested 已由 explorer 证据串联 |
+| x402 | ✅ Live 支付闭环已验证 | X402-1/2/3/4/5/6/7/8/9/10/13/14/15 已完成；真实 V2/EIP-3009 支付、PaidReportEnvelope 与 PaymentAttested 已由 explorer 证据串联 |
 | Preflight | ✅ 已完成 | 固定 54 项总闸门；Demo 环境实测 50 PASS / 4 项显式 Live WARN / 0 FAIL，覆盖 Node、Solidity、smoke、scenarios、MCP、x402 与 UI |
 | 动效 | 🟡 仅 waterfall 已有 | `priceFlash`、`riskPulse`、支付流水和 Demo banner 待补，且必须支持 reduced motion |
 | 中文路演 | 🟡 有 30 秒和 3 分钟素材 | 需统一成 30 秒 / 1 分钟 / 3 分钟同一故事，并补 x402 与评委追问 |
@@ -381,7 +381,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 | X402-2 | 加入最小依赖并锁版本：优先 `@injectivelabs/x402`；客户端确有需要才加 `@x402/core` / `@x402/evm` / `@x402/fetch` | P0 | Bowen | Done | 精确锁定 `@injectivelabs/x402@0.0.1` + `express@5.2.1`，Node 提升到 `>=20`；`ws` override 到修复版 `8.21.0`，`npm audit` 为 0 vulnerabilities；README 已说明用途与不引入第二套 x402 包的边界 |
 | X402-3 | 新建 `src/x402/config.js`：network、asset、decimals、payTo、facilitator URL、三端点价格、TTL、live/demo mode；启动时做 fail-fast 校验 | P0 | Bowen | Done | `config.js` 固定 1776/1439 原生 USDC、3 个 atomic price、Live/Demo 与 HTTPS 门禁；`/supported` 校验 V2/exact/asset/decimals/EIP-3009；`tests/x402Config.test.js` 10 tests passed |
 | X402-4 | 新建 `src/x402/server.js`：统一 402 challenge、V2 标准 headers、支付校验、settle、成功后放行；不把业务逻辑复制进 middleware | P0 | Bowen | Done | Express middleware 输出可解码 `PAYMENT-REQUIRED`，使用官方 decoder；在 facilitator 前拒绝 malformed/expired/future/wrong network/asset/amount/payTo/domain，settle 成功才 `next()`；`tests/x402Server.test.js` 9 tests passed |
-| X402-5 | 新建 `src/x402/client.js`：支持浏览器外部钱包和 CLI signer 的 402→签名→重试流程；私钥绝不从前端发往服务端 | P0 | Unassigned | Todo | client contract tests；取消签名、余额不足、网络错误、settlement timeout 都有明确可恢复提示 |
+| X402-5 | 新建 `src/x402/client.js`：支持浏览器外部钱包和 CLI signer 的 402→签名→重试流程；私钥绝不从前端发往服务端 | P0 | Bowen | Done | `createPaidFetch`/`fetchPaidIntel` 支持注入钱包或 CLI signer，签名只在本地、只回传 signature + signer 地址；新增 `balanceOf` 预检与 `classifyPaidFailure`，把取消签名/预算超限/错网/余额不足/网络错误/settlement timeout/结算失败映射为带 `recoverable` 的 `X402ClientError`；`tests/x402Client.test.js` 13 contract tests（含「私钥绝不外泄」断言）全绿，`npm test` 270 passed |
 | X402-6 | 新建 `src/x402/settlement.js`：facilitator verify/settle adapter、幂等键、receipt store、重试与状态机 `CHALLENGED/SIGNED/SETTLING/SETTLED/UNLOCKED/FAILED` | P0 | Bowen | Done | 官方 V2 verify/settle adapter + bounded retry + 原子 JSON receipt store + single-flight；已结算/解锁重启恢复，悬空 SETTLING 转人工 reconciliation FAILED，失败永不解锁；`tests/x402Settlement.test.js` 7 tests passed |
 | X402-7 | 定义 `PaidReportEnvelope` schema，至少包含 `report_id/kind/case_id/payer/payee/network/asset/amount/payment_tx/settled_at/data_snapshot/model_provider/evidence_hash/report_hash/expires_at` | P0 | Bowen | Done | `src/x402/paidReport.js` 提供 schema manifest、规范化、脱敏、稳定 hash/重算、TTL 校验；10 个正反例测试；三端点均返回已校验 envelope |
 | X402-8 | 实现三个付费端点，复用现有 `worldRiskAgent`、`valuationAgent`、`documentConsistency`、`pricingEngine` 和 scenario runner | P0 | Bowen | Done | `src/x402/endpoints.js` 组合 risk / valuation / fraud-review 三种报告，支付只控制访问、不改风险分；`tests/x402Endpoints.test.js` 三端点解锁通过 |
