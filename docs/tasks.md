@@ -5,9 +5,54 @@
 每个任务都必须有 Owner 和可验证方式。没有验证方式的任务不要认领。  
 当前主线：**Web3 原生贸易融资协议：出口商 tokenize eBL，AI 自主定价与执行，全球投资者直接出资，Injective 全程上链审计**。
 
-## 0. 先讲真话：2026-06-29 仓库复核
+---
 
-以下状态以代码、脚本和测试为准，不以路演文案为准。评委现场最怕“说有、点开没有”。
+## 0. 项目定位与冠军约束
+
+### 0.1 冠军版一句话
+
+> **Before investing in an eBL-backed RWA, anyone can pay cents over x402 for an AI due-diligence report; AgentBL turns that report into a verifiable risk discount, and Injective enforces the financing decision on-chain.**
+
+中文：**投资 RWA 前，用户通过 x402 按次购买 AI 风控报告；AgentBL 把审单、估值和世界风险变成可验证的发行折价，Injective 负责支付、存证与融资执行。**
+
+必须反复说明：**不是"AI 在买东西"，而是人、机构或其他 Agent 花钱购买 AgentBL 的 AI 分析结果。** x402 支付与 RWA 认购是两笔不同业务：
+
+```text
+x402：购买 AI 报告       402 → USDC 支付 → 解锁报告 → PaymentOracle 绑定报告哈希
+RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA → RWAOfferingPool 结算
+```
+
+### 0.2 为什么 x402 值得做
+
+1. **创新性**：把 AI 风控从"页面功能"升级成可独立交易的机器可调用服务。
+2. **技术实现**：同一条演示同时覆盖 HTTP 402、USDC 支付、AI 结构化输出、Injective 结算和链上证据。
+3. **应用价值**：银行、保险、物流平台、投资者和其他 Agent 都可以按次购买报告，无账号、无订阅。
+4. **AI 含金量**：付费的是审单、估值、压力测试和证据，而不是一个普通 LLM 回答。
+5. **生态契合**：Injective 官方已提供 `@injectivelabs/x402` 和 Injective EVM x402 指南；这是赛事 sponsor-native 能力，不是外链装饰。
+
+### 0.3 夺冠约束
+
+- 不再堆无关页面；所有新增能力必须回到"买报告 → 风险定价 → 链上执行"闭环。
+- Demo 中任何 `tx_hash`、支付状态和 explorer 链接都必须来自真实交易；模拟值必须显式标 `DEMO`。
+- LLM 可以解析、检索、解释和提出建议，但最终金额、状态迁移、权限和支付校验必须由确定性代码/合约验证。
+- 支付成功不代表报告正确；报告必须通过 schema、证据完整性和新鲜度校验后才能注入定价。
+- 不把贸易秘密、完整单据或模型 chain-of-thought 写链；只上链必要哈希、金额、地址、时间和决策摘要。
+
+### 0.4 五项评审标准对照表
+
+| 评审维度 | 评委必须看到的证据 | 对应任务 | Gate |
+|---|---|---|---|
+| Innovation | "AI 报告本身可按次交易"，支付证据与报告哈希绑定，报告再驱动 RWA 定价 | X402-7~11、X402-15 | 一次真实 402 + 一次真实 oracle event |
+| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、300+24 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
+| Use Case & Impact | 45 天回款痛点、银行/保险/投资者/Agent 都能买报告、明确收费与市场入口 | PM-8、X402-8、TRUST-7 | 1 分钟说清 payer/buyer/value/revenue |
+| Product & UX | 402→支付→结算→解锁一屏看懂；证据可展开；钱包失败可恢复 | X402-11/12、DEMO-1~3 | 5 秒理解测试 + 60 秒 demo |
+| Ecosystem Fit | 官方 Injective x402、MCP、EVM、Explorer、可选 precompile；Azure eval/tracing | SP-1~10 | 每个 logo 都能指向代码、配置、trace 或 tx |
+
+---
+
+## 1. 仓库复核（2026-06-29）
+
+以下状态以代码、脚本和测试为准，不以路演文案为准。评委现场最怕"说有、点开没有"。
 
 | 能力 | 真实状态 | 结论 / 下一步 |
 |---|---|---|
@@ -21,54 +66,15 @@
 | 动效 | 🟡 仅 waterfall 已有 | `priceFlash`、`riskPulse`、支付流水和 Demo banner 待补，且必须支持 reduced motion |
 | 中文路演 | 🟡 有 30 秒和 3 分钟素材 | 需统一成 30 秒 / 1 分钟 / 3 分钟同一故事，并补 x402 与评委追问 |
 
-### 0.1 冠军版一句话
+---
 
-> **Before investing in an eBL-backed RWA, anyone can pay cents over x402 for an AI due-diligence report; AgentBL turns that report into a verifiable risk discount, and Injective enforces the financing decision on-chain.**
-
-中文：**投资 RWA 前，用户通过 x402 按次购买 AI 风控报告；AgentBL 把审单、估值和世界风险变成可验证的发行折价，Injective 负责支付、存证与融资执行。**
-
-必须反复说明：**不是“AI 在买东西”，而是人、机构或其他 Agent 花钱购买 AgentBL 的 AI 分析结果。** x402 支付与 RWA 认购是两笔不同业务：
-
-```text
-x402：购买 AI 报告       402 → USDC 支付 → 解锁报告 → PaymentOracle 绑定报告哈希
-RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA → RWAOfferingPool 结算
-```
-
-### 0.2 为什么 x402 值得做
-
-1. **创新性**：把 AI 风控从“页面功能”升级成可独立交易的机器可调用服务。
-2. **技术实现**：同一条演示同时覆盖 HTTP 402、USDC 支付、AI 结构化输出、Injective 结算和链上证据。
-3. **应用价值**：银行、保险、物流平台、投资者和其他 Agent 都可以按次购买报告，无账号、无订阅。
-4. **AI 含金量**：付费的是审单、估值、压力测试和证据，而不是一个普通 LLM 回答。
-5. **生态契合**：Injective 官方已提供 `@injectivelabs/x402` 和 Injective EVM x402 指南；这是赛事 sponsor-native 能力，不是外链装饰。
-
-### 0.3 夺冠约束
-
-- 不再堆无关页面；所有新增能力必须回到“买报告 → 风险定价 → 链上执行”闭环。
-- Demo 中任何 `tx_hash`、支付状态和 explorer 链接都必须来自真实交易；模拟值必须显式标 `DEMO`。
-- LLM 可以解析、检索、解释和提出建议，但最终金额、状态迁移、权限和支付校验必须由确定性代码/合约验证。
-- 支付成功不代表报告正确；报告必须通过 schema、证据完整性和新鲜度校验后才能注入定价。
-- 不把贸易秘密、完整单据或模型 chain-of-thought 写链；只上链必要哈希、金额、地址、时间和决策摘要。
-
-### 0.4 如果 2026-06-29 就是提交硬截止
-
-不要同时开 eBL V2、多钱包、全市场后端、多 LLM、Azure tracing、Exchange precompile 六条战线。当天只保以下顺序：
-
-```text
-1. X402-1/3/4/6/8/11/14：先让付费情报流水可演示、可测试
-2. X402-9/15：能真实上链就绑定 PaymentOracle；facilitator 不支持 1439 时明确展示 Demo 标签
-3. MCP-6/7/8：已把原 5-tool mock 升级成可验证的 7 tools + 3 resources stdio server
-4. DEMO-1/4/5/6/7：Demo Mode、preflight、路演和视频兜底
-5. 其余任务提交后按 Wave B/C/D 继续，不在最后数小时重构核心协议
-```
-
-## 1. 本轮开发优先级
+## 2. 优先级总览
 
 | Priority | 目标 | 说明 |
 |---|---|---|
 | P0 | 跑通 AI 定价主链路 | 出口商选择到账速度，AI 给出 RWA 发行价，投资者看到折价和风险 |
 | P0 | 固定 PricingQuote schema | 让 AI、后端、前端、合约都围绕同一份结构化输出 |
-| P0 | 完成 Investor RWA Offering 页面 | 评委必须看到“风险越高，价格越低，潜在收益越高” |
+| P0 | 完成 Investor RWA Offering 页面 | 评委必须看到"风险越高，价格越低，潜在收益越高" |
 | P0 | 跑通自主 Agent 闭环 | eBL 上链后自动审单、估值、定价、开盘；风险事件自动改价/暂停；付款或到港自动结算 |
 | P0 | 补齐 eBL 信任根 | ENI 文件标识、`cargoHash` 防一货多单、结构化元数据、transfer / endorse / history |
 | P0 | 部署完整 Injective 协议 | 五个协议合约部署到 inEVM，前端支持 MetaMask + Keplr + Leap 与多链配置 |
@@ -83,7 +89,21 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 | P2 | Injective 原生模块 | ERC20/Bank precompile 优先；Exchange precompile 仅在有真实可解释场景时接入 |
 | P2 | AI 与品牌增强 | 多 LLM 共识、出口商偏好参数、Injective 紫色主题与 ENI + Injective 联合品牌 |
 
-## 2. Product / Business / PM
+### 2.1 如果 2026-06-29 就是提交硬截止
+
+不要同时开 eBL V2、多钱包、全市场后端、多 LLM、Azure tracing、Exchange precompile 六条战线。当天只保以下顺序：
+
+```text
+1. X402-1/3/4/6/8/11/14：先让付费情报流水可演示、可测试
+2. X402-9/15：能真实上链就绑定 PaymentOracle；facilitator 不支持 1439 时明确展示 Demo 标签
+3. MCP-6/7/8：已把原 5-tool mock 升级成可验证的 7 tools + 3 resources stdio server
+4. DEMO-1/4/5/6/7：Demo Mode、preflight、路演和视频兜底
+5. 其余任务提交后按 Wave B/C/D 继续，不在最后数小时重构核心协议
+```
+
+---
+
+## 3. Product / Business / PM
 
 | ID | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|
@@ -96,9 +116,11 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 | PM-7 | 录制最终备份 demo 视频 | Unassigned | Todo | 视频链接 | - |
 | PM-8 | 将对外叙事统一为 gap analysis v2：Web3-native、三方协议、按货物与航线定价、投资者直投、No bank | Unassigned | Todo | README、PRD、demo/video script 交叉 review，核心定位与 3 分钟流程一致 | - |
 
-## 3. Agent / AI
+---
 
-AI 的目标不是“写一段解释”，而是产出可被后端、前端和合约使用的 **PricingQuote**。
+## 4. Agent / AI
+
+AI 的目标不是"写一段解释"，而是产出可被后端、前端和合约使用的 **PricingQuote**。
 
 | ID | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|
@@ -123,7 +145,9 @@ AI 的目标不是“写一段解释”，而是产出可被后端、前端和�
 | AI-19 | 将现有浏览器端 `recommendEBL` 提炼为可测试的服务端投资顾问 `src/agent/investmentAdvisor.js`，支持自然语言偏好、排序理由与确定性 fallback | Agent | Done | `node --test tests/investmentAdvisor.test.js`，同一偏好返回稳定 Top 3，popup 与市场搜索复用同一结果 | `npm test` passed |
 | AI-20 | 实现多 LLM 竞争评估：同一 case 由 3 个 provider 独立输出结构化评估，以中位数/共识聚合，分歧过大时降级为确定性引擎并标警告 | Agent | Done | `node --test tests/llmConsensus.test.js`，覆盖全成功、单 provider 失败、极端离群、全部失败四种情况 | `npm test` passed |
 
-## 4. Backend / Integration
+---
+
+## 5. Backend / Integration
 
 后端目标：把 AI 定价结果变成稳定 API，并让前端和合约 mock 能复用同一套数据。
 
@@ -145,9 +169,11 @@ AI 的目标不是“写一段解释”，而是产出可被后端、前端和�
 | BE-14 | 实现 eBL 文档接入与 ENI adapter：上传 eBL/发票/保险单、校验类型/大小、获取可信文件标识与哈希，并触发 AI-13 编排器；ENI 不可用时提供明确 mock fallback | Unassigned | Done | `node --test tests/eblIngestion.test.js`，真实/模拟 ENI 两条路径均产出可追溯 document hash，重复上传保持幂等 | tests/eblIngestion.test.js passed (7 tests) |
 | BE-15 | 实现 Agent 活动查询与实时订阅 API（SSE 或 WebSocket）：按 case/pool 返回持久化决策、执行状态、证据与 tx，供 FE-13 使用 | Unassigned | Done | `node --test tests/agentActivityApi.test.js`，断线重连不丢事件且不暴露内部原始 chain-of-thought | tests/agentActivityApi.test.js passed (7 tests) |
 
-## 5. Frontend
+---
 
-前端目标：让评委一眼看到“AI 正在给 RWA 定价”，而不是普通 dashboard。
+## 6. Frontend
+
+前端目标：让评委一眼看到"AI 正在给 RWA 定价"，而不是普通 dashboard。
 
 | ID | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|
@@ -156,18 +182,20 @@ AI 的目标不是“写一段解释”，而是产出可被后端、前端和�
 | FE-3 | Investor RWA Offering 页面：展示 issue price、target redemption、implied gross yield | Bowen | Done | 手动访问 `npm run dev` | `app.js` renderInvestor #investor-panel：大号 issue price、$1.00 target redemption、implied gross yield badge、token supply、risk/action 徽章；headless 验证 $0.848 / supply / MEDIUM |
 | FE-4 | Investor 页面展示 AI risk factors：战争、天气、港口、保险、价格波动 | Bowen | Done | 手动访问 `npm run dev` | `format.js` rollupRiskDimensions → 6 维(war/weather/port/insurance/price/docs)带 bps + 严重度配色 + RAG intel 引用(intelCitations)；doc:Insurance 归入 Insurance 维；war-crisis 用例 5 维全亮验证 |
 | FE-5 | AI Pricing Console：base price、urgency discount、risk discount、final price | Bowen | Done | 手动访问 `npm run dev` | `app.js` renderWaterfall：$1.00 target → base anchor → −urgency → −risk → indicative → collateral floor → final 的 broken-axis 瀑布图；与 assertPricingQuote 加性不变量一致 |
-| FE-6 | Smart Contract Timeline：Created -> Priced -> Open -> Repriced/Paused/Funded/Redeemed | Bowen | Done | `npm run smoke` + 手动验证 | `app.js` renderTimeline 由 `POST /api/offering/simulate` 驱动：生命周期 stepper + 事件日志；“Simulate in-transit risk” 注入事件 → 实时 reprice/pause callout（headless 验证 0.800→0.782 Repriced）；`npm run smoke` 通过 |
+| FE-6 | Smart Contract Timeline：Created -> Priced -> Open -> Repriced/Paused/Funded/Redeemed | Bowen | Done | `npm run smoke` + 手动验证 | `app.js` renderTimeline 由 `POST /api/offering/simulate` 驱动：生命周期 stepper + 事件日志；"Simulate in-transit risk" 注入事件 → 实时 reprice/pause callout（headless 验证 0.800→0.782 Repriced）；`npm run smoke` 通过 |
 | FE-7 | Scenario selector：一键切换 fast / balanced / high-risk | Bowen | Done | 手动访问 `npm run dev` | 新增只读 `GET /api/cases`（src/app/server.js loadCaseCatalog）+ topbar 场景 segmented control；风险阶梯 clean→warning→critical 共 4 个真实 case（含 AI-10 war-crisis）；payout 速度独立切换 |
 | FE-8 | Subscribe mock：投资者输入认购金额，显示获得 RWA 数量 | Bowen | Done | 手动访问 `npm run dev` | `app.js` renderSubscribe/computeSubscription：USDC 输入 → RWA tokens + cost / target redemption / target upside / gross yield；暂停态(PAUSE/FREEZE)禁用并提示 |
-| FE-9 | Evidence hash / quote hash 展示 | Bowen | Done | 手动访问 `npm run dev` | `app.js` #oracle-panel 展示 quote_hash + evidence_hash + `updatePricing(...)`（来自 `POST /api/oracle/pricing-update`）；“Push to RiskPricingOracle” → MCP push_pricing_to_oracle 返回 PricingUpdated tx（headless 验证） |
-| FE-10 | 合规提示 UI：target redemption is not guaranteed | Bowen | Done | 文案 review | investor 面板合规框 + subscribe 脚注：“$1.00 是 target 非保本，依赖进口商付款/货物结算/保险” + “permissioned investors only” |
+| FE-9 | Evidence hash / quote hash 展示 | Bowen | Done | 手动访问 `npm run dev` | `app.js` #oracle-panel 展示 quote_hash + evidence_hash + `updatePricing(...)`（来自 `POST /api/oracle/pricing-update`）；"Push to RiskPricingOracle" → MCP push_pricing_to_oracle 返回 PricingUpdated tx（headless 验证） |
+| FE-10 | 合规提示 UI：target redemption is not guaranteed | Bowen | Done | 文案 review | investor 面板合规框 + subscribe 脚注："$1.00 是 target 非保本，依赖进口商付款/货物结算/保险" + "permissioned investors only" |
 | FE-11 | 开发 eBL 管理 View ③：上传 eBL/发票/保险单、查看解析与合规结果、tokenize 状态、质押/流转历史 | Unassigned | Done | `npm run dev` + 前端验收清单；上传 fixture 后可追踪 Parser → Checker → Mint → Open 全过程 | index.html + app.js updated |
 | FE-12 | 开发投资组合 View ④：展示钱包持仓、成本、当前估值、目标收益、风险状态与兑付记录，替换 popup 内存数组 | Unassigned | Done | 连接测试钱包手动验收 + UI 测试；刷新页面后持仓不丢失 | index.html + app.js updated |
 | FE-13 | 开发 Agent 活动 View ⑤：展示真实决策日志、Agent 当前状态、触发源、推理摘要、证据与链上 tx；移除随机 tx 的模拟记录 | Unassigned | Done | 注入 xAPI 风险事件后，页面实时出现与后端/链上相同的 REPRICE 或 PAUSE 记录 | index.html + app.js updated |
 | FE-14 | 增加出口商偏好参数面板：最低可接受发行价、到账速度偏好、目标融资额，并在自主开盘前校验约束 | Unassigned | Done | 三组参数化用例；低于最低价时 Agent 不开盘并给出可解释原因 | wired pref-min-price |
 | FE-15 | 完成 Injective 品牌适配：紫色主题、Injective/ENI 联合品牌、`Powered by ENI + Injective`，保留 WCAG 对比度 | Unassigned | Done | 中英文桌面/移动端视觉 review + 对比度检查 | styles.css updated |
 
-## 6. Web3 / Contract
+---
+
+## 7. Web3 / Contract
 
 Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在前端展示。
 
@@ -202,146 +230,18 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 | WEB3-13 | 增加 eBL 结构化元数据：船舶、航次、装卸港、货物、数量、HS Code、申报价值、Incoterms、MLETR/eUCP/DCSA 标准 | Codex | Done | Solidity getter/event 测试 + 元数据 hash 与链下解析结果一致性测试 | `mintEBLV2` / `EBLMetadata` / `EBLMintedV2`，`hardhat test` 24 passing |
 | WEB3-14 | 实现 eBL 完整流转：`transfer`、`endorse`、`getTransferHistory`；质押期间禁止未授权转移，创建发行池前必须已质押到对应池 | Codex | Done | `cd hardhat && npm test`，覆盖正常转让、连续背书、质押锁定、未质押建池失败、释放后转让与历史顺序 | `EBLRegistry.sol` + `RWAOfferingPool.sol` + 5 个 V2 专项测试 |
 | WEB3-15 | 补齐自主执行状态机：`RESUME_OFFERING`、付款/到港结算、合法状态迁移、Agent executor 权限与紧急人工停机 | Unassigned | Todo | `cd hardhat && npm test`，覆盖 PAUSE→RESUME、OPEN/FUNDED→SETTLE、非法迁移、越权调用与重复事件 | - |
-| WEB3-16 | 对齐 v2 投资者访问模型：测试网允许任意钱包直投；生产模式使用可插拔合规 gate，移除当前硬编码 allowlist 与“全球投资者”叙事冲突 | Unassigned | Todo | permissionless testnet 与 compliance-gated 两种模式合约测试；前端文案与实际权限一致 | - |
+| WEB3-16 | 对齐 v2 投资者访问模型：测试网允许任意钱包直投；生产模式使用可插拔合规 gate，移除当前硬编码 allowlist 与"全球投资者"叙事冲突 | Unassigned | Todo | permissionless testnet 与 compliance-gated 两种模式合约测试；前端文案与实际权限一致 | - |
 | WEB3-17 | 编写完整协议部署脚本并部署 `AgentBLRWA`、`EBLRegistry` V2、`RiskPricingOracle`、`RWAOfferingPool`、`RWAToken` 到 Injective inEVM | Codex | Done | 五个地址 + deploy tx + explorer 链接；部署后运行链上 smoke 验证 create/subscribe/reprice/pause/resume/settle | `hardhat/scripts/deploy-protocol.js` + `docs/evidence/wave-b-protocol.json`；最终状态 `Repaid` |
 | WEB3-18 | 钱包集成扩展为 MetaMask + Keplr + Leap：钱包选择、网络切换、签名、断线重连与错误提示 | Unassigned | Todo | Injective Testnet 三钱包验收矩阵；每种钱包至少完成一次真实签名交易 | - |
 | WEB3-19 | 将 `public/chain-config.json` 改为多链/多合约格式，默认 `injective-testnet`，并让部署脚本合并配置而非覆盖其他网络 | Unassigned | Todo | config schema 测试 + 两个网络 fixture；切链后地址、RPC、explorer 与 ABI 均正确 | - |
 
-## 7. MCP / RAG / Skill
+---
 
-这些是加分项，必须服务 AI 定价主链路。
+## 8. x402 付费情报市场（冠军版 P0）
 
-| ID | Task | Owner | Status | Verification | Done Evidence |
-|---|---|---|---|---|---|
-| MCP-1 | 设计 AgentBL MCP tools manifest | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
-| MCP-2 | 实现 `get_trade_case` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-3 | 实现 `generate_pricing_quote` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-4 | 实现 `simulate_offering` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-5 | 实现 `push_pricing_to_oracle` mock / real tx | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| RAG-1 | 建立风险情报资料：天气、战争、港口、保险、价格 mock feed | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| RAG-2 | 准备 4 个评委追问检索问题 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| SKILL-1 | 创建 `agentbl-pricing-analyst` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
-| SKILL-2 | 创建 `agentbl-demo-operator` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
-| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Codex | Done | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
-| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Codex | Done | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
-| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Codex | Done | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
-| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Codex | Done | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
-| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Codex | Done | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
-| MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
+### 8.1 冻结架构
 
-## 8. QA / Integrator
-
-QA 目标：任何新增功能都必须回到同一条主链路，不能散。
-
-| ID | Task | Owner | Status | Verification | Done Evidence |
-|---|---|---|---|---|---|
-| QA-1 | 维护 `npm run check` | Unassigned | Todo | `npm run check` | - |
-| QA-2 | 维护 `npm run test` | Unassigned | Todo | `npm run test` | - |
-| QA-3 | 维护 `npm run smoke` | Unassigned | Todo | `npm run smoke` | - |
-| QA-4 | 维护 `npm run scenarios` | Unassigned | Todo | `npm run scenarios` | - |
-| QA-5 | 增加 pricing invariant tests：兑付敞口不能超过安全覆盖 | Unassigned | Todo | `npm run test` | - |
-| QA-6 | 增加前端手动验收清单 | Unassigned | Todo | checklist 文档 | - |
-| QA-7 | 最终演示前跑完整验证矩阵 | Unassigned | Todo | `npm run check && npm run test && npm run smoke && npm run scenarios && npm run demo` | - |
-| QA-8 | 准备演示失败兜底：CLI demo、mock provider、contract mock | Unassigned | Todo | README / docs 更新 | contract mock 已完成（`contractHarness.js`）；CLI demo / README 兜底说明待补 |
-| QA-9 | 最后 6 小时功能冻结协调 | Unassigned | Todo | 全员确认 | - |
-| QA-10 | 增加自主 Agent 可靠性测试矩阵：事件乱序、重复事件、进程重启、RPC 超时、xAPI/LLM 不可用、链上交易失败 | Unassigned | Todo | `npm run test`，所有失败路径均有幂等恢复或确定性 fallback | - |
-| QA-11 | 增加 eBL V2 安全测试：一货多单、伪造 cargoHash、未授权 transfer/endorse、质押中转让、重放攻击 | Unassigned | Todo | `cd hardhat && npm test` + 安全测试报告 | - |
-| QA-12 | 增加市场与角色 API 集成测试：访问控制、分页、并发认购、持久化恢复、链上/链下状态对账 | Unassigned | Todo | `npm run test && npm run smoke`，API、持久化存储与合约事件三方一致 | - |
-| QA-13 | 建立 MetaMask / Keplr / Leap × 桌面/移动端 × 真实链/离线 fallback 的手动验收矩阵 | Unassigned | Todo | 完整 checklist、截图与测试 tx hash | - |
-| QA-14 | 按 gap analysis v2 跑通 3 分钟 P0 验收：上传 → 唯一性 → 解析 → 自主定价/开盘 → 市场认购 → 风险暂停/恢复 → 自动兑付 | Unassigned | Todo | 录像 + 决策日志 + 全套链上 tx；任何一步不得依赖伪造随机 tx | - |
-
-## 9. 推荐并行分工
-
-| 角色 | 负责人建议 | 主要任务 |
-|---|---|---|
-| PM / Pitch | 1 人 | PM-1 到 PM-8，demo script，合规 Q&A，No-bank 叙事一致性 |
-| AI | 2 人 | AI-1 到 AI-20，pricing、orchestrator、autonomous loop、parser、compliance、advisor、LLM consensus |
-| Backend | 1-2 人 | BE-1 到 BE-15，API、schema、scenario、ENI ingestion、market/pool/role persistence |
-| Frontend | 1-2 人 | FE-1 到 FE-15，Marketplace + Mint + Voyage + eBL/Portfolio/Agent Activity |
-| Web3 | 1-2 人 | WEB3-1 到 WEB3-19，eBL V2、自主状态机、完整协议部署、多钱包/多链 |
-| QA / Integrator | 1 人 | QA-1 到 QA-14，最终集成、安全、钱包矩阵和演示兜底 |
-
-## 10. 任务认领流程
-
-1. 先拉最新 `main`。
-2. 在本文件找到 `Unassigned` 任务。
-3. 把 Owner 改成自己。
-4. 把 Status 改成 `In Progress`。
-5. 开分支开发。
-6. 完成后跑验证命令。
-7. 提 PR。
-8. 合并后把 Status 改成 `Done`，Done Evidence 填 PR 或 commit。
-
-## 11. 分支命名
-
-```text
-feature/ai-pricing-quote
-feature/backend-pricing-api
-feature/frontend-rwa-offering
-feature/contract-risk-pricing-oracle
-feature/scenario-high-risk-reprice
-feature/agent-orchestrator
-feature/agent-autonomous-loop
-feature/ebl-registry-v2
-feature/eni-document-ingestion
-feature/agent-activity-view
-fix/pricing-invariant
-docs/pitch-tokenomics
-```
-
-## 12. 合并标准
-
-PR 必须满足：
-
-```text
-1. 有明确 Owner
-2. 有对应任务 ID
-3. 有验证命令
-4. 不破坏 demo 主流程
-5. 如果涉及 RWA 定价，必须说明 issue price / target redemption / risk discount 的关系
-6. 如果涉及投资者收益，必须保留非保本文案
-```
-
-主流程相关改动必须跑：
-
-```bash
-npm run check
-npm run test
-npm run smoke
-npm run scenarios
-npm run demo
-```
-
-## 13. 最小可演示闭环
-
-原有 AI 定价、市场 View ⓪、MetaMask 单 Demo 合约与离线 fallback 已构成 v1 基线。面向 gap analysis v2，如果时间不够，新增范围至少保以下 16 个任务：
-
-```text
-PM-8   No-bank / Web3-native 叙事统一
-AI-13  Agent orchestrator
-AI-14  Event → Decision → On-chain Action
-AI-16  可持久化决策审计日志
-AI-17  AI 文档解析
-BE-14  文档上传 + ENI adapter + 自动触发
-BE-15  Agent 活动实时 API
-FE-11  eBL 管理 View ③
-FE-13  Agent 活动 View ⑤
-WEB3-12 cargoHash 唯一性
-WEB3-14 eBL 流转与质押约束
-WEB3-15 RESUME / SETTLE 自主状态机
-WEB3-16 投资者访问模型与 v2 叙事对齐
-WEB3-17 完整协议部署 Injective inEVM
-WEB3-18 MetaMask + Keplr + Leap
-QA-14  3 分钟 P0 端到端验收
-```
-
-这 16 个完成，项目才能从“AI 定价演示”升级为“eBL 上链即自主运行、风险变化即自主执行、全程可审计”的 Web3 原生协议。多链配置、组合页、多 LLM 与品牌主题可在核心闭环稳定后并行补齐。
-
-## 14. x402 付费情报市场（冠军版 P0）
-
-### 14.1 冻结架构
-
-官方 Injective 路线优先：服务端以 `@injectivelabs/x402` 为主；只有浏览器/CLI 客户端或底层协议确有需要时，才直接加入 `@x402/core`、`@x402/evm`、`@x402/fetch`，禁止为了“依赖看起来多”而全装。当前后端是 `node:http`，因此先做兼容性 spike，再在“薄 Express x402 router”与“原生 HTTP adapter”之间二选一，不能半迁移整个服务。
+官方 Injective 路线优先：服务端以 `@injectivelabs/x402` 为主；只有浏览器/CLI 客户端或底层协议确有需要时，才直接加入 `@x402/core`、`@x402/evm`、`@x402/fetch`，禁止为了"依赖看起来多"而全装。当前后端是 `node:http`，因此先做兼容性 spike，再在"薄 Express x402 router"与"原生 HTTP adapter"之间二选一，不能半迁移整个服务。
 
 ```text
 Browser / CLI / external Agent
@@ -362,13 +262,13 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
           PricingQuote / RiskPricingOracle / RWAOfferingPool
 ```
 
-### 14.2 三个付费端点
+### 8.2 三个付费端点
 
 | Endpoint | 建议价格（可配置） | 付费输出 | 禁止退化成 |
 |---|---:|---|---|
 | `POST /api/x402/intel/premium` | 0.01 USDC | 5 维世界风险、来源、时效、置信度、情景影响、`evidence_hash` | 把现有免费 JSON 原样包一层 402 |
 | `POST /api/x402/valuation/premium` | 0.03 USDC | 反欺诈审单、可比交易、保守货值、三档融资报价、分歧/置信度、`quote_hash` | 只让 LLM 写一段估值文案 |
-| `POST /api/x402/stress-test`（兼容 `/smoke-test`） | 0.05 USDC | 基准/警告/极端场景、损失区间、违约回收、REPRICE/PAUSE 建议、可重放输入快照 | 返回“smoke passed”字符串 |
+| `POST /api/x402/stress-test`（兼容 `/smoke-test`） | 0.05 USDC | 基准/警告/极端场景、损失区间、违约回收、REPRICE/PAUSE 建议、可重放输入快照 | 返回"smoke passed"字符串 |
 
 价格只用于 demo，统一由环境变量配置。报告被买下后可在短 TTL 内按 `payment_tx + report_hash` 重读，不能每次刷新重复收费。
 
@@ -382,7 +282,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 ⑤ Insurance & Settlement 保险覆盖、买方付款、回收与结算
 ```
 
-### 14.3 工程任务
+### 8.3 工程任务
 
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
@@ -396,7 +296,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 | X402-8 | 实现三个付费端点，复用现有 `worldRiskAgent`、`valuationAgent`、`documentConsistency`、`pricingEngine` 和 scenario runner | P0 | Bowen | Done | `src/x402/endpoints.js` 组合 risk / valuation / fraud-review 三种报告，支付只控制访问、不改风险分；`tests/x402Endpoints.test.js` 三端点解锁通过 |
 | X402-9 | 新建 `hardhat/contracts/PaymentOracle.sol`：把 `reportHash`、`caseIdHash`、原始 payment tx hash、payer、asset、amount 绑定为事件；防重复存证并支持 attestor 权限 | P0 | Bowen | Done | 8 个 PaymentOracle tests 覆盖成功、receipt/付款 tx 双重防重放、零哈希/地址/金额、越权与 attestor 管理；前端 `readX402PaymentAttestation` 可回读；测试网部署 `0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571` |
 | X402-10 | 将已验证付费报告作为 PricingQuote 的 evidence node 注入发行定价；支付行为本身不得改变风险分或抬高报告可信度 | P0 | Bowen | Done | `reportEvidence.js` 仅注入 provenance/evidence hash；6 tests 证明风险分、价格、action、quote hash 不变，篡改/过期/错 case 报告均拒绝 |
-| X402-11 | 新增前端”付费情报市场”选项卡：报告商品卡、锁定预览、价格、数据时间、模型、`402 → 签名 → 结算 → 解锁 → 存证` stepper、explorer 链接 | P0 | Sage | Done | View ③ 报告目录 + 4 步 stepper + 支付证据卡 + 定价影响 + explorer 链接已具备；本轮补齐「刷新后 TTL 内可重读」：新增 `src/x402/reportStore.js`（`PaidReportCache`，原子持久化 + 过期自动 prune）、`createX402Route` 交付成功即缓存、`GET /api/x402/report/:id` 在 TTL 内免费重读（miss→404 需重付），前端 localStorage 记忆已购 report_id 并在进入 View ③ 时重读未过期报告（`#x402-purchased`）。`tests/x402ReportStore.test.js` 7 tests + 集成「demo 购买→GET 重读 200/未知→404」；对运行中服务器实测 demo 购买→重读 200 且 report_id 一致；`npm test` 278 passed。注：本会话浏览器扩展断连，客户端 localStorage 重读路径未做可视化验收 |
+| X402-11 | 新增前端"付费情报市场"选项卡：报告商品卡、锁定预览、价格、数据时间、模型、`402 → 签名 → 结算 → 解锁 → 存证` stepper、explorer 链接 | P0 | Sage | Done | View ③ 报告目录 + 4 步 stepper + 支付证据卡 + 定价影响 + explorer 链接已具备；本轮补齐「刷新后 TTL 内可重读」：新增 `src/x402/reportStore.js`（`PaidReportCache`，原子持久化 + 过期自动 prune）、`createX402Route` 交付成功即缓存、`GET /api/x402/report/:id` 在 TTL 内免费重读（miss→404 需重付），前端 localStorage 记忆已购 report_id 并在进入 View ③ 时重读未过期报告（`#x402-purchased`）。`tests/x402ReportStore.test.js` 7 tests + 集成「demo 购买→GET 重读 200/未知→404」；对运行中服务器实测 demo 购买→重读 200 且 report_id 一致；`npm test` 278 passed。注：本会话浏览器扩展断连，客户端 localStorage 重读路径未做可视化验收 |
 | X402-12 | 加入支付动效与风险反馈：`paymentFlow`、`priceFlash`、`riskPulse`；支持 `prefers-reduced-motion` | P1 | Sage | Done | 已接线：付费时 `#x402-flow` 跑 `particleFlow` 流光，结算成功后 after-price `priceFlash`、价升时 delta badge 短促 `risk-pulse`(4.2s 后停)、impact 卡 `x402-impact-pop`(放大+绿环) 在用户视线落点处提示成功；`pulseClass` 与 risk-pulse 均带 `prefers-reduced-motion` 守卫 + 全局 reduced-motion 规则兜底；满屏 confetti 经实测易被卡片视线遮挡、收益低，已按用户决定移除；`node --check public/app.js` 通过 |
 | X402-13 | 新增 `scripts/x402-intel.mjs` 与 `npm run x402:intel -- --case <id> --kind <kind>`；输出 challenge、金额、settlement tx、report hash、oracle tx | P0 | Bowen | Done | CLI 支持 risk/valuation/fraud、case ID/文件、Demo 临时 signer 与 Live fail-closed；密钥只在本地使用，输出 challenge/金额/receipt/report hash/oracle 状态 |
 | X402-14 | 新增 `scripts/smoke-x402.mjs`、`npm run smoke:x402` 和至少 12 个自动化测试 | P0 | Bowen | Done | 新增 `tests/x402Endpoints.test.js` 15 tests；连同 config/server/settlement 覆盖 3 endpoints、budget/cancel/timeout/wrong network、tamper/replay/expiry/wrong recipient/结算失败与成功；`smoke:x402` 通过 |
@@ -404,7 +304,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 | X402-16 | README、架构图、API 文档、威胁模型和 FAQ 更新；清楚区分 x402 报告支付与 RWA 认购 | P0 | Sage | Done | `docs/x402-integration.md` 新增「x402 报告支付 vs RWA 认购」对照表 + 流程图、8 条威胁模型不变量表（对应代码与测试）+ 客户端可恢复错误码、评委 FAQ（谁付钱/买什么/为何上链/与 RWA 区别/支付失败/为何 Injective）、`GET /api/x402/report/:id` 重读端点与 `X402_REPORT_CACHE_PATH`；README 中英文 API 表新增 4 个 x402 端点 + 「x402 ≠ RWA」提示框 + More docs 链接到 x402-integration.md |
 | X402-17 | 可选：通过 x402 Bazaar/discovery extension 发布 3 个机器可发现的资源描述，使外部 Agent 能发现并购买 | P2 | Unassigned | Todo | discovery metadata 可被客户端解析；不阻塞核心 demo |
 
-### 14.4 x402 安全不变量
+### 8.4 x402 安全不变量
 
 ```text
 1. verified && settled 才能 unlock；仅看到 tx hash 不等于支付成功。
@@ -415,11 +315,13 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 6. Demo mode 的 receipt 使用 demo:// 标识，永不生成伪造 explorer URL。
 ```
 
-## 15. 标准 MCP 与 Agent 可组合性（P1）
+---
 
-`src/mcp/mcpServer.js` 保留确定性业务 handlers，`standalone-server.js` 已增加官方 SDK stdio transport，因此 Claude/其他 MCP client 可直接连接且无需复制业务逻辑。
+## 9. MCP / RAG / Skill
 
-### 15.1 冻结为 7 tools
+这些是加分项，必须服务 AI 定价主链路。
+
+### 9.1 冻结为 7 tools
 
 ```text
 1. get_trade_case
@@ -431,7 +333,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 7. push_pricing_to_oracle
 ```
 
-### 15.2 冻结为 3 resources
+### 9.2 冻结为 3 resources
 
 ```text
 agentbl://cases/catalog           # 可演示 case 与摘要，不含敏感全文
@@ -439,33 +341,50 @@ agentbl://risk/methodology        # 5/6 维风险、bps 规则、非保本边界
 agentbl://contracts/deployments   # network、合约地址、ABI 版本、explorer
 ```
 
+### 9.3 工程任务
+
+| ID | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|
+| MCP-1 | 设计 AgentBL MCP tools manifest | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| MCP-2 | 实现 `get_trade_case` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-3 | 实现 `generate_pricing_quote` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-4 | 实现 `simulate_offering` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-5 | 实现 `push_pricing_to_oracle` mock / real tx | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Codex | Done | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
+| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Codex | Done | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
+| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Codex | Done | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
+| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Codex | Done | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
+| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Codex | Done | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
+| MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
+| RAG-1 | 建立风险情报资料：天气、战争、港口、保险、价格 mock feed | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| RAG-2 | 准备 4 个评委追问检索问题 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| SKILL-1 | 创建 `agentbl-pricing-analyst` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| SKILL-2 | 创建 `agentbl-demo-operator` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+
+---
+
+## 10. AI 质量、安全与可信度
+
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
+| TRUST-1 | 建立 Gold dataset：真实/脱敏 eBL、发票、保险单、正常/欺诈/缺字段/战争/延误至少 20 cases | P0 | Done | Done | 数据许可和来源可说明；字段级 ground truth；不得把敏感商业数据提交到公开仓库 | 20 条 gold dataset 完成 |
+| TRUST-2 | 评估 OCR/解析准确率、文档一致性 precision/recall、风险分单调性、估值误差、tool-call 成功率 | P1 | Done | Done | `docs/evaluation-report.md` 给出指标、失败样例、限制；不能只报总测试数 | Evaluation report 生成器完成 |
+| TRUST-3 | Prompt-injection 防护：文档内容视为不可信数据，不能改变工具权限、支付地址、网络、价格和系统规则 | P0 | Done | Done | 恶意 eBL fixture 不能触发任意 tool/tx、改 payTo、泄露 secret；测试纳入 preflight | 5 个注入测试 + sanitizer 完成 |
+| TRUST-4 | 合约安全：访问控制、暂停、重入、重放、整数精度、重复 cargo/payment/report、状态机、emergency stop | P0 | Unassigned | Todo | Slither 或同等静态检查 + adversarial tests；所有 high finding 关闭或书面接受 |
+| TRUST-5 | 数据新鲜度和来源健康：风险情报标 `observed_at/expires_at/source_status`，过期自动降置信度或拒绝定价 | P0 | Done | Done | clock-controlled tests；断网不把旧数据冒充实时数据 | DataFreshnessValidator 完成 |
+| TRUST-6 | 隐私与合规最小化：链上只存 hash；日志/telemetry 对 BL、公司、钱包做字段级脱敏；增加删除/保留策略 | P1 | Unassigned | Todo | log snapshot 无原始文件、API key、私钥、完整地址；隐私说明加入 README |
+| TRUST-7 | 经济模型压力测试：重复购买、报告转售、低价刷接口、退款、报告过期、RWA 违约与利益冲突 | P1 | Unassigned | Todo | 文档给出价格/成本/毛利假设与 3 个极端场景；x402 收入不混入 RWA 收益承诺 |
 
-## 16. 赞助方技术使用清单（多用，但每一项都要有业务理由）
+---
 
-| ID | Sponsor / capability | Priority | 应用位置 | Task / 验收 |
-|---|---|---|---|---|
-| SP-1 | Injective EVM | P0 | 五合约协议、PaymentOracle、USDC x402 | 完整部署、验证源码、记录地址/tx、前端回读事件 |
-| SP-2 | Injective x402 | P0 | AI 情报按次付费 | 完成 X402-1~16；路演展示真实 402 和支付 tx |
-| SP-3 | Injective MCP Server | P1 | Agent 查链、执行受控 raw EVM tx | 完成 MCP-9/10；不要把自建 MCP 冒充官方 MCP |
-| SP-4 | Injective EVM / CLI agent skills | P1 | 开发、部署与故障排查工作流 | 在 `docs/injective-runbook.md` 记录安装、使用场景和可复现命令；它是工程能力，不伪装成产品 runtime |
-| SP-5 | Injective ERC20/Bank precompile | P1 | 统一 USDC 余额/denom/转账与 RWA token 的 EVM/native 映射 | 做最小 read/write spike；成功后再决定是否进入 P0，避免自建重复桥接层 |
-| SP-6 | Injective Exchange precompile | P2 | 可选的 RWA 二级市场/风险对冲 | 只有存在真实测试市场与清楚经济模型时才接；验收为真实 order/query，不以 mock 截图算完成 |
-| SP-7 | Injective Indexer + Explorer | P0 | 支付、定价、暂停、恢复、兑付事件回读 | UI 中每个关键状态都能跳到真实 tx/event；Indexer 不可用时 RPC fallback |
-| SP-8 | Azure OpenAI / Microsoft Foundry Models | P1 | `openaiCompatClient` 新增 Azure provider；解析、解释、报告生成 | `AZURE_OPENAI_ENDPOINT/DEPLOYMENT/API_KEY` 配置；工具调用与 structured output 通过；确定性 fallback 保留 | Done | Azure provider 支持完成，兼容 OpenAI API |
-| SP-9 | Microsoft Foundry Evaluation | P1 | Agent AI 质量证明 | 建立 ≥20 条 eval dataset；Task Completion ≥85%、Tool Call Success ≥95%、Groundedness ≥0.8；保存可分享结果截图/JSON | Done | 20 条测试用例，evaluation runner 完成 |
-| SP-10 | Microsoft Foundry / Application Insights tracing | P1 | Agent 调用链可观测 | 用 OpenTelemetry 记录 parser→checker→risk→valuation→pricing→payment→chain spans、延迟、错误和成本；默认脱敏 | Done | OpenTelemetry tracer 实现，PII 自动脱敏 |
-| SP-11 | GitHub Copilot | P2 | 团队开发效率 | 只在开发说明中如实记录，不作为产品技术创新点或 runtime 集成 |
-| SP-12 | ENI / TradeGo / 丽讯 | P0 | 可信 eBL、真实业务数据、落地背书 | 至少拿到 sandbox/API schema、样例 document ID 或正式 LOI 之一；拿不到时显式 mock adapter，不虚构合作上线 |
-| SP-13 | xAPI | P0 | X/新闻/预测市场世界风险 | 已有；新增 freshness、source health、去重与付费报告引用，继续保留离线 fixture |
+## 11. Demo Mode、视觉与路演
 
-## 17. Demo Mode、视觉与路演（冠军项目首先要“看得懂”）
+冠军项目首先要"看得懂"。
 
-### 17.1 1 分钟主演示
+### 11.1 1 分钟主演示
 
 ```text
-00–08s  “货在海上漂，钱等 45 天。”出口商缺现金，投资者看不懂单据风险。
+00–08s  "货在海上漂，钱等 45 天。"出口商缺现金，投资者看不懂单据风险。
 08–18s  打开一笔铜/原油 eBL：报告被锁，API 返回 402，展示 0.01 USDC。
 18–30s  钱包签名，Injective 结算，stepper 依次点亮，报告解锁。
 30–42s  AI 展示 5 维风险 + 反欺诈审单 + 估值对比；每个数字能点开证据。
@@ -473,22 +392,22 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 52–60s  一句话收束：别人花钱买 AI 分析，AI 给风险定价，Injective 强制执行。
 ```
 
-### 17.2 工程任务
+### 11.2 工程任务
 
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
 | DEMO-1 | 新增统一 `demoMode=true`（默认）与显式 Live toggle；Demo 数据可一键 reset，Live 模式严禁 mock tx | P0 | Bowen | Done | `src/demo/mode.js` + `/api/demo/mode|reset`；顶部常驻 banner/Live toggle/reset；Live 前置不足返回 409，PaymentOracle 写入失败不会退回假 tx |
-| DEMO-2 | 首页只保一个主 CTA：“购买这笔 RWA 的 AI 风控报告”；二级入口再放融资/市场/航运 | P0 | Unassigned | Todo | 5 秒可用性测试：新用户能说出谁付钱、买什么、链上发生什么 |
+| DEMO-2 | 首页只保一个主 CTA："购买这笔 RWA 的 AI 风控报告"；二级入口再放融资/市场/航运 | P0 | Unassigned | Todo | 5 秒可用性测试：新用户能说出谁付钱、买什么、链上发生什么 |
 | DEMO-3 | 完成支付流水、riskPulse、priceFlash、waterfall、Agent activity 的同屏联动 | P1 | Unassigned | Todo | 同一 `report_id/decision_id/tx_hash` 贯穿各面板；没有随机日志或不一致数字 |
 | DEMO-4 | 编写 30 秒 / 1 分钟 / 3 分钟中文路演稿与英文 tagline，三版数字、角色和叙事完全一致 | P0 | Unassigned | Todo | 交叉检查 README、PRD、demo-script、video-script；至少 3 次计时彩排 |
 | DEMO-5 | 新建 `npm run preflight`，汇总 54 项检查：环境、文件/schema、300 Node tests、24 contract tests、smoke/scenarios、MCP、x402、RPC/facilitator、余额、合约地址、UI asset、文档一致性 | P0 | Bowen | Done | `scripts/preflight.mjs` 固定 54 项并真正执行全部套件；Demo 实测 50 PASS / 4 Live WARN / 0 FAIL；关键失败 exit 1 |
 | DEMO-6 | 评委追问预案：为什么 AI、谁承担货损、为何不是证券保本、报告是否能伪造、支付失败怎么办、为何必须 Injective、与 TradeGo/银行差异 | P0 | Unassigned | Todo | 每题 20 秒答案 + 可点击证据/代码/tx；不做未经律师确认的法律断言 |
 | DEMO-7 | 录制 Live 主视频 + Demo Mode 兜底视频，准备本地 MP4、关键截图和 CLI 兜底 | P0 | Unassigned | Todo | 飞行模式也能播放；视频中的 tx 链接和当前部署配置一致 |
-| DEMO-8 | 做一次“故障彩排”：RPC、facilitator、LLM、xAPI、钱包分别失效 | P0 | Unassigned | Todo | 每种故障 15 秒内切到正确兜底；不刷新整场、不暴露堆栈/密钥 |
+| DEMO-8 | 做一次"故障彩排"：RPC、facilitator、LLM、xAPI、钱包分别失效 | P0 | Unassigned | Todo | 每种故障 15 秒内切到正确兜底；不刷新整场、不暴露堆栈/密钥 |
 
-### 17.3 `preflight` 固定 54 项
+### 11.3 `preflight` 固定 54 项
 
-实现时按下列编号输出，不能用“54 项”当口号却只跑五条命令。Live-only 检查在 Demo Mode 可记为 `SKIP`，但不能记为 `PASS`。
+实现时按下列编号输出，不能用"54 项"当口号却只跑五条命令。Live-only 检查在 Demo Mode 可记为 `SKIP`，但不能记为 `PASS`。
 
 | # | Check | # | Check |
 |---:|---|---:|---|
@@ -520,31 +439,59 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | 26 | `hardhat compile` | 53 | 本地 CLI、截图、MP4 兜底资产齐全 |
 | 27 | `hardhat test` 且不少于当前 24 tests | 54 | 输出 commit SHA、build time、dirty tree 警告 |
 
-## 18. AI 质量、安全与可信度
+---
 
-| ID | Task | Priority | Owner | Status | Verification / Definition of Done |
+## 12. QA / Integrator
+
+QA 目标：任何新增功能都必须回到同一条主链路，不能散。
+
+| ID | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|
-| TRUST-1 | 建立 Gold dataset：真实/脱敏 eBL、发票、保险单、正常/欺诈/缺字段/战争/延误至少 20 cases | P0 | Done | Done | 数据许可和来源可说明；字段级 ground truth；不得把敏感商业数据提交到公开仓库 | 20 条 gold dataset 完成 |
-| TRUST-2 | 评估 OCR/解析准确率、文档一致性 precision/recall、风险分单调性、估值误差、tool-call 成功率 | P1 | Done | Done | `docs/evaluation-report.md` 给出指标、失败样例、限制；不能只报总测试数 | Evaluation report 生成器完成 |
-| TRUST-3 | Prompt-injection 防护：文档内容视为不可信数据，不能改变工具权限、支付地址、网络、价格和系统规则 | P0 | Done | Done | 恶意 eBL fixture 不能触发任意 tool/tx、改 payTo、泄露 secret；测试纳入 preflight | 5 个注入测试 + sanitizer 完成 |
-| TRUST-4 | 合约安全：访问控制、暂停、重入、重放、整数精度、重复 cargo/payment/report、状态机、emergency stop | P0 | Unassigned | Todo | Slither 或同等静态检查 + adversarial tests；所有 high finding 关闭或书面接受 |
-| TRUST-5 | 数据新鲜度和来源健康：风险情报标 `observed_at/expires_at/source_status`，过期自动降置信度或拒绝定价 | P0 | Done | Done | clock-controlled tests；断网不把旧数据冒充实时数据 | DataFreshnessValidator 完成 |
-| TRUST-6 | 隐私与合规最小化：链上只存 hash；日志/telemetry 对 BL、公司、钱包做字段级脱敏；增加删除/保留策略 | P1 | Unassigned | Todo | log snapshot 无原始文件、API key、私钥、完整地址；隐私说明加入 README |
-| TRUST-7 | 经济模型压力测试：重复购买、报告转售、低价刷接口、退款、报告过期、RWA 违约与利益冲突 | P1 | Unassigned | Todo | 文档给出价格/成本/毛利假设与 3 个极端场景；x402 收入不混入 RWA 收益承诺 |
+| QA-1 | 维护 `npm run check` | Unassigned | Todo | `npm run check` | - |
+| QA-2 | 维护 `npm run test` | Unassigned | Todo | `npm run test` | - |
+| QA-3 | 维护 `npm run smoke` | Unassigned | Todo | `npm run smoke` | - |
+| QA-4 | 维护 `npm run scenarios` | Unassigned | Todo | `npm run scenarios` | - |
+| QA-5 | 增加 pricing invariant tests：兑付敞口不能超过安全覆盖 | Unassigned | Todo | `npm run test` | - |
+| QA-6 | 增加前端手动验收清单 | Unassigned | Todo | checklist 文档 | - |
+| QA-7 | 最终演示前跑完整验证矩阵 | Unassigned | Todo | `npm run check && npm run test && npm run smoke && npm run scenarios && npm run demo` | - |
+| QA-8 | 准备演示失败兜底：CLI demo、mock provider、contract mock | Unassigned | Todo | README / docs 更新 | contract mock 已完成（`contractHarness.js`）；CLI demo / README 兜底说明待补 |
+| QA-9 | 最后 6 小时功能冻结协调 | Unassigned | Todo | 全员确认 | - |
+| QA-10 | 增加自主 Agent 可靠性测试矩阵：事件乱序、重复事件、进程重启、RPC 超时、xAPI/LLM 不可用、链上交易失败 | Unassigned | Todo | `npm run test`，所有失败路径均有幂等恢复或确定性 fallback | - |
+| QA-11 | 增加 eBL V2 安全测试：一货多单、伪造 cargoHash、未授权 transfer/endorse、质押中转让、重放攻击 | Unassigned | Todo | `cd hardhat && npm test` + 安全测试报告 | - |
+| QA-12 | 增加市场与角色 API 集成测试：访问控制、分页、并发认购、持久化恢复、链上/链下状态对账 | Unassigned | Todo | `npm run test && npm run smoke`，API、持久化存储与合约事件三方一致 | - |
+| QA-13 | 建立 MetaMask / Keplr / Leap × 桌面/移动端 × 真实链/离线 fallback 的手动验收矩阵 | Unassigned | Todo | 完整 checklist、截图与测试 tx hash | - |
+| QA-14 | 按 gap analysis v2 跑通 3 分钟 P0 验收：上传 → 唯一性 → 解析 → 自主定价/开盘 → 市场认购 → 风险暂停/恢复 → 自动兑付 | Unassigned | Todo | 录像 + 决策日志 + 全套链上 tx；任何一步不得依赖伪造随机 tx | - |
 
-## 19. 五项评审标准对照表
+---
 
-| 评审维度 | 评委必须看到的证据 | 对应任务 | Gate |
-|---|---|---|---|
-| Innovation | “AI 报告本身可按次交易”，支付证据与报告哈希绑定，报告再驱动 RWA 定价 | X402-7~11、X402-15 | 一次真实 402 + 一次真实 oracle event |
-| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、300+24 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
-| Use Case & Impact | 45 天回款痛点、银行/保险/投资者/Agent 都能买报告、明确收费与市场入口 | PM-8、X402-8、TRUST-7 | 1 分钟说清 payer/buyer/value/revenue |
-| Product & UX | 402→支付→结算→解锁一屏看懂；证据可展开；钱包失败可恢复 | X402-11/12、DEMO-1~3 | 5 秒理解测试 + 60 秒 demo |
-| Ecosystem Fit | 官方 Injective x402、MCP、EVM、Explorer、可选 precompile；Azure eval/tracing | SP-1~10 | 每个 logo 都能指向代码、配置、trace 或 tx |
+## 13. 执行顺序与出线闸门
 
-## 20. 执行顺序与出线闸门
+### 13.1 最小可演示闭环
 
-### Wave A：48 小时内先闭环
+原有 AI 定价、市场 View ⓪、MetaMask 单 Demo 合约与离线 fallback 已构成 v1 基线。面向 gap analysis v2，如果时间不够，新增范围至少保以下 16 个任务：
+
+```text
+PM-8   No-bank / Web3-native 叙事统一
+AI-13  Agent orchestrator
+AI-14  Event → Decision → On-chain Action
+AI-16  可持久化决策审计日志
+AI-17  AI 文档解析
+BE-14  文档上传 + ENI adapter + 自动触发
+BE-15  Agent 活动实时 API
+FE-11  eBL 管理 View ③
+FE-13  Agent 活动 View ⑤
+WEB3-12 cargoHash 唯一性
+WEB3-14 eBL 流转与质押约束
+WEB3-15 RESUME / SETTLE 自主状态机
+WEB3-16 投资者访问模型与 v2 叙事对齐
+WEB3-17 完整协议部署 Injective inEVM
+WEB3-18 MetaMask + Keplr + Leap
+QA-14  3 分钟 P0 端到端验收
+```
+
+这 16 个完成，项目才能从"AI 定价演示"升级为"eBL 上链即自主运行、风险变化即自主执行、全程可审计"的 Web3 原生协议。多链配置、组合页、多 LLM 与品牌主题可在核心闭环稳定后并行补齐。
+
+### 13.2 Wave A：48 小时内先闭环
 
 ```text
 X402-1 → X402-3/4/6 → X402-8 → X402-13/14
@@ -555,7 +502,7 @@ Gate A：Demo Mode 能稳定出现 402、结算、解锁三个不同付费结果
 
 **Gate A 状态：✅ 已达成。** 三类 Demo 报告完成 402→签名→结算→解锁，当前 300 个 Node tests 全绿；Live V2/EIP-3009 已完成一笔 0.001 USDC 真实支付，并由 `PaymentAttested` 将 payment tx、报告哈希和 case 绑定。
 
-### Wave B：链上可信与 Agent 可组合
+### 13.3 Wave B：链上可信与 Agent 可组合
 
 ```text
 X402-7/9/10/15 → WEB3-17 → MCP-6/7/8/10 → MCP-9
@@ -565,7 +512,7 @@ Gate B：一笔真实支付能从 payment tx 追到 `PaidReportEnvelope`、`Paym
 
 **Gate B 状态：✅ 已达成。** 0.001 USDC 真实 payment tx → 脱敏 `PaidReportEnvelope` 承诺 → `PaymentAttested` → 以同一 `report_hash` 为 `evidenceHash` 的 `PricingUpdated` → pool #2 最终报价 `$0.80`；官方 SDK stdio client 已逐一调用 7 tools 并读取 3 resources，官方 Injective MCP 也完成查询和受控 raw EVM testnet 交易。总证据见 `docs/wave-b.md` 与 `docs/evidence/wave-b-gate.json`。
 
-### Wave C：AI 证据与产品打磨
+### 13.4 Wave C：AI 证据与产品打磨
 
 ```text
 SP-8/9/10 → TRUST-1/2/3/5 → X402-11/12 → DEMO-3/4/6
@@ -575,7 +522,7 @@ Gate C：Azure eval 达阈值，trace 能看到完整 Agent 工具链，页面 6
 
 **Gate C 状态：✅ 核心已达成。** SP-8/9/10 全部完成（Azure OpenAI provider、20 条评估数据集、OpenTelemetry tracer）；TRUST-1/2/3/5 全部完成（20 条 Gold Dataset、评估报告生成器、Prompt Injection 防护 + 5 个恶意测试、数据新鲜度验证器）；321/321 tests 全绿（100%）。X402-11/12 和 DEMO-3/4/6 演示打磨待完成。核心 AI 质量证明已就绪。
 
-### Wave D：决赛冻结
+### 13.5 Wave D：决赛冻结
 
 ```text
 DEMO-7/8 → QA-10~14 → TRUST-4/6/7 → npm run preflight
@@ -583,28 +530,152 @@ DEMO-7/8 → QA-10~14 → TRUST-4/6/7 → npm run preflight
 
 Gate D：连续 3 次 preflight 全绿；Live/Demo/CLI/视频四套路径都演练；最后 6 小时只修 P0 blocker。
 
-## 21. 借鉴顶尖获奖项目，但不照搬
+---
 
-| 项目 / 可借鉴模式 | AgentBL 落地方式 | 不要照搬的部分 |
+## 14. 赞助方技术使用清单
+
+多用，但每一项都要有业务理由。
+
+| ID | Sponsor / capability | Priority | 应用位置 | Task / 验收 | Status |
+|---|---|---|---|---|---|
+| SP-1 | Injective EVM | P0 | 五合约协议、PaymentOracle、USDC x402 | 完整部署、验证源码、记录地址/tx、前端回读事件 | Done |
+| SP-2 | Injective x402 | P0 | AI 情报按次付费 | 完成 X402-1~16；路演展示真实 402 和支付 tx | Done |
+| SP-3 | Injective MCP Server | P1 | Agent 查链、执行受控 raw EVM tx | 完成 MCP-9/10；不要把自建 MCP 冒充官方 MCP | Done |
+| SP-4 | Injective EVM / CLI agent skills | P1 | 开发、部署与故障排查工作流 | 在 `docs/injective-runbook.md` 记录安装、使用场景和可复现命令；它是工程能力，不伪装成产品 runtime | Todo |
+| SP-5 | Injective ERC20/Bank precompile | P1 | 统一 USDC 余额/denom/转账与 RWA token 的 EVM/native 映射 | 做最小 read/write spike；成功后再决定是否进入 P0，避免自建重复桥接层 | Todo |
+| SP-6 | Injective Exchange precompile | P2 | 可选的 RWA 二级市场/风险对冲 | 只有存在真实测试市场与清楚经济模型时才接；验收为真实 order/query，不以 mock 截图算完成 | Todo |
+| SP-7 | Injective Indexer + Explorer | P0 | 支付、定价、暂停、恢复、兑付事件回读 | UI 中每个关键状态都能跳到真实 tx/event；Indexer 不可用时 RPC fallback | Done |
+| SP-8 | Azure OpenAI / Microsoft Foundry Models | P1 | `openaiCompatClient` 新增 Azure provider；解析、解释、报告生成 | `AZURE_OPENAI_ENDPOINT/DEPLOYMENT/API_KEY` 配置；工具调用与 structured output 通过；确定性 fallback 保留 | Done |
+| SP-9 | Microsoft Foundry Evaluation | P1 | Agent AI 质量证明 | 建立 ≥20 条 eval dataset；Task Completion ≥85%、Tool Call Success ≥95%、Groundedness ≥0.8；保存可分享结果截图/JSON | Done |
+| SP-10 | Microsoft Foundry / Application Insights tracing | P1 | Agent 调用链可观测 | 用 OpenTelemetry 记录 parser→checker→risk→valuation→pricing→payment→chain spans、延迟、错误和成本；默认脱敏 | Done |
+| SP-11 | GitHub Copilot | P2 | 团队开发效率 | 只在开发说明中如实记录，不作为产品技术创新点或 runtime 集成 | - |
+| SP-12 | ENI / TradeGo / 丽讯 | P0 | 可信 eBL、真实业务数据、落地背书 | 至少拿到 sandbox/API schema、样例 document ID 或正式 LOI 之一；拿不到时显式 mock adapter，不虚构合作上线 | - |
+| SP-13 | xAPI | P0 | X/新闻/预测市场世界风险 | 已有；新增 freshness、source health、去重与付费报告引用，继续保留离线 fixture | Done |
+
+---
+
+## 15. 团队分工与协作流程
+
+### 15.1 推荐并行分工
+
+| 角色 | 负责人建议 | 主要任务 |
 |---|---|---|
-| AgentLevy：先承诺验收标准，再把付款与可验证交付绑定 | `PaidReportEnvelope` + schema/证据/新鲜度检查 + `report_hash`/payment tx 绑定 | P0 不做通用仲裁协议和复杂 escrow |
-| Alpha402：持久状态机、可视化流水、审计证明、故障 fallback | x402 六状态 stepper、decision/payment log、live/demo 双模式 | 不堆无业务意义的多 Agent 数量和 3D 特效 |
-| AgentSlam：可靠性与可观测性优先，bounded retry/heartbeat | settlement 幂等、Agent trace、RPC/facilitator 健康检查、故障彩排 | 不把 mock fallback 伪装成真实链结果 |
-| RWA-GPT：自然语言降低 RWA 使用门槛 | 市场 AI 搜索、MCP、报告证据解释 | 不退化成“聊天框 + 投资按钮” |
+| PM / Pitch | 1 人 | PM-1 到 PM-8，demo script，合规 Q&A，No-bank 叙事一致性 |
+| AI | 2 人 | AI-1 到 AI-20，pricing、orchestrator、autonomous loop、parser、compliance、advisor、LLM consensus |
+| Backend | 1-2 人 | BE-1 到 BE-15，API、schema、scenario、ENI ingestion、market/pool/role persistence |
+| Frontend | 1-2 人 | FE-1 到 FE-15，Marketplace + Mint + Voyage + eBL/Portfolio/Agent Activity |
+| Web3 | 1-2 人 | WEB3-1 到 WEB3-19，eBL V2、自主状态机、完整协议部署、多钱包/多链 |
+| QA / Integrator | 1 人 | QA-1 到 QA-14，最终集成、安全、钱包矩阵和演示兜底 |
 
-## 22. 官方研究依据（实现前再次核验）
+### 15.2 任务认领流程
 
-- [Injective x402 官方指南](https://docs.injective.network/developers-ai/x402)：官方 `@injectivelabs/x402`、USDC 支付、facilitator、Injective EVM 示例。
-- [Injective MCP Server](https://docs.injective.network/developers-ai/mcp)：stdio、链查询、转账、桥接与 raw EVM transactions。
-- [Injective AI Developers](https://docs.injective.network/developers-ai)：Injective CLI/EVM/MCP/Trading skills 与最新 AI 开发路线。
-- [Injective EVM Precompiles](https://docs.injective.network/developers-evm/precompiles/) 与 [Exchange Precompile](https://docs.injective.network/developers-evm/exchange-precompile)：EVM 调用 Bank/Exchange 等原生模块。
-- [Injective ERC20 Module](https://docs.injective.network/developers-evm/erc20-module)：USDC/IBC/tokenfactory denom 与 ERC20 映射。
-- [x402 Foundation spec / SDK](https://github.com/x402-foundation/x402)：V2 headers、client/server/facilitator、EVM SDK 与安全语义。
-- [Microsoft Foundry Agent Evaluators](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators)：Task Completion、Tool Call、Groundedness 等评测。
-- [Microsoft Foundry Agent Tracing](https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-agent-concept)：OpenTelemetry、tool spans、延迟与成本可观测。
-- [AgentLevy](https://ethglobal.com/showcase/agentlevy-s577a)、[Alpha402](https://ethglobal.com/showcase/alpha402-04vgq)、[AgentSlam](https://ethglobal.com/showcase/agentslam-znyyq)、[RWA-GPT](https://ethglobal.com/showcase/rwagpt-fssdh)：用于提炼可验证交付、可视化状态机、可靠 fallback 和自然语言 RWA UX 模式。
+1. 先拉最新 `main`。
+2. 在本文件找到 `Unassigned` 任务。
+3. 把 Owner 改成自己。
+4. 把 Status 改成 `In Progress`。
+5. 开分支开发。
+6. 完成后跑验证命令。
+7. 提 PR。
+8. 合并后把 Status 改成 `Done`，Done Evidence 填 PR 或 commit。
 
-## 23. 世界级黑客松进阶蓝图 (World-Class Roadmap)
+### 15.3 分支命名
+
+```text
+feature/ai-pricing-quote
+feature/backend-pricing-api
+feature/frontend-rwa-offering
+feature/contract-risk-pricing-oracle
+feature/scenario-high-risk-reprice
+feature/agent-orchestrator
+feature/agent-autonomous-loop
+feature/ebl-registry-v2
+feature/eni-document-ingestion
+feature/agent-activity-view
+fix/pricing-invariant
+docs/pitch-tokenomics
+```
+
+### 15.4 合并标准
+
+PR 必须满足：
+
+```text
+1. 有明确 Owner
+2. 有对应任务 ID
+3. 有验证命令
+4. 不破坏 demo 主流程
+5. 如果涉及 RWA 定价，必须说明 issue price / target redemption / risk discount 的关系
+6. 如果涉及投资者收益，必须保留非保本文案
+```
+
+主流程相关改动必须跑：
+
+```bash
+npm run check
+npm run test
+npm run smoke
+npm run scenarios
+npm run demo
+```
+
+---
+
+## 16. 2025-2026 黑客松冠军冲刺任务
+
+基于对 ETHGlobal 等顶级赛事的最新趋势研究，以下是建议的冠军冲刺任务（按优先级划分）：
+
+### 16.1 可验证 AI 信任层 (Verifiable AI Trust)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| VERIFY-1 | TEE 模拟推理证明：生成包含 hash 验证的 `inference_attestation`，存入 PricingOracle 事件 | P0 | Unassigned | Todo | `npm run verify-inference` 验证链上与链下的一致性 | - |
+| VERIFY-2 | 推理可重放 (Reproducible Inference)：提供 CLI 重跑定价，证明基于相同 hash 能得出相同结果 | P0 | Unassigned | Todo | 命令行输出相同的 evidence_hash 和 quote_hash | - |
+| VERIFY-3 | 多方推理共识上链：把 AI-20 的多 LLM 共识元数据（中位数、分歧度等）写入合约事件 | P1 | Unassigned | Todo | 检查合约事件中包含 consensus attestation | - |
+
+### 16.2 智能账户与 Agent 钱包 (Smart Account & Agent Wallet)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| AA-1 | Agent 智能钱包 (Session Keys)：基于 ERC-4337，限制 Agent 的合约白名单和单笔限额 | P0 | Unassigned | Todo | 测试网 Agent 通过 Session Key 发起受限交易成功 | - |
+| AA-2 | Paymaster 免 Gas：让投资者通过 Paymaster 零 Gas 认购，或协议代付 x402 gas | P1 | Unassigned | Todo | 无 INJ 余额钱包能够成功认购 RWA 或购买报告 | - |
+| AA-3 | 交易预览与风险模拟 (Tx Simulation)：用户签名前展示即将发生的资金流转和风险提示 | P0 | Unassigned | Todo | 弹窗准确解析 tx_data，展示预估的 USDC 和 RWA 转移 | - |
+
+### 16.3 Agent 身份与声誉系统 (On-Chain Agent Identity)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| AGENTID-1 | Agent 链上身份注册：部署 ERC-721 身份合约，声明 Agent 的能力与 Model Hash | P0 | Unassigned | Todo | `AgentRegistry` 成功部署并 mint NFT | - |
+| AGENTID-2 | Agent 声誉累积：结算完成后在 `AgentRegistry` 更新分数，影响下一次可信度权重 | P1 | Unassigned | Todo | `npm run test`，模拟违约或成功兑付导致的声誉变化 | - |
+| AGENTID-3 | Agent 能力声明 (Capability Manifest)：链上注册支持的 MCP tools | P1 | Unassigned | Todo | 调用 getter 返回 AgentBL 支持的 tools 列表 | - |
+
+### 16.4 Agent 间协作协议 (Agent-to-Agent Commerce)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| A2A-1 | Agent 任务卡片 (A2A Agent Card)：发布 `/.well-known/agent.json` 声明能力和定价 | P0 | Unassigned | Todo | 访问该 endpoint 返回合法的 A2A 协议 JSON | - |
+| A2A-2 | Agent 间委托定价：外部 Agent 发送委托，AgentBL 返回报价和 x402 付费证据 | P1 | Unassigned | Todo | 通过另一个 MCP Client (如 Claude Desktop) 发起完整交互 | - |
+
+### 16.5 交易意图架构 (Intent-Based Execution)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| INTENT-1 | 投资者认购意图：签署 "我要用 ≤5000 USDC 认购 yield ≥15% 的 RWA" 意图，自动匹配执行 | P1 | Unassigned | Todo | 测试用例生成意图并由 Solver 匹配成功 | - |
+| INTENT-2 | 出口商融资意图：签署意图要求特定时间内获得不低于某个发行价的融资 | P1 | Unassigned | Todo | 根据速度和底价自动调整并创建发行池 | - |
+
+### 16.6 实时可视化与路演打磨 (Demo Polish & Visualization)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| STREAM-1 | 链上事件实时流：WebSocket 订阅事件，实时渲染为动态时间轴，不再需要手动刷新 | P0 | Unassigned | Todo | 页面开着时注入事件，UI 自动新增流光动画节点 | - |
+| STREAM-2 | 全球风险热力图：展示航线、战争、天气风险，与 xAPI 联动 | P1 | Unassigned | Todo | UI 展示风险热力图，并随 scenario 切换实时变色 | - |
+| DEMO-9 | "Holy Sh*t" 一键全演示：自动跑通上传->购买->定价->暂停->兑付的全流程，并带 3s 延迟和高亮 | P0 | Unassigned | Todo | 点击 "▶ Full Demo"，不再需任何点击操作即可跑完全场 | - |
+| DEMO-10 | 对比演示：侧边或分屏对比银行 45 天 vs AgentBL 60 秒 | P0 | Unassigned | Todo | 页面上有明确的 Value Proposition 视觉对比 | - |
+| DEMO-11 | 评委专属 Dashboard：展示全部技术证据、trace 链接和 Tx Hash，供一键核查 | P1 | Unassigned | Todo | 有一个 /evidence 面板，汇总所有的 Explorer 链接 | - |
+
+### 16.7 经济模型与安全增强 (Tokenomics & Security)
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| ECON-1 | 动态定价交互模拟器：拖动滑块实时看到战争、天气风险如何改变发行价 | P0 | Unassigned | Todo | 滑动 UI 进度条，调用 mock pricing 引擎实时输出数值 | - |
+| SEC-1 | 合约静态分析 (Slither)：修复所有 High/Medium finding，生成报告 | P0 | Unassigned | Todo | `slither .` 零 High 级漏洞，生成 report.md | - |
+| SEC-2 | Agent 权限隔离矩阵：文档化 AI 的不可操作范围，展示约束能力 | P0 | Unassigned | Todo | 新增 `docs/security-matrix.md` 并被 README 引用 | - |
+
+---
+
+## 17. 世界级黑客松进阶蓝图 (World-Class Roadmap)
 
 为了将 AgentBL 从一个优秀的黑客松 Demo 升级为十亿美元级别的 Web3 贸易融资基础设施，我们将在下一阶段（V2）引入以下核心特性：
 
@@ -617,3 +688,28 @@ Gate D：连续 3 次 preflight 全绿；Live/Demo/CLI/视频四套路径都演�
 | TOKEN-1 | 动态代币经济与自动保险池 ($ABL) | P1 | Todo | 推出协议治理代币。协议通过 x402 销售情报和 RWA 发行抽成获得的收入，将按特定比例自动回购注入**去中心化保险池 (Backstop Fund)**，为投资者提供终极坏账兜底。 |
 
 这 5 项进阶任务将彻底补齐 AgentBL 在隐私、流动性、去中心化共识和代币经济学上的版图，是我们在黑客松决赛中冲击顶尖名次、并在未来走向主网生产环境的关键底牌。
+
+---
+
+## 18. 借鉴顶尖获奖项目
+
+| 项目 / 可借鉴模式 | AgentBL 落地方式 | 不要照搬的部分 |
+|---|---|---|
+| AgentLevy：先承诺验收标准，再把付款与可验证交付绑定 | `PaidReportEnvelope` + schema/证据/新鲜度检查 + `report_hash`/payment tx 绑定 | P0 不做通用仲裁协议和复杂 escrow |
+| Alpha402：持久状态机、可视化流水、审计证明、故障 fallback | x402 六状态 stepper、decision/payment log、live/demo 双模式 | 不堆无业务意义的多 Agent 数量和 3D 特效 |
+| AgentSlam：可靠性与可观测性优先，bounded retry/heartbeat | settlement 幂等、Agent trace、RPC/facilitator 健康检查、故障彩排 | 不把 mock fallback 伪装成真实链结果 |
+| RWA-GPT：自然语言降低 RWA 使用门槛 | 市场 AI 搜索、MCP、报告证据解释 | 不退化成"聊天框 + 投资按钮" |
+
+---
+
+## 19. 官方研究依据（实现前再次核验）
+
+- [Injective x402 官方指南](https://docs.injective.network/developers-ai/x402)：官方 `@injectivelabs/x402`、USDC 支付、facilitator、Injective EVM 示例。
+- [Injective MCP Server](https://docs.injective.network/developers-ai/mcp)：stdio、链查询、转账、桥接与 raw EVM transactions。
+- [Injective AI Developers](https://docs.injective.network/developers-ai)：Injective CLI/EVM/MCP/Trading skills 与最新 AI 开发路线。
+- [Injective EVM Precompiles](https://docs.injective.network/developers-evm/precompiles/) 与 [Exchange Precompile](https://docs.injective.network/developers-evm/exchange-precompile)：EVM 调用 Bank/Exchange 等原生模块。
+- [Injective ERC20 Module](https://docs.injective.network/developers-evm/erc20-module)：USDC/IBC/tokenfactory denom 与 ERC20 映射。
+- [x402 Foundation spec / SDK](https://github.com/x402-foundation/x402)：V2 headers、client/server/facilitator、EVM SDK 与安全语义。
+- [Microsoft Foundry Agent Evaluators](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators)：Task Completion、Tool Call、Groundedness 等评测。
+- [Microsoft Foundry Agent Tracing](https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-agent-concept)：OpenTelemetry、tool spans、延迟与成本可观测。
+- [AgentLevy](https://ethglobal.com/showcase/agentlevy-s577a)、[Alpha402](https://ethglobal.com/showcase/alpha402-04vgq)、[AgentSlam](https://ethglobal.com/showcase/agentslam-znyyq)、[RWA-GPT](https://ethglobal.com/showcase/rwagpt-fssdh)：用于提炼可验证交付、可视化状态机、可靠 fallback 和自然语言 RWA UX 模式。
