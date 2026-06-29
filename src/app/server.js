@@ -207,7 +207,7 @@ async function serveStatic(urlPath, response) {
   }
 
   try {
-    const body = await fs.readFile(filePath);
+    let body = await fs.readFile(filePath);
     const ext = path.extname(filePath);
     const types = {
       '.html': 'text/html; charset=utf-8',
@@ -215,6 +215,13 @@ async function serveStatic(urlPath, response) {
       '.css': 'text/css; charset=utf-8',
       '.json': 'application/json; charset=utf-8'
     };
+
+    // 为 HTML 文件注入环境变量
+    if (ext === '.html') {
+      const envScript = `<script>window.ENV={DEEPSEEK_API_KEY:'${process.env.DEEPSEEK_API_KEY||''}',DEEPSEEK_BASE_URL:'${process.env.DEEPSEEK_BASE_URL||'https://api.deepseek.com'}'}</script>`;
+      body = Buffer.from(body.toString().replace('</head>', `${envScript}</head>`));
+    }
+
     response.writeHead(200, { 'content-type': types[ext] ?? 'application/octet-stream' });
     response.end(body);
   } catch {

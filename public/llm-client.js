@@ -8,8 +8,8 @@
 // 依赖：fetch（浏览器原生）、TextDecoder
 
 const DEEPSEEK_CONFIG = {
-  API_KEY: '',
-  BASE_URL: 'https://api.deepseek.com',
+  API_KEY: window.ENV?.DEEPSEEK_API_KEY || '',
+  BASE_URL: window.ENV?.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
   MODEL: 'deepseek-chat',
   TIMEOUT_MS: 60000,
   MAX_TOOL_ROUNDS: 5  // Function calling 最大轮数
