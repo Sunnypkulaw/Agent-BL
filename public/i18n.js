@@ -44,6 +44,38 @@ export function t(key, vars) {
   return str;
 }
 
+const DATA_DICT = {
+  'Primary Aluminum Ingots (P1020, LME Grade)': '原铝锭 (P1020, LME 级)',
+  'Copper Cathodes (LME Grade A, Cu-CATH-1)': '阴极铜 (LME A级, Cu-CATH-1)',
+  'Copper Concentrate (28% Cu, 5 g/t Au, 30 g/t Ag)': '铜精矿 (含铜28%, 金5g/t, 银30g/t)',
+  'Crude Oil (Murban grade, light sweet)': '原油 (Murban 穆尔班级, 轻质低硫)',
+  'Refined Oil Products (Gasoline 92 RON 30,000 MT + Diesel 50ppm 20,000 MT)': '成品油 (92号汽油 3万吨 + 柴油 2万吨)',
+  'Iron Ore Fines (Pilbara Blend, 62% Fe)': '铁矿粉 (Pilbara 皮尔巴拉混合, 62%品位)',
+  'Natural Rubber (TSR20 / STR20, 1,200 MT)': '天然橡胶 (TSR20 / STR20, 1200吨)',
+  'Non-GMO Soybeans (非转基因大豆), Bulk': '散装非转基因大豆',
+
+  'Jebel Ali, Dubai, UAE': '阿联酋, 迪拜 (杰贝阿里)',
+  'Rotterdam, Netherlands': '荷兰, 鹿特丹',
+  'Singapore': '新加坡',
+  'Shanghai (Yangshan)': '中国, 上海 (洋山港)',
+  'Antofagasta, Chile': '智利, 安托法加斯塔',
+  'Lianyungang, China': '中国, 连云港',
+  'Universal Terminal, Jurong Island, Singapore': '新加坡 (裕廊岛通用码头)',
+  'Ulsan, Republic of Korea': '韩国, 蔚山',
+  'Port Hedland, Western Australia': '澳大利亚, 黑德兰港',
+  'Tianjin, China': '中国, 天津',
+  'Singapore (Jurong Refinery Terminal)': '新加坡 (裕廊炼油厂码头)',
+  'Jakarta (Tanjung Priok), Indonesia': '印尼, 雅加达 (丹戎不碌)',
+  'Bangkok (Klong Toey), Thailand': '泰国, 曼谷 (孔堤港)',
+  'Qingdao, China': '中国, 青岛',
+  'Shanghai, China': '中国, 上海'
+};
+
+export function tData(str) {
+  if (lang !== 'zh' || !str) return str;
+  return DATA_DICT[str] || str;
+}
+
 /**
  * Apply translations to static markup. Walks elements carrying:
  *   data-i18n         -> textContent
