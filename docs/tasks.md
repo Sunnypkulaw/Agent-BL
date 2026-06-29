@@ -222,6 +222,12 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 | RAG-2 | 准备 4 个评委追问检索问题 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
 | SKILL-1 | 创建 `agentbl-pricing-analyst` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
 | SKILL-2 | 创建 `agentbl-demo-operator` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Codex | Done | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
+| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Codex | Done | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
+| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Codex | Done | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
+| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Codex | Done | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
+| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Codex | Done | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
+| MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
 
 ## 8. QA / Integrator
 
@@ -435,12 +441,6 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
-| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Codex | Done | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
-| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Codex | Done | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
-| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Codex | Done | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
-| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Codex | Done | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
-| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Codex | Done | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
-| MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
 
 ## 16. 赞助方技术使用清单（多用，但每一项都要有业务理由）
 
@@ -603,3 +603,17 @@ Gate D：连续 3 次 preflight 全绿；Live/Demo/CLI/视频四套路径都演�
 - [Microsoft Foundry Agent Evaluators](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators)：Task Completion、Tool Call、Groundedness 等评测。
 - [Microsoft Foundry Agent Tracing](https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-agent-concept)：OpenTelemetry、tool spans、延迟与成本可观测。
 - [AgentLevy](https://ethglobal.com/showcase/agentlevy-s577a)、[Alpha402](https://ethglobal.com/showcase/alpha402-04vgq)、[AgentSlam](https://ethglobal.com/showcase/agentslam-znyyq)、[RWA-GPT](https://ethglobal.com/showcase/rwagpt-fssdh)：用于提炼可验证交付、可视化状态机、可靠 fallback 和自然语言 RWA UX 模式。
+
+## 23. 世界级黑客松进阶蓝图 (World-Class Roadmap)
+
+为了将 AgentBL 从一个优秀的黑客松 Demo 升级为十亿美元级别的 Web3 贸易融资基础设施，我们将在下一阶段（V2）引入以下核心特性：
+
+| ID | 任务方向 | 优先级 | 状态 | 商业价值与技术愿景 |
+|---|---|---|---|---|
+| ZK-1 | 零知识证明隐私 (zkTLS) | P0 | Todo | 出口商的商业机密（发票金额、航线）不应在公链裸奔。通过 zkTLS 和 ZK-SNARKs，向 RiskPricingOracle 证明货值和真实性，实现**链上隐私合规定价**。 |
+| DEFI-1 | 跨链流动性路由 (Cross-Chain Liquidity) | P0 | Todo | 接入 Wormhole 或 LayerZero，允许以太坊、Arbitrum 等主流链上的 USDC 投资者一键认购，底层自动跨链至 Injective RWA 池，彻底**打破流动性孤岛**。 |
+| AI-21 | 去中心化 AI 预言机网络 (AVS) | P0 | Todo | 单个 AI 节点存在中心化作恶风险。将 `valuationAgent` 升级为基于 EigenLayer 的 AVS 网络，多个自主节点质押 INJ/ETH 进行估值共识，实现真正的**去中心化 AI 信任**。 |
+| COMP-1 | 机构级合规网关 (Institutional KYC/AML) | P1 | Todo | 接入 Quadrata / zkMe 等真实身份提供商。在 `RWAOfferingPool` 智能合约中增加合规门槛，确保只有通过 KYC 的机构资金可以认购高级别风险池。 |
+| TOKEN-1 | 动态代币经济与自动保险池 ($ABL) | P1 | Todo | 推出协议治理代币。协议通过 x402 销售情报和 RWA 发行抽成获得的收入，将按特定比例自动回购注入**去中心化保险池 (Backstop Fund)**，为投资者提供终极坏账兜底。 |
+
+这 5 项进阶任务将彻底补齐 AgentBL 在隐私、流动性、去中心化共识和代币经济学上的版图，是我们在黑客松决赛中冲击顶尖名次、并在未来走向主网生产环境的关键底牌。
