@@ -85,6 +85,41 @@ async function resolveSigner(options) {
   );
 }
 
+/** USDC settles with 6 decimals; convert a USDC face amount to atomic units. */
+function toAtomicUsdc(amountUSDC) {
+  return BigInt(Math.round(Number(amountUSDC) * 1_000_000));
+}
+
+/**
+ * Map a failed paid retry response into a recoverable client error code so the
+ * caller can show a clear, actionable hint instead of a raw HTTP body.
+ */
+export function classifyPaidFailure(status, body = {}) {
+  const message = String(body?.error ?? body?.message ?? '').trim();
+  if (/insufficient|balance|funds/iu.test(message)) {
+    return {
+      code: 'X402_INSUFFICIENT_BALANCE',
+      message: message || 'The signer does not hold enough USDC to settle this payment',
+      recoverable: true
+    };
+  }
+  if (status === 401 || /signature|signer/iu.test(message)) {
+    return {
+      code: 'X402_SIGNATURE_REJECTED',
+      message: message || 'The payment signature was rejected by the resource server',
+      recoverable: true
+    };
+  }
+  if (/timeout|timed out/iu.test(message)) {
+    return { code: 'X402_TIMEOUT', message: message || 'Settlement timed out', recoverable: true };
+  }
+  return {
+    code: 'X402_SETTLEMENT_FAILED',
+    message: message || `Payment settlement failed (HTTP ${status})`,
+    recoverable: true
+  };
+}
+
 function mergePaidBody(init, challenge, payload) {
   let original = {};
   if (typeof init.body === 'string' && init.body.trim()) {
@@ -127,6 +162,26 @@ export function createPaidFetch(options = {}) {
       ...options,
       demoMode: options.demoMode ?? demoModeDefault(options.env)
     });
+
+    // Optional pre-flight balance guard: when the caller can read the signer's
+    // on-chain USDC balance, refuse to sign a payment the wallet cannot cover so
+    // the user gets a top-up hint instead of a failed settlement after signing.
+    if (typeof options.balanceOf === 'function') {
+      const requiredAtomic = toAtomicUsdc(challenge.amount);
+      let balanceAtomic;
+      try {
+        balanceAtomic = BigInt(await options.balanceOf(signer.address));
+      } catch (error) {
+        throw new X402ClientError('X402_BALANCE_CHECK_FAILED', `Could not read USDC balance: ${error.message}`, { cause: error });
+      }
+      if (balanceAtomic < requiredAtomic) {
+        throw new X402ClientError(
+          'X402_INSUFFICIENT_BALANCE',
+          `Signer ${signer.address} holds ${balanceAtomic} atomic USDC but ${requiredAtomic} is required`
+        );
+      }
+    }
+
     let signature;
     try {
       signature = await signer.signMessage(challenge.body.challenge);
@@ -195,6 +250,7 @@ export async function fetchPaidIntel(baseUrl, endpoint, options = {}) {
     unpaid: capturedChallenge.challenge.body,
     paid: response.ok ? body : null,
     error: response.ok ? null : body,
+    failure: response.ok ? null : classifyPaidFailure(response.status, body),
     paymentTxHash: receipt?.txHash ?? receipt?.transaction ?? body?.payment?.txHash ?? null,
     payment: body?.payment ?? receipt,
     x402_required: true,

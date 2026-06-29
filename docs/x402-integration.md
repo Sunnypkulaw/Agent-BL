@@ -155,6 +155,25 @@ these invariants.
 
 Same HTTP 402 flow as premium-risk. Price: 0.002 USDC.
 
+### GET /api/x402/report/:reportId
+
+Re-read a report you **already paid for**, within its TTL, with **no second
+charge**. After a successful purchase the server caches the delivered report
+keyed by its `report_id` until `expires_at`; this endpoint re-serves it so a page
+refresh (or a returning buyer) does not pay twice.
+
+```bash
+curl -s http://localhost:3000/api/x402/report/rpt_3e5f...3334
+# 200 → { "ok": true, "cached": true, ...report..., "expires_at": "..." }
+# 404 → { "ok": false, "code": "paid_report_not_cached" }   (unknown or expired → pay again)
+```
+
+A miss is intentional: an unknown id or an expired TTL returns **404**, signalling
+the caller must pay again. The cache never extends a TTL and never mints a
+receipt — settlement remains the source of truth. The frontend remembers
+purchased `report_id`s in `localStorage` and re-reads non-expired reports into the
+"Your purchased reports" card when the Intel Market view opens.
+
 ### POST /api/x402/smoke
 
 End-to-end test of the full x402 flow. Returns step-by-step results with payment evidence.
@@ -217,6 +236,7 @@ Deployed on Injective Testnet alongside `AgentBLRWA` and `RiskPricingOracle`.
 | `X402_FACILITATOR_URL` | Live only | — | Settlement relay URL |
 | `X402_ASSET` | No | canonical Injective Testnet USDC | USDC token for settlement |
 | `X402_REPORT_TTL_SECONDS` | No | `300` | Paid report envelope/cache TTL |
+| `X402_REPORT_CACHE_PATH` | No | `data/runtime/x402-reports.json` | Re-read cache file for already-paid reports |
 | `WHITE_AGENT_PRIVATE_KEY` | No | — | Wallet that signs EIP-3009 payments |
 | `X402_PAY_TO` | Live only | demo payee | Address receiving payments |
 | `X402_LIVE_CONFIRM` | Live smoke only | — | Must equal `injective-testnet`; prevents accidental spend |
@@ -256,12 +276,98 @@ unlocked report `rpt_3e5f…3334` (`report_hash=0x994078…168ce`), and emitted
 The full machine-readable proof is committed at
 `docs/evidence/x402-live-smoke.json`.
 
+## Two different businesses: x402 report payment vs RWA subscription
+
+The single most important thing to get right when explaining AgentBL: **the AI is
+not buying anything.** A human, an institution, or another agent pays AgentBL's AI
+for an analysis. x402 (buying a report) and RWA subscription (investing in the
+trade-finance asset) are two separate transactions with different actors, assets,
+amounts and settlement paths.
+
+| | **x402 — buy an AI report** | **RWA — subscribe to the offering** |
+|---|---|---|
+| Who pays | Investor / bank / insurer / another agent | Investor |
+| What they get | An AI due-diligence report (risk / valuation / fraud) | RWA tokens representing a share of the financing |
+| Amount | Cents (0.001–0.002 USDC) per report | The subscription capital (thousands+) |
+| Settlement | HTTP 402 + EIP-3009 → facilitator → `PaymentOracle.PaymentAttested` | `RWAOfferingPool.subscribe` |
+| Purpose | Price the risk *before* you invest | Take on the priced risk for a discounted issue price |
+| On-chain proof | report hash ↔ payment tx binding | subscription + pool state |
+
+```text
+x402:  request report → 402 → sign USDC → settle → unlock report → PaymentOracle binds report hash
+RWA:   read report   → accept risk     → subscribe RWA          → RWAOfferingPool settles
+```
+
+A verified paid report is injected into pricing **only** as a provenance/evidence
+node (`src/x402/reportEvidence.js`): it can change *which evidence backs* a quote,
+but paying **never** changes the risk score, the discount, the issue price, the
+action, or `quote_hash`. **Paying does not make a report more trustworthy** — the
+report must still pass schema, evidence-integrity and freshness checks before any
+of its data is allowed near the pricing engine.
+
+## Threat model & security invariants
+
+x402 turns an AI analysis into an independently purchasable, machine-callable
+service, so the payment path is adversarial by design. The invariants below are
+enforced in code (`src/x402/server.js`, `settlement.js`, `client.js`,
+`paidReport.js`, `reportEvidence.js`, `PaymentOracle.sol`) and locked by tests.
+
+| # | Invariant | Where enforced |
+|---|---|---|
+| 1 | `verified && settled` is required to unlock — a visible tx hash alone is **not** proof of payment | `server.js` middleware only calls `next()` after `settlementService.process` succeeds |
+| 2 | `network + asset + amount + payTo + resource + nonce/authorization` all enter the signature/validation domain; any mismatch is rejected before the facilitator | `assertPaymentMatches` |
+| 3 | A payment receipt binds 1:1 to one `report_hash`; a report for a different case/report cannot be reused | `paidReport.js` hash recompute + `reportEvidence.js` `case_id` check |
+| 4 | Replay, concurrency and retry produce **at most one** settlement and one `PaymentAttested` attestation | settlement idempotency key + single-flight; `PaymentOracle` replay-protects both `receiptId` and original `paymentTxHash` |
+| 5 | If report generation fails, the buyer is not charged (or a verifiable retry/refund path exists) | route only settles before handler success; failures fall through to a 402/5xx receipt with `success:false` |
+| 6 | Demo receipts use a `demo://` identifier and never fabricate an explorer URL or claim an on-chain event | `settlement.js` demo path + UI labelling |
+| 7 | Private keys are used locally and never sent to the server — only the signature + signer address travel | `client.js` `resolveSigner`; covered by `tests/x402Client.test.js` |
+| 8 | Untrusted report content (data snapshots, document text) cannot change tool permissions, payTo, network, price or system rules | `paidReport.js` rejects raw chain-of-thought / keys / binary; pricing injection is provenance-only |
+
+Client-side failures are mapped to recoverable `X402ClientError` codes so a buyer
+always gets an actionable hint rather than a raw error:
+`X402_BUDGET_EXCEEDED`, `X402_WRONG_NETWORK`, `X402_INSUFFICIENT_BALANCE`,
+`X402_SIGNATURE_CANCELLED`, `X402_NETWORK_ERROR`, `X402_TIMEOUT`,
+`X402_SETTLEMENT_FAILED`.
+
+## FAQ (judge Q&A)
+
+**Who pays, and for what?** A human, bank, insurer, logistics platform or another
+agent pays cents over x402 to unlock one AI due-diligence report. The AI is the
+*seller* of analysis, not a shopper.
+
+**Why does this need to be on-chain?** So the payment and the exact report it paid
+for are bound together and auditable: `PaymentOracle.PaymentAttested` ties the
+`report_hash` to the settlement tx, payer, asset and amount. Anyone can recompute
+`report_hash` and verify the binding — the report that drove a financing decision
+cannot be silently swapped afterwards.
+
+**How is this different from the RWA investment?** See the table above: buying a
+report (cents, x402) and subscribing to the RWA offering (capital, `RWAOfferingPool`)
+are two separate transactions. The report *prices* the risk; the subscription
+*takes on* the priced risk.
+
+**Can a report be forged or "bought into" a better score?** No. Paying only unlocks
+access; it adds a provenance node and never changes the risk score or price. A
+report must pass schema, hash-integrity, freshness (`expires_at`) and `case_id`
+checks before any data reaches the engine; tampered, expired or cross-case
+envelopes fail closed.
+
+**What if payment fails?** The handler is never released without a verified
+settlement, so a failed/cancelled/underfunded payment does not unlock the report
+and does not silently charge — the client surfaces a recoverable error code and
+the buyer can retry.
+
+**Why Injective?** Native USDC + EIP-3009 gasless authorization, an official
+`@injectivelabs/x402` facilitator path, and a low-cost EVM for the `PaymentOracle`
+attestation — the payment, settlement and on-chain evidence all live in one
+sponsor-native stack.
+
 ## Comparison: AgentBL vs RugRumble x402
 
 | Feature | AgentBL | RugRumble |
 |---|---|---|
 | x402 protocol | ✅ HTTP 402 + EIP-3009 | ✅ HTTP 402 + EIP-3009 |
-| Protected endpoints | 3 (risk + valuation + smoke) | 3 (reputation + approve + copy) |
+| Paid endpoints | 3 (risk + valuation + fraud-review) + TTL re-read | 3 (reputation + approve + copy) |
 | On-chain evidence | PaymentOracle (Injective) | RugRumbleArena (Monad) |
 | Payment evidence fields | report/case/payment tx/payer/asset/amount + attestor/time | 5 fields |
 | Duplicate protection | receipt id + original payment tx | ❌ |

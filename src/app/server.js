@@ -606,6 +606,25 @@ export async function handleRequest(request, response) {
         return;
       }
 
+      // x402 re-read: return an already-paid report by id within its TTL, with
+      // no new charge. A miss (unknown id or expired) is a 404 — the caller must
+      // pay again. This backs the UI's "purchased reports survive a refresh".
+      if (request.method === 'GET' && url.pathname.startsWith('/api/x402/report/')) {
+        const reportId = decodeURIComponent(url.pathname.slice('/api/x402/report/'.length));
+        const { getPaidReportCache } = await import('../x402/reportStore.js');
+        const cached = await getPaidReportCache().read(reportId);
+        if (!cached) {
+          sendJson(response, 404, {
+            ok: false,
+            code: 'paid_report_not_cached',
+            error: 'No unexpired paid report is cached for this id; payment is required again'
+          });
+          return;
+        }
+        sendJson(response, 200, { ok: true, cached: true, ...cached.report, expires_at: cached.expires_at });
+        return;
+      }
+
       // x402-protected: premium risk intel (HTTP 402 before payment)
       if (url.pathname === '/api/x402/intel/premium-risk') {
         const { createX402Route, buildPremiumRiskIntel } = await import('../x402/server.js');

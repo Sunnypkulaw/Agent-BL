@@ -5,6 +5,9 @@ main
 .env.local
 .env.*.local
 
+# Runtime state (x402 receipts, cached paid reports, decision logs)
+data/runtime/
+
 # Dependencies
 node_modules/
 
