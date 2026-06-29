@@ -68,6 +68,39 @@ describe('x402 Client', () => {
       server.close();
     }
   });
+
+  // X402-11: a demo purchase is re-readable via GET within its TTL (refresh),
+  // and an unknown id returns a clean 404 ("pay again").
+  test('a purchased report is re-readable via GET /api/x402/report/:id within TTL', async () => {
+    const prevMode = process.env.DEMO_MODE;
+    process.env.DEMO_MODE = 'true';
+    const server = createServer();
+    await new Promise((r) => server.listen(0, '127.0.0.1', r));
+    const base = `http://127.0.0.1:${server.address().port}`;
+    try {
+      const { fetchPaidIntel } = await import('../src/x402/client.js');
+      const result = await fetchPaidIntel(base, '/api/x402/intel/premium-risk', {
+        demoMode: true,
+        budgetUSDC: 0.01
+      });
+      const reportId = result.paid?.report_envelope?.report_id;
+      assert.ok(reportId, 'demo purchase returns a report id');
+
+      const reread = await fetch(`${base}/api/x402/report/${reportId}`);
+      assert.equal(reread.status, 200);
+      const body = await reread.json();
+      assert.equal(body.ok, true);
+      assert.equal(body.cached, true);
+      assert.equal(body.report_envelope.report_id, reportId);
+
+      const miss = await fetch(`${base}/api/x402/report/rpt_${'0'.repeat(64)}`);
+      assert.equal(miss.status, 404);
+      assert.equal((await miss.json()).code, 'paid_report_not_cached');
+    } finally {
+      server.close();
+      if (prevMode === undefined) delete process.env.DEMO_MODE; else process.env.DEMO_MODE = prevMode;
+    }
+  });
 });
 
 describe('x402 Settlement', () => {

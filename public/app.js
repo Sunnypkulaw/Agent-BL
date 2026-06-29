@@ -1396,6 +1396,91 @@ async function loadX402Config() {
   }
 }
 
+// X402-11 re-read: remember purchased reports locally so a page refresh can
+// re-open them within their TTL (the server re-serves them with no new charge).
+const X402_PURCHASES_KEY = 'agentbl.x402.purchases';
+
+function loadX402Purchases() {
+  let entries = [];
+  try {
+    entries = JSON.parse(localStorage.getItem(X402_PURCHASES_KEY) || '[]');
+  } catch { entries = []; }
+  const now = Date.now();
+  // Drop locally-expired entries up front; the server is the final authority.
+  const live = entries.filter((e) => e?.report_id && Date.parse(e.expires_at || '') > now);
+  if (live.length !== entries.length) saveX402Purchases(live);
+  return live;
+}
+
+function saveX402Purchases(entries) {
+  try { localStorage.setItem(X402_PURCHASES_KEY, JSON.stringify(entries)); } catch { /* storage disabled */ }
+}
+
+function persistX402Purchase(envelope) {
+  if (!envelope?.report_id || !envelope?.expires_at) return;
+  const entries = loadX402Purchases().filter((e) => e.report_id !== envelope.report_id);
+  entries.unshift({
+    report_id: envelope.report_id,
+    expires_at: envelope.expires_at,
+    kind: envelope.kind || 'premium-risk',
+    case_id: envelope.case_id || null
+  });
+  saveX402Purchases(entries.slice(0, 12));
+}
+
+async function restoreX402Purchases() {
+  const card = $('#x402-purchased');
+  const list = $('#x402-purchased-list');
+  if (!card || !list) return;
+  const entries = loadX402Purchases();
+  if (!entries.length) { card.hidden = true; list.innerHTML = ''; return; }
+
+  // Confirm each report is still re-readable on the server (within TTL); a 404
+  // means the cache expired, so drop it locally too.
+  const surviving = [];
+  for (const entry of entries) {
+    try {
+      const res = await fetch(`/api/x402/report/${encodeURIComponent(entry.report_id)}`);
+      if (res.ok) surviving.push({ entry, report: await res.json() });
+    } catch { /* offline — keep the local entry, just can't re-open right now */ }
+  }
+  if (!surviving.length) { card.hidden = true; saveX402Purchases([]); return; }
+  saveX402Purchases(surviving.map((s) => s.entry));
+
+  card.hidden = false;
+  list.innerHTML = surviving.map(({ entry }, i) => {
+    const when = new Date(entry.expires_at).toLocaleTimeString();
+    return [
+      `<div class="x402-purchased-item" data-idx="${i}" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">`,
+      `<div><strong style="font-size:13px;">${entry.kind}</strong>`,
+      `<div class="muted" style="font-size:11px;">${entry.case_id || ''} · ${t('x402_purchased_expires', { time: when })}</div></div>`,
+      `<button class="btn ghost x402-reread-btn" data-idx="${i}" style="font-size:12px;">${t('x402_purchased_reread')}</button>`,
+      `</div>`
+    ].join('');
+  }).join('');
+
+  list.querySelectorAll('.x402-reread-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const data = surviving[Number(btn.dataset.idx)]?.report;
+      if (data) reopenX402Report(data);
+    });
+  });
+}
+
+// Re-render the payment card + pricing impact for an already-paid report,
+// without re-running the 402 flow.
+function reopenX402Report(data) {
+  renderX402FlowReset();
+  setX402Step('challenge', 'done', t('x402_challenge_status'));
+  setX402Step('pay', 'done', t('x402_signed'));
+  setX402Step('settle', 'done', t('x402_settled'));
+  setX402Step('unlock', 'done', t('x402_unlocked'));
+  updateX402PaymentCard(data.payment ? data : { payment: data.payment });
+  updateX402PricingImpact(data);
+  const log = $('#x402-log');
+  if (log) log.innerHTML = `<p>• <span style="color:#2EA043;">${t('x402_purchased_reread')} — ${data.report_envelope?.report_id?.slice(0, 18) || ''}…</span></p>`;
+}
+
 function renderIntelMarket() {
   loadX402Config().then(() => {
     // Re-apply static i18n to the x402 view after it's shown
@@ -1404,6 +1489,7 @@ function renderIntelMarket() {
     renderX402ServiceList();
     renderX402FlowReset();
     wireX402Handlers();
+    restoreX402Purchases();
   });
 }
 
@@ -1663,6 +1749,12 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
     setX402Step('unlock', 'done', t('x402_unlocked'));
     updateX402PaymentCard(data);
     updateX402PricingImpact(data);
+
+    // Remember this report so a refresh can re-open it within its TTL.
+    if (data.report_envelope) {
+      persistX402Purchase(data.report_envelope);
+      restoreX402Purchases();
+    }
 
     log.innerHTML += `<p>• <span style="color:#2EA043;">${t('x402_unlocked_log', { events: data.events?.length || 0, intel: data.deepIntel?.length || 0 })}</span></p>`;
 

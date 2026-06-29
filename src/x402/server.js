@@ -416,19 +416,7 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
         });
         payment = { ...payment, ...attestation.payment };
       }
-      response.writeHead(200, {
-        'Content-Type': 'application/json; charset=utf-8',
-        'PAYMENT-RESPONSE': JSON.stringify({
-          network,
-          txHash: payment.txHash,
-          amount: Math.floor(priceUSDC * 1_000_000),
-          payer,
-          reportId: reportEnvelope.report_id,
-          reportHash: reportEnvelope.report_hash,
-          attestationTxHash: payment.attestationTxHash ?? null
-        })
-      });
-      response.end(JSON.stringify({
+      const deliveredBody = {
         ...report,
         report_envelope: reportEnvelope,
         payment: {
@@ -442,7 +430,29 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
           serviceId,
           amountUSDC: priceUSDC
         }
-      }, null, 2));
+      };
+      // Cache the delivered report so the buyer can re-read it (e.g. after a
+      // page refresh) within its TTL without paying again. Best-effort: a cache
+      // failure must never block delivering the report the buyer paid for.
+      try {
+        const { getPaidReportCache } = await import('./reportStore.js');
+        await getPaidReportCache().save({ envelope: reportEnvelope, report: deliveredBody });
+      } catch {
+        // re-read is a convenience layer; settlement remains the source of truth
+      }
+      response.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'PAYMENT-RESPONSE': JSON.stringify({
+          network,
+          txHash: payment.txHash,
+          amount: Math.floor(priceUSDC * 1_000_000),
+          payer,
+          reportId: reportEnvelope.report_id,
+          reportHash: reportEnvelope.report_hash,
+          attestationTxHash: payment.attestationTxHash ?? null
+        })
+      });
+      response.end(JSON.stringify(deliveredBody, null, 2));
     } catch (error) {
       const status = error?.code === 'INVALID_ARGUMENT' ? 401 : 500;
       response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
