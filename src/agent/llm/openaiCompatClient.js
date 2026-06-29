@@ -12,6 +12,14 @@
 // should fall back to the deterministic valuation path.
 
 const PROVIDERS = {
+  azure: {
+    // Azure OpenAI Service - requires AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, AZURE_OPENAI_API_KEY
+    // Endpoint format: https://<resource>.openai.azure.com
+    baseUrlEnv: 'AZURE_OPENAI_ENDPOINT',
+    deploymentEnv: 'AZURE_OPENAI_DEPLOYMENT',
+    keyEnv: 'AZURE_OPENAI_API_KEY',
+    apiVersion: '2024-02-15-preview'
+  },
   tencent: {
     // Tencent Cloud TokenHub (Hunyuan), OpenAI-compatible. ONLY hy3-preview is
     // permitted on this account, so the model is locked and ignores LLM_MODEL.
@@ -47,6 +55,19 @@ const PROVIDERS = {
  * @returns {{provider:string, baseUrl:string, model:string, apiKey:string}|null}
  */
 export function resolveProvider(env = process.env) {
+  // Azure OpenAI Service (check first as it requires special handling)
+  const azureCfg = PROVIDERS.azure;
+  if (env[azureCfg.keyEnv] && env[azureCfg.baseUrlEnv] && env[azureCfg.deploymentEnv]) {
+    return {
+      provider: 'azure',
+      baseUrl: env[azureCfg.baseUrlEnv].replace(/\/$/, ''),
+      deployment: env[azureCfg.deploymentEnv],
+      apiVersion: azureCfg.apiVersion,
+      apiKey: env[azureCfg.keyEnv],
+      model: env[azureCfg.deploymentEnv] // Azure uses deployment name as model
+    };
+  }
+
   // Fully custom OpenAI-compatible endpoint.
   if (env.LLM_BASE_URL && env.LLM_API_KEY) {
     return {
@@ -58,7 +79,7 @@ export function resolveProvider(env = process.env) {
   }
 
   const explicit = env.LLM_PROVIDER && PROVIDERS[env.LLM_PROVIDER];
-  const order = explicit ? [env.LLM_PROVIDER] : Object.keys(PROVIDERS);
+  const order = explicit ? [env.LLM_PROVIDER] : Object.keys(PROVIDERS).filter(p => p !== 'azure');
 
   for (const name of order) {
     const cfg = PROVIDERS[name];
@@ -87,7 +108,7 @@ export function isConfigured(env = process.env) {
  */
 export async function chatCompletion({ messages, tools, toolChoice = 'auto', temperature = 0.2, timeoutMs = 45000 }, env = process.env) {
   const cfg = resolveProvider(env);
-  if (!cfg) throw new Error('No LLM provider configured. Set DEEPSEEK_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY or LLM_BASE_URL+LLM_API_KEY.');
+  if (!cfg) throw new Error('No LLM provider configured. Set DEEPSEEK_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY / AZURE_OPENAI_* or LLM_BASE_URL+LLM_API_KEY.');
 
   const body = { model: cfg.model, messages, temperature };
   if (tools && tools.length > 0) {
@@ -95,15 +116,25 @@ export async function chatCompletion({ messages, tools, toolChoice = 'auto', tem
     body.tool_choice = toolChoice;
   }
 
+  // Build URL based on provider
+  let url;
+  const headers = { 'content-type': 'application/json' };
+
+  if (cfg.provider === 'azure') {
+    // Azure OpenAI uses deployment-specific endpoint
+    url = `${cfg.baseUrl}/openai/deployments/${cfg.deployment}/chat/completions?api-version=${cfg.apiVersion}`;
+    headers['api-key'] = cfg.apiKey;
+  } else {
+    url = `${cfg.baseUrl}/chat/completions`;
+    headers['authorization'] = `Bearer ${cfg.apiKey}`;
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(`${cfg.baseUrl}/chat/completions`, {
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${cfg.apiKey}`
-      },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal
     });

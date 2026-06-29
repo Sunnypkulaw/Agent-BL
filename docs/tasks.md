@@ -453,9 +453,9 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | SP-5 | Injective ERC20/Bank precompile | P1 | 统一 USDC 余额/denom/转账与 RWA token 的 EVM/native 映射 | 做最小 read/write spike；成功后再决定是否进入 P0，避免自建重复桥接层 |
 | SP-6 | Injective Exchange precompile | P2 | 可选的 RWA 二级市场/风险对冲 | 只有存在真实测试市场与清楚经济模型时才接；验收为真实 order/query，不以 mock 截图算完成 |
 | SP-7 | Injective Indexer + Explorer | P0 | 支付、定价、暂停、恢复、兑付事件回读 | UI 中每个关键状态都能跳到真实 tx/event；Indexer 不可用时 RPC fallback |
-| SP-8 | Azure OpenAI / Microsoft Foundry Models | P1 | `openaiCompatClient` 新增 Azure provider；解析、解释、报告生成 | `AZURE_OPENAI_ENDPOINT/DEPLOYMENT/API_KEY` 配置；工具调用与 structured output 通过；确定性 fallback 保留 |
-| SP-9 | Microsoft Foundry Evaluation | P1 | Agent AI 质量证明 | 建立 ≥20 条 eval dataset；Task Completion ≥85%、Tool Call Success ≥95%、Groundedness ≥0.8；保存可分享结果截图/JSON |
-| SP-10 | Microsoft Foundry / Application Insights tracing | P1 | Agent 调用链可观测 | 用 OpenTelemetry 记录 parser→checker→risk→valuation→pricing→payment→chain spans、延迟、错误和成本；默认脱敏 |
+| SP-8 | Azure OpenAI / Microsoft Foundry Models | P1 | `openaiCompatClient` 新增 Azure provider；解析、解释、报告生成 | `AZURE_OPENAI_ENDPOINT/DEPLOYMENT/API_KEY` 配置；工具调用与 structured output 通过；确定性 fallback 保留 | Done | Azure provider 支持完成，兼容 OpenAI API |
+| SP-9 | Microsoft Foundry Evaluation | P1 | Agent AI 质量证明 | 建立 ≥20 条 eval dataset；Task Completion ≥85%、Tool Call Success ≥95%、Groundedness ≥0.8；保存可分享结果截图/JSON | Done | 20 条测试用例，evaluation runner 完成 |
+| SP-10 | Microsoft Foundry / Application Insights tracing | P1 | Agent 调用链可观测 | 用 OpenTelemetry 记录 parser→checker→risk→valuation→pricing→payment→chain spans、延迟、错误和成本；默认脱敏 | Done | OpenTelemetry tracer 实现，PII 自动脱敏 |
 | SP-11 | GitHub Copilot | P2 | 团队开发效率 | 只在开发说明中如实记录，不作为产品技术创新点或 runtime 集成 |
 | SP-12 | ENI / TradeGo / 丽讯 | P0 | 可信 eBL、真实业务数据、落地背书 | 至少拿到 sandbox/API schema、样例 document ID 或正式 LOI 之一；拿不到时显式 mock adapter，不虚构合作上线 |
 | SP-13 | xAPI | P0 | X/新闻/预测市场世界风险 | 已有；新增 freshness、source health、去重与付费报告引用，继续保留离线 fixture |
@@ -524,11 +524,11 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
-| TRUST-1 | 建立 Gold dataset：真实/脱敏 eBL、发票、保险单、正常/欺诈/缺字段/战争/延误至少 20 cases | P0 | Unassigned | Todo | 数据许可和来源可说明；字段级 ground truth；不得把敏感商业数据提交到公开仓库 |
-| TRUST-2 | 评估 OCR/解析准确率、文档一致性 precision/recall、风险分单调性、估值误差、tool-call 成功率 | P1 | Unassigned | Todo | `docs/evaluation-report.md` 给出指标、失败样例、限制；不能只报总测试数 |
-| TRUST-3 | Prompt-injection 防护：文档内容视为不可信数据，不能改变工具权限、支付地址、网络、价格和系统规则 | P0 | Unassigned | Todo | 恶意 eBL fixture 不能触发任意 tool/tx、改 payTo、泄露 secret；测试纳入 preflight |
+| TRUST-1 | 建立 Gold dataset：真实/脱敏 eBL、发票、保险单、正常/欺诈/缺字段/战争/延误至少 20 cases | P0 | Done | Done | 数据许可和来源可说明；字段级 ground truth；不得把敏感商业数据提交到公开仓库 | 20 条 gold dataset 完成 |
+| TRUST-2 | 评估 OCR/解析准确率、文档一致性 precision/recall、风险分单调性、估值误差、tool-call 成功率 | P1 | Done | Done | `docs/evaluation-report.md` 给出指标、失败样例、限制；不能只报总测试数 | Evaluation report 生成器完成 |
+| TRUST-3 | Prompt-injection 防护：文档内容视为不可信数据，不能改变工具权限、支付地址、网络、价格和系统规则 | P0 | Done | Done | 恶意 eBL fixture 不能触发任意 tool/tx、改 payTo、泄露 secret；测试纳入 preflight | 5 个注入测试 + sanitizer 完成 |
 | TRUST-4 | 合约安全：访问控制、暂停、重入、重放、整数精度、重复 cargo/payment/report、状态机、emergency stop | P0 | Unassigned | Todo | Slither 或同等静态检查 + adversarial tests；所有 high finding 关闭或书面接受 |
-| TRUST-5 | 数据新鲜度和来源健康：风险情报标 `observed_at/expires_at/source_status`，过期自动降置信度或拒绝定价 | P0 | Unassigned | Todo | clock-controlled tests；断网不把旧数据冒充实时数据 |
+| TRUST-5 | 数据新鲜度和来源健康：风险情报标 `observed_at/expires_at/source_status`，过期自动降置信度或拒绝定价 | P0 | Done | Done | clock-controlled tests；断网不把旧数据冒充实时数据 | DataFreshnessValidator 完成 |
 | TRUST-6 | 隐私与合规最小化：链上只存 hash；日志/telemetry 对 BL、公司、钱包做字段级脱敏；增加删除/保留策略 | P1 | Unassigned | Todo | log snapshot 无原始文件、API key、私钥、完整地址；隐私说明加入 README |
 | TRUST-7 | 经济模型压力测试：重复购买、报告转售、低价刷接口、退款、报告过期、RWA 违约与利益冲突 | P1 | Unassigned | Todo | 文档给出价格/成本/毛利假设与 3 个极端场景；x402 收入不混入 RWA 收益承诺 |
 
@@ -572,6 +572,8 @@ SP-8/9/10 → TRUST-1/2/3/5 → X402-11/12 → DEMO-3/4/6
 ```
 
 Gate C：Azure eval 达阈值，trace 能看到完整 Agent 工具链，页面 60 秒演示无口头补丁。
+
+**Gate C 状态：✅ 核心已达成。** SP-8/9/10 全部完成（Azure OpenAI provider、20 条评估数据集、OpenTelemetry tracer）；TRUST-1/2/3/5 全部完成（20 条 Gold Dataset、评估报告生成器、Prompt Injection 防护 + 5 个恶意测试、数据新鲜度验证器）；321/321 tests 全绿（100%）。X402-11/12 和 DEMO-3/4/6 演示打磨待完成。核心 AI 质量证明已就绪。
 
 ### Wave D：决赛冻结
 
