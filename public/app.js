@@ -2006,6 +2006,133 @@ console.error = function(...args) {
 };
 
 // ===========================================================================
+// Agent Activity (BE-15) — module-level so selectCase / boot can call them
+// ===========================================================================
+
+// BE-15: Local agent activity logger (complements SSE stream)
+function logAgentActivityUI(activity) {
+  if (!state.agentActivities) state.agentActivities = [];
+
+  const record = {
+    id: `ui-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+    timestamp: new Date().toISOString(),
+    ...activity
+  };
+
+  state.agentActivities.unshift(record);
+
+  // Keep only last 100 activities in UI state
+  if (state.agentActivities.length > 100) {
+    state.agentActivities = state.agentActivities.slice(0, 100);
+  }
+
+  // Update timeline visualization
+  renderAgentTimeline();
+
+  return record;
+}
+
+// BE-15: Subscribe to real-time agent activity stream (SSE)
+let agentActivityStream = null;
+
+function subscribeToAgentActivity(caseId) {
+  // Close existing stream
+  if (agentActivityStream) {
+    agentActivityStream.close();
+    agentActivityStream = null;
+  }
+
+  if (!caseId) return;
+
+  try {
+    agentActivityStream = new EventSource(`/api/agent/activity/stream?case_id=${caseId}`);
+
+    agentActivityStream.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'connected') {
+        agentLog('🔗 Connected to Agent activity stream', 'var(--ok)');
+      } else if (data.type === 'activity') {
+        const emoji = getActivityEmoji(data.action);
+        agentLog(`${emoji} Agent: ${data.action}${data.details?.price ? ` → $${data.details.price}` : ''}`, 'var(--accent)');
+
+        logAgentActivityUI(data);
+
+        if (data.action === 'REPRICE_DECISION' || data.action === 'PAUSE_OFFERING') {
+          toast(`🤖 Agent: ${data.action}`);
+        }
+      }
+    };
+
+    agentActivityStream.onerror = () => {
+      agentLog('⚠️ SSE disconnected, reconnecting...', 'var(--warn)');
+      if (agentActivityStream) agentActivityStream.close();
+      setTimeout(() => subscribeToAgentActivity(caseId), 3000);
+    };
+  } catch (error) {
+    console.error('Failed to subscribe to agent activity:', error);
+  }
+}
+
+function getActivityEmoji(action) {
+  const emojiMap = {
+    'eBL_UPLOADED': '📄',
+    'COMPLIANCE_CHECK': '⚖️',
+    'VALUATION_COMPLETE': '💰',
+    'PRICING_QUOTE': '📊',
+    'RISK_ESCALATION': '⚠️',
+    'REPRICE_DECISION': '📉',
+    'PAUSE_OFFERING': '⏸️',
+    'RESUME_OFFERING': '▶️',
+    'ON_CHAIN_UPDATE': '⛓️',
+    'SUBSCRIPTION': '💵',
+    'SETTLE': '✅'
+  };
+  return emojiMap[action] || '🤖';
+}
+
+// BE-15: Render agent activity timeline
+function renderAgentTimeline() {
+  const container = $('#agent-logs-container');
+  if (!container || !state.agentActivities || state.agentActivities.length === 0) return;
+
+  // Only show last 10 activities in timeline
+  const recentActivities = state.agentActivities.slice(0, 10);
+
+  let timelineHtml = '<div style="font-family: var(--mono); font-size: 13px; line-height: 1.8;">';
+  timelineHtml += '<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🤖 Agent Decision Timeline</div>';
+  timelineHtml += '<div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>';
+
+  recentActivities.forEach(activity => {
+    const time = new Date(activity.timestamp).toLocaleTimeString('en-US', { hour12: false });
+    const emoji = getActivityEmoji(activity.action);
+    const actionLabel = activity.action.replace(/_/g, ' ');
+
+    let detailStr = '';
+    if (activity.details) {
+      if (activity.details.fileName) detailStr = `→ ${activity.details.fileName}`;
+      else if (activity.details.price) detailStr = `→ $${activity.details.price}`;
+      else if (activity.details.status) detailStr = `→ ${activity.details.status}`;
+      else if (activity.details.newPrice) detailStr = `→ $${activity.details.newPrice}`;
+    }
+
+    timelineHtml += `<div style="color: var(--text-2); margin: 4px 0;">
+      <span style="color: var(--muted);">${time}</span>
+      ${emoji} <span style="color: var(--text-main);">${actionLabel}</span>
+      <span style="color: var(--accent);">${detailStr}</span>
+    </div>`;
+  });
+
+  timelineHtml += '</div>';
+
+  // Only update if we have a dedicated timeline container
+  const timelineContainer = $('#agent-timeline');
+  if (timelineContainer) {
+    timelineContainer.innerHTML = timelineHtml;
+  }
+}
+
+// ===========================================================================
 // Wiring
 // ===========================================================================
 function wireStaticHandlers() {
@@ -2177,130 +2304,6 @@ function wireStaticHandlers() {
       toast(`${successCount} document(s) uploaded to ENI`);
     }
   }
-
-  // BE-15: Local agent activity logger (complements SSE stream)
-  function logAgentActivityUI(activity) {
-    if (!state.agentActivities) state.agentActivities = [];
-
-    const record = {
-      id: `ui-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-      timestamp: new Date().toISOString(),
-      ...activity
-    };
-
-    state.agentActivities.unshift(record);
-
-    // Keep only last 100 activities in UI state
-    if (state.agentActivities.length > 100) {
-      state.agentActivities = state.agentActivities.slice(0, 100);
-    }
-
-    // Update timeline visualization
-    renderAgentTimeline();
-
-    return record;
-  }
-
-  // BE-15: Subscribe to real-time agent activity stream (SSE)
-  let agentActivityStream = null;
-
-  function subscribeToAgentActivity(caseId) {
-    // Close existing stream
-    if (agentActivityStream) {
-      agentActivityStream.close();
-      agentActivityStream = null;
-    }
-
-    if (!caseId) return;
-
-    try {
-      agentActivityStream = new EventSource(`/api/agent/activity/stream?case_id=${caseId}`);
-
-      agentActivityStream.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === 'connected') {
-          agentLog('🔗 Connected to Agent activity stream', 'var(--ok)');
-        } else if (data.type === 'activity') {
-          const emoji = getActivityEmoji(data.action);
-          agentLog(`${emoji} Agent: ${data.action}${data.details?.price ? ` → $${data.details.price}` : ''}`, 'var(--accent)');
-
-          logAgentActivityUI(data);
-
-          if (data.action === 'REPRICE_DECISION' || data.action === 'PAUSE_OFFERING') {
-            toast(`🤖 Agent: ${data.action}`);
-          }
-        }
-      };
-
-      agentActivityStream.onerror = () => {
-        agentLog('⚠️ SSE disconnected, reconnecting...', 'var(--warn)');
-        if (agentActivityStream) agentActivityStream.close();
-        setTimeout(() => subscribeToAgentActivity(caseId), 3000);
-      };
-    } catch (error) {
-      console.error('Failed to subscribe to agent activity:', error);
-    }
-  }
-
-  function getActivityEmoji(action) {
-    const emojiMap = {
-      'eBL_UPLOADED': '📄',
-      'COMPLIANCE_CHECK': '⚖️',
-      'VALUATION_COMPLETE': '💰',
-      'PRICING_QUOTE': '📊',
-      'RISK_ESCALATION': '⚠️',
-      'REPRICE_DECISION': '📉',
-      'PAUSE_OFFERING': '⏸️',
-      'RESUME_OFFERING': '▶️',
-      'ON_CHAIN_UPDATE': '⛓️',
-      'SUBSCRIPTION': '💵',
-      'SETTLE': '✅'
-    };
-    return emojiMap[action] || '🤖';
-  }
-
-  // BE-15: Render agent activity timeline
-  function renderAgentTimeline() {
-    const container = $('#agent-logs-container');
-    if (!container || !state.agentActivities || state.agentActivities.length === 0) return;
-
-    // Only show last 10 activities in timeline
-    const recentActivities = state.agentActivities.slice(0, 10);
-
-    let timelineHtml = '<div style="font-family: var(--mono); font-size: 13px; line-height: 1.8;">';
-    timelineHtml += '<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🤖 Agent Decision Timeline</div>';
-    timelineHtml += '<div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>';
-
-    recentActivities.forEach(activity => {
-      const time = new Date(activity.timestamp).toLocaleTimeString('en-US', { hour12: false });
-      const emoji = getActivityEmoji(activity.action);
-      const actionLabel = activity.action.replace(/_/g, ' ');
-
-      let detailStr = '';
-      if (activity.details) {
-        if (activity.details.fileName) detailStr = `→ ${activity.details.fileName}`;
-        else if (activity.details.price) detailStr = `→ $${activity.details.price}`;
-        else if (activity.details.status) detailStr = `→ ${activity.details.status}`;
-        else if (activity.details.newPrice) detailStr = `→ $${activity.details.newPrice}`;
-      }
-
-      timelineHtml += `<div style="color: var(--text-2); margin: 4px 0;">
-        <span style="color: var(--muted);">${time}</span>
-        ${emoji} <span style="color: var(--text-main);">${actionLabel}</span>
-        <span style="color: var(--accent);">${detailStr}</span>
-      </div>`;
-    });
-
-    timelineHtml += '</div>';
-
-    // Only update if we have a dedicated timeline container
-    const timelineContainer = $('#agent-timeline');
-    if (timelineContainer) {
-      timelineContainer.innerHTML = timelineHtml;
-    }
-  }
-  const eblUploadStatus = $('#ebl-upload-status');
 
   if (eblBrowseBtn && eblFileInput) {
     eblBrowseBtn.addEventListener('click', (e) => { e.preventDefault(); eblFileInput.click(); });
