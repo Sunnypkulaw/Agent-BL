@@ -1524,7 +1524,7 @@ function renderX402ServiceList() {
     `<p class="muted" style="font-size:12px;margin:4px 0 0;">${s.description}</p>`,
     `<span class="badge" style="font-size:10px;margin-top:4px;display:inline-block;">${s.status}</span>`,
     `</div>`
-  ].join(''));
+  ].join('')).join('');
 }
 
 function renderX402FlowReset() {
