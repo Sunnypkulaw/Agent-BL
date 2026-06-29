@@ -111,6 +111,10 @@ const DICT = {
     lang_switch_to: 'EN',
     lang_btn_title: 'Switch to English',
     wallet_title: '连接钱包，在 {network} 测试网铸造',
+    wallet_connected_label: '已连接',
+    wallet_copy: '复制地址',
+    wallet_view_explorer: '在浏览器中查看',
+    wallet_disconnect: '断开连接',
 
 	    // category filter
 	    cat_all: '全部',
@@ -289,6 +293,10 @@ const DICT = {
     t_connect_cancel: '已取消连接',
     t_connect_fail: '连接失败: {msg}',
     t_wallet_connected: '钱包已连接 · {network}',
+    t_wallet_disconnected: '钱包已断开，并已撤销本站授权',
+    t_wallet_disconnected_local: '本站已断开钱包（如需彻底撤销，请在钱包扩展中操作）',
+    t_wallet_copied: '地址已复制',
+    t_wallet_copy_fail: '复制失败',
     t_load_cases_fail: '加载案例失败: {msg}',
     t_pricing_fail: '定价失败: {msg}',
     t_reprice_fail: '重定价失败: {msg}',
@@ -431,6 +439,10 @@ const DICT = {
     lang_switch_to: '中文',
     lang_btn_title: 'Switch to Chinese',
     wallet_title: 'Connect wallet to mint on the {network} testnet',
+    wallet_connected_label: 'Connected',
+    wallet_copy: 'Copy address',
+    wallet_view_explorer: 'View on explorer',
+    wallet_disconnect: 'Disconnect',
 
 	    // category filter
 	    cat_all: 'All',
@@ -609,6 +621,10 @@ const DICT = {
     t_connect_cancel: 'Connection cancelled',
     t_connect_fail: 'Connection failed: {msg}',
     t_wallet_connected: 'Wallet connected · {network}',
+    t_wallet_disconnected: 'Wallet disconnected and this site’s permission revoked',
+    t_wallet_disconnected_local: 'Wallet disconnected here (revoke fully in your wallet extension)',
+    t_wallet_copied: 'Address copied',
+    t_wallet_copy_fail: 'Copy failed',
     t_load_cases_fail: 'Failed to load cases: {msg}',
     t_pricing_fail: 'Pricing failed: {msg}',
     t_reprice_fail: 'Reprice failed: {msg}',

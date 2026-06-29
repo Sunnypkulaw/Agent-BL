@@ -172,6 +172,29 @@ export async function connectWallet() {
   return { address };
 }
 
+/**
+ * Disconnect the wallet: drop the cached signer session and, when the provider
+ * supports it (EIP-2255), ask it to revoke this site's eth_accounts permission
+ * so a later "connect" re-prompts instead of silently re-attaching. Best-effort:
+ * the local session is always cleared even if the provider can't revoke.
+ * @returns {Promise<{revoked:boolean}>}
+ */
+export async function disconnect() {
+  const eth = getEthereumProvider();
+  let revoked = false;
+  if (eth?.request) {
+    try {
+      await eth.request({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] });
+      revoked = true;
+    } catch {
+      // Provider doesn't support revoking (or the user dismissed it) — the local
+      // session is still cleared below; the wallet just stays authorized.
+    }
+  }
+  _session = null;
+  return { revoked };
+}
+
 async function getContract(write = false) {
   const cfg = await loadChainConfig();
   const address = cfg?.contracts?.AgentBLRWA;

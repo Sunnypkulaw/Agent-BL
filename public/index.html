@@ -31,7 +31,18 @@
 
         <div class="topbar-right">
           <button id="lang-btn" class="btn ghost lang-btn" data-i18n-title="lang_btn_title">EN</button>
-          <button id="wallet-btn" class="btn ghost wallet-btn" data-i18n="wallet_connect" data-i18n-title="wallet_title">Connect Wallet</button>
+          <div class="wallet-wrap">
+            <button id="wallet-btn" class="btn ghost wallet-btn" data-i18n="wallet_connect" data-i18n-title="wallet_title" aria-haspopup="menu" aria-expanded="false">Connect Wallet</button>
+            <div id="wallet-menu" class="wallet-menu" role="menu" hidden>
+              <div class="wallet-menu-addr">
+                <span class="wallet-menu-label" data-i18n="wallet_connected_label">Connected</span>
+                <code id="wallet-menu-address">0x…</code>
+              </div>
+              <button id="wallet-copy-btn" class="wallet-menu-item" role="menuitem" type="button" data-i18n="wallet_copy">Copy address</button>
+              <a id="wallet-explorer-btn" class="wallet-menu-item" role="menuitem" target="_blank" rel="noopener" data-i18n="wallet_view_explorer">View on explorer</a>
+              <button id="wallet-disconnect-btn" class="wallet-menu-item danger" role="menuitem" type="button" data-i18n="wallet_disconnect">Disconnect</button>
+            </div>
+          </div>
           <div class="live-pill" id="live-pill" data-i18n-title="live_tip">
             <span class="dot"></span> LIVE
           </div>

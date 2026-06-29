@@ -1341,11 +1341,12 @@ function refreshWalletUi() {
   if (!btn) return;
   const addr = web3.connectedAddress();
   if (addr) {
-    btn.textContent = `🦊 ${addr.slice(0, 6)}…${addr.slice(-4)}`;
+    btn.textContent = `🦊 ${addr.slice(0, 6)}…${addr.slice(-4)} ▾`;
     btn.classList.add('connected');
   } else {
     btn.textContent = t('wallet_connect');
     btn.classList.remove('connected');
+    closeWalletMenu();
   }
 }
 
@@ -1364,6 +1365,12 @@ async function doConnect() {
 }
 
 async function onWalletClick() {
+  // When already connected, the button opens an account menu (with Disconnect)
+  // rather than re-running the connect flow.
+  if (web3.isWalletConnected()) {
+    toggleWalletMenu();
+    return;
+  }
   try {
     await doConnect();
   } catch (e) {
@@ -1371,6 +1378,66 @@ async function onWalletClick() {
     else if (e.code === 'REJECTED') toast(t('t_connect_cancel'), true);
     else toast(t('t_connect_fail', { msg: e.message || e }), true);
   }
+}
+
+function isWalletMenuOpen() {
+  const menu = $('#wallet-menu');
+  return menu ? !menu.hidden : false;
+}
+
+function closeWalletMenu() {
+  const menu = $('#wallet-menu');
+  const btn = $('#wallet-btn');
+  if (menu) menu.hidden = true;
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+async function openWalletMenu() {
+  const menu = $('#wallet-menu');
+  const btn = $('#wallet-btn');
+  if (!menu || !btn) return;
+  const addr = web3.connectedAddress();
+  if (!addr) return;
+  const addrEl = $('#wallet-menu-address');
+  if (addrEl) addrEl.textContent = `${addr.slice(0, 10)}…${addr.slice(-6)}`;
+  // Point the explorer link at this address (best-effort; falls back to testnet).
+  const explorer = $('#wallet-explorer-btn');
+  if (explorer) {
+    let base = 'https://testnet.blockscout.injective.network';
+    try { base = (await web3.loadChainConfig())?.explorerBase || base; } catch { /* default */ }
+    explorer.href = `${base.replace(/\/$/u, '')}/address/${addr}`;
+  }
+  menu.hidden = false;
+  btn.setAttribute('aria-expanded', 'true');
+}
+
+function toggleWalletMenu() {
+  if (isWalletMenuOpen()) closeWalletMenu();
+  else openWalletMenu();
+}
+
+async function onWalletDisconnect() {
+  closeWalletMenu();
+  try {
+    const { revoked } = await web3.disconnect();
+    state.wallet = null;
+    refreshWalletUi();
+    toast(t(revoked ? 't_wallet_disconnected' : 't_wallet_disconnected_local'));
+  } catch (e) {
+    toast(t('t_connect_fail', { msg: e.message || e }), true);
+  }
+}
+
+async function onWalletCopy() {
+  const addr = web3.connectedAddress();
+  if (!addr) return;
+  try {
+    await navigator.clipboard.writeText(addr);
+    toast(t('t_wallet_copied'));
+  } catch {
+    toast(t('t_wallet_copy_fail'), true);
+  }
+  closeWalletMenu();
 }
 
 // ===========================================================================
@@ -1716,6 +1783,15 @@ function wireStaticHandlers() {
     b.addEventListener('click', () => setView(b.dataset.view)));
   $('#lang-btn').addEventListener('click', () => toggleLang());
   $('#wallet-btn').addEventListener('click', onWalletClick);
+  $('#wallet-disconnect-btn')?.addEventListener('click', onWalletDisconnect);
+  $('#wallet-copy-btn')?.addEventListener('click', onWalletCopy);
+  // Close the wallet menu on an outside click or Escape.
+  document.addEventListener('click', (e) => {
+    if (isWalletMenuOpen() && !e.target.closest('.wallet-wrap')) closeWalletMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isWalletMenuOpen()) closeWalletMenu();
+  });
   $('#mode-toggle-btn')?.addEventListener('click', onModeToggle);
   $('#demo-reset-btn')?.addEventListener('click', onDemoReset);
   $('#mint-btn').addEventListener('click', onMint);
