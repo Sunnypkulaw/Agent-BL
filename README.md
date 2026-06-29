@@ -318,6 +318,13 @@ After `npm run dev`, all endpoints are at `http://localhost:3000`. A POST with a
 | GET/POST | `/api/mcp/tools` · `/api/mcp/call` | MCP tool list / call |
 | POST/GET | `/api/rag/search` · `/api/rag/judge-qa` | RAG search / judge Q&A |
 | POST | `/api/intel/world-risk` | Live xAPI world-risk sweep → events + signals + before/after re-priced quote |
+| GET | `/api/x402/config` | x402 paid-report service catalog + network/facilitator config |
+| GET/POST | `/api/x402/intel/premium-risk` · `/valuation/premium` · `/documents/fraud-review` | Paid AI reports — HTTP 402 before payment (see [`docs/x402-integration.md`](./docs/x402-integration.md)) |
+| GET | `/api/x402/report/:id` | Re-read an already-paid report within its TTL (no second charge) |
+
+> **x402 ≠ RWA.** Paying cents over x402 *buys an AI report*; subscribing to an
+> offering *invests capital in the RWA*. Two different transactions — see the
+> [x402 vs RWA section](./docs/x402-integration.md#two-different-businesses-x402-report-payment-vs-rwa-subscription).
 
 **Compare three payout speeds:**
 ```bash
@@ -429,6 +436,7 @@ insurance coverage. The demo uses permissioned mock investors only.
 - [`docs/PRD.md`](./docs/PRD.md) — product requirements & pricing model v0.2
 - [`docs/background.md`](./docs/background.md) — eBL / RWA / trade-finance primer
 - [`docs/contracts.md`](./docs/contracts.md) — frozen contract interfaces
+- [`docs/x402-integration.md`](./docs/x402-integration.md) — x402 paid-report market, threat model, FAQ, and x402-vs-RWA distinction
 - [`docs/award-roadmap.md`](./docs/award-roadmap.md) — capability & award roadmap
 - [`docs/ai-valuation-tooling.md`](./docs/ai-valuation-tooling.md) — AI valuation tool-calling
 - [`docs/xapi-integration.md`](./docs/xapi-integration.md) — live world-risk signals via xAPI (X/Twitter · news · prediction markets)
@@ -721,6 +729,12 @@ X402-15 已于 2026-06-29 通过（显式测试用 self-transfer）：官方 V2 
 | GET/POST | `/api/mcp/tools` · `/api/mcp/call` | MCP 工具清单 / 调用 |
 | POST/GET | `/api/rag/search` · `/api/rag/judge-qa` | RAG 检索 / 评委问答 |
 | POST | `/api/intel/world-risk` | xAPI 实时世界风险扫描 → 事件 + 信号 + 并入前后的重新定价 |
+| GET | `/api/x402/config` | x402 付费报告服务目录 + 网络/facilitator 配置 |
+| GET/POST | `/api/x402/intel/premium-risk` · `/valuation/premium` · `/documents/fraud-review` | 付费 AI 报告——付款前返回 HTTP 402（详见 [`docs/x402-integration.md`](./docs/x402-integration.md)） |
+| GET | `/api/x402/report/:id` | 在 TTL 内重读已付费报告（不再次扣费） |
+
+> **x402 ≠ RWA。** 用 x402 花几分钱*购买一份 AI 报告*；认购 offering 是*用资金投资 RWA*。
+> 这是两笔不同的交易——见 [x402 与 RWA 的区别](./docs/x402-integration.md#two-different-businesses-x402-report-payment-vs-rwa-subscription)。
 
 **对比三档到账速度：**
 ```bash
@@ -826,6 +840,7 @@ AgentBL-AI/
 - [`docs/PRD.md`](./docs/PRD.md) — 产品需求与定价模型 v0.2
 - [`docs/background.md`](./docs/background.md) — eBL / RWA / 贸易融资领域背景
 - [`docs/contracts.md`](./docs/contracts.md) — 合约接口冻结设计
+- [`docs/x402-integration.md`](./docs/x402-integration.md) — x402 付费报告市场、威胁模型、FAQ，以及 x402 与 RWA 的区别
 - [`docs/award-roadmap.md`](./docs/award-roadmap.md) — 能力与拿奖路线
 - [`docs/ai-valuation-tooling.md`](./docs/ai-valuation-tooling.md) — AI 估值 tool calling
 - [`docs/xapi-integration.md`](./docs/xapi-integration.md) — xAPI 实时世界风险接入（X/Twitter · 新闻 · 预测市场）

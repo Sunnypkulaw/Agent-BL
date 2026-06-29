@@ -16,7 +16,7 @@
 | Injective Testnet | 🟡 已有单合约真实交易 | 已有 chainId `1439`、合约地址和 explorer；仍需完整协议部署与事件回读 |
 | MCP Server | 🟡 只有 5-tool mock | 当前是自定义 handler + HTTP mock，不是标准 MCP stdio server；没有 resources，不能宣称“7 工具 + 3 资源” |
 | Demo Mode | ✅ 已完成 | `DEMO_MODE=true` 默认、顶部常驻 banner、Live toggle、一键 reset；Live 配置不足时显式失败，不伪造链上 tx |
-| x402 | ✅ Live 支付闭环已验证 | X402-1/2/3/4/5/6/7/8/9/10/13/14/15 已完成；真实 V2/EIP-3009 支付、PaidReportEnvelope 与 PaymentAttested 已由 explorer 证据串联 |
+| x402 | ✅ Live 支付闭环已验证；全部 P0 完成 | X402-1~11/13/14/15/16（全部 P0）已完成；真实 V2/EIP-3009 支付、PaidReportEnvelope 与 PaymentAttested 已由 explorer 证据串联；前端付费市场含 TTL 重读；仅 X402-12(P1 动效)/X402-17(P2 discovery) 待做 |
 | Preflight | ✅ 已完成 | 固定 54 项总闸门；Demo 环境实测 50 PASS / 4 项显式 Live WARN / 0 FAIL，覆盖 Node、Solidity、smoke、scenarios、MCP、x402 与 UI |
 | 动效 | 🟡 仅 waterfall 已有 | `priceFlash`、`riskPulse`、支付流水和 Demo banner 待补，且必须支持 reduced motion |
 | 中文路演 | 🟡 有 30 秒和 3 分钟素材 | 需统一成 30 秒 / 1 分钟 / 3 分钟同一故事，并补 x402 与评委追问 |
@@ -392,7 +392,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 | X402-13 | 新增 `scripts/x402-intel.mjs` 与 `npm run x402:intel -- --case <id> --kind <kind>`；输出 challenge、金额、settlement tx、report hash、oracle tx | P0 | Bowen | Done | CLI 支持 risk/valuation/fraud、case ID/文件、Demo 临时 signer 与 Live fail-closed；密钥只在本地使用，输出 challenge/金额/receipt/report hash/oracle 状态 |
 | X402-14 | 新增 `scripts/smoke-x402.mjs`、`npm run smoke:x402` 和至少 12 个自动化测试 | P0 | Bowen | Done | 新增 `tests/x402Endpoints.test.js` 15 tests；连同 config/server/settlement 覆盖 3 endpoints、budget/cancel/timeout/wrong network、tamper/replay/expiry/wrong recipient/结算失败与成功；`smoke:x402` 通过 |
 | X402-15 | 做 Injective Live smoke：钱包有 INJ gas + USDC，实际购买一份报告，回读支付 tx、`PaymentAttested` 与报告哈希 | P0 | Bowen | Done | 2026-06-29 在 `eip155:1439` 以测试用 self-transfer 真实结算 0.001 USDC：payment `0x6d796d…a0b49`、report `rpt_3e5f…3334` / hash `0x994078…168ce`、attestation `0xa03ab9…fef6e`；路演前可改用独立 treasury payTo 再跑；完整证据见 `docs/evidence/x402-live-smoke.json` |
-| X402-16 | README、架构图、API 文档、威胁模型和 FAQ 更新；清楚区分 x402 报告支付与 RWA 认购 | P0 | Unassigned | Todo | 新成员按 README 15 分钟跑通 Demo；评委 Q&A 能回答“谁付钱、买什么、为什么要链上、与 RWA 有何区别” |
+| X402-16 | README、架构图、API 文档、威胁模型和 FAQ 更新；清楚区分 x402 报告支付与 RWA 认购 | P0 | Bowen | Done | `docs/x402-integration.md` 新增「x402 报告支付 vs RWA 认购」对照表 + 流程图、8 条威胁模型不变量表（对应代码与测试）+ 客户端可恢复错误码、评委 FAQ（谁付钱/买什么/为何上链/与 RWA 区别/支付失败/为何 Injective）、`GET /api/x402/report/:id` 重读端点与 `X402_REPORT_CACHE_PATH`；README 中英文 API 表新增 4 个 x402 端点 + 「x402 ≠ RWA」提示框 + More docs 链接到 x402-integration.md |
 | X402-17 | 可选：通过 x402 Bazaar/discovery extension 发布 3 个机器可发现的资源描述，使外部 Agent 能发现并购买 | P2 | Unassigned | Todo | discovery metadata 可被客户端解析；不阻塞核心 demo |
 
 ### 14.4 x402 安全不变量

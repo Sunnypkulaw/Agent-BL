@@ -10,6 +10,7 @@ import {
   x402Usdc
 } from './config.js';
 import { createPaidReportEnvelope, hashReportSnapshot } from './paidReport.js';
+import { getPaidReportCache } from './reportStore.js';
 import {
   JsonReceiptStore,
   PaymentSettlementError,
@@ -435,7 +436,6 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
       // page refresh) within its TTL without paying again. Best-effort: a cache
       // failure must never block delivering the report the buyer paid for.
       try {
-        const { getPaidReportCache } = await import('./reportStore.js');
         await getPaidReportCache().save({ envelope: reportEnvelope, report: deliveredBody });
       } catch {
         // re-read is a convenience layer; settlement remains the source of truth

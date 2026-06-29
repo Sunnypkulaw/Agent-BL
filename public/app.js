@@ -1436,14 +1436,17 @@ async function restoreX402Purchases() {
   if (!entries.length) { card.hidden = true; list.innerHTML = ''; return; }
 
   // Confirm each report is still re-readable on the server (within TTL); a 404
-  // means the cache expired, so drop it locally too.
-  const surviving = [];
-  for (const entry of entries) {
+  // means the cache expired, so drop it locally too. Probe in parallel and keep
+  // the original order.
+  const probes = await Promise.all(entries.map(async (entry) => {
     try {
       const res = await fetch(`/api/x402/report/${encodeURIComponent(entry.report_id)}`);
-      if (res.ok) surviving.push({ entry, report: await res.json() });
-    } catch { /* offline — keep the local entry, just can't re-open right now */ }
-  }
+      return res.ok ? { entry, report: await res.json() } : null;
+    } catch {
+      return null; // offline — can't re-open right now
+    }
+  }));
+  const surviving = probes.filter(Boolean);
   if (!surviving.length) { card.hidden = true; saveX402Purchases([]); return; }
   saveX402Purchases(surviving.map((s) => s.entry));
 
@@ -1475,7 +1478,7 @@ function reopenX402Report(data) {
   setX402Step('pay', 'done', t('x402_signed'));
   setX402Step('settle', 'done', t('x402_settled'));
   setX402Step('unlock', 'done', t('x402_unlocked'));
-  updateX402PaymentCard(data.payment ? data : { payment: data.payment });
+  updateX402PaymentCard(data);
   updateX402PricingImpact(data);
   const log = $('#x402-log');
   if (log) log.innerHTML = `<p>• <span style="color:#2EA043;">${t('x402_purchased_reread')} — ${data.report_envelope?.report_id?.slice(0, 18) || ''}…</span></p>`;
@@ -1549,14 +1552,20 @@ function updateX402PaymentCard(data) {
   const card = $('#x402-payment-card');
   if (!card) return;
   card.hidden = false;
+  const pay = data.payment ?? {};
+  // The smoke flow nests these under `receipt`; the unlocked/cached report body
+  // carries them at the top level — accept either shape.
+  const serviceId = pay.receipt?.serviceId ?? pay.serviceId;
+  const amountUSDC = pay.receipt?.amountUSDC ?? pay.amountUSDC;
   const tx = $('#x402-txhash');
-  if (tx && data.payment?.txHash) tx.textContent = data.payment.txHash.slice(0, 42) + '…';
+  if (tx && pay.txHash) tx.textContent = pay.txHash.slice(0, 42) + '…';
   const svc = $('#x402-service');
-  if (svc && data.payment?.receipt?.serviceId) svc.textContent = data.payment.receipt.serviceId;
+  if (svc && serviceId) svc.textContent = serviceId;
   const amt = $('#x402-amount');
-  if (amt && data.payment?.receipt?.amountUSDC !== undefined) amt.textContent = data.payment.receipt.amountUSDC + ' USDC';
+  if (amt && amountUSDC !== undefined) amt.textContent = amountUSDC + ' USDC';
   const rh = $('#x402-resphash');
-  if (rh && data.payment?.evidence?.responseHash) rh.textContent = data.payment.evidence.responseHash.slice(0, 42) + '…';
+  const reportHash = pay.evidence?.responseHash ?? data.report_envelope?.report_hash;
+  if (rh && reportHash) rh.textContent = reportHash.slice(0, 42) + '…';
 }
 
 function updateX402PricingImpact(data) {
