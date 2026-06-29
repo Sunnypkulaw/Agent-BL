@@ -46,6 +46,60 @@ AgentBL turns this around with three moves:
 
 > **One-line pitch:** *An AI Agent that prices real-world risk — and the market pays it for every call.*
 
+### 🌍 The Problem — why trade finance is the right battlefield
+
+Trade finance is the circulatory system of the global economy, yet it runs on paperwork, phone calls, and institutional trust built over decades. This isn't a niche problem — it's a systemic one.
+
+**The numbers:**
+
+| Metric | Data |
+|--------|------|
+| Global trade finance gap | **$2.5 trillion** (ADB) — real orders, real cargo, no funding |
+| Export SME rejection rate | ~45% of trade finance applications from SMEs are declined by banks |
+| Cash locked in transit | 30–45 days between shipment and payment — the exporter's cash is frozen |
+| eBL penetration | ~5% of bills of lading are electronic — the rest is paper, fax, and courier |
+
+**The real timeline of an export deal:**
+
+```text
+T0  Order received        Exporter starts sourcing, producing, spending cash
+T1  Cargo loaded + B/L    Exporter has shipped but hasn't been paid — cash gap begins
+T2  At sea (20-45 days)   Delays, weather, port congestion, price swings, insurance lapses
+T3  Arrival + payment     Importer pays, B/L transfers, cargo released
+T4  Exporter gets paid    Cash finally returns — 45+ days after the work began
+```
+
+AgentBL targets the gap between **T1 and T4**.
+
+**Why SMEs get locked out:**
+
+| Pain point | What it means |
+|------------|---------------|
+| Can't take big orders | Buyer wants $5M of goods; exporter can only float $1M in working capital |
+| Bank thresholds too high | Banks assess company size, not trade quality — real deals get rejected |
+| Opaque risk | Financiers can't see cargo status, price movements, or insurance validity in real time |
+| No early-warning system | Risk is assessed once at underwriting, never re-evaluated during transit |
+| Paper vulnerable to fraud | Duplicate B/Ls, mis-invoicing, phantom cargo — hard to detect before it's too late |
+
+**Why eBL is the key instrument:**
+
+The bill of lading is the title document of global trade — whoever controls it controls the claim to the cargo. Making it electronic (eBL) unlocks programmability:
+
+- **Uniqueness** — can't be duplicated and pledged to multiple lenders
+- **Verifiability** — issuer, carrier, cargo, and timestamp are cryptographically signed
+- **Transferability** — ownership can move on-chain without courier mail
+
+And the legal ground is shifting fast:
+
+| Jurisdiction | Development |
+|--------------|-------------|
+| UNCITRAL MLETR | Model law for electronic transferable records — adopted by multiple countries |
+| Singapore ETA 2021 | Electronic Transactions Act explicitly recognizes eBL as functionally equivalent to paper |
+| UK ETDA 2023 | Electronic Trade Documents Act gives e-documents the same legal possession status as paper |
+| DCSA | Members targeting 100% eBL adoption by 2030 |
+
+> **The window is open.** The legal infrastructure for eBL is ready. The trade finance gap is growing. AI and blockchain together can close it — not by replacing banks, but by making trade risk transparent, auditable, and dynamically priceable.
+
 ### ✨ Highlights — why this is more than "another RWA dApp"
 
 | | Highlight | What makes it stand out |
@@ -511,6 +565,60 @@ AgentBL 用三步翻转这个局面：
 3. **报告越多，定价越准。** 每份付费报告将风险证据锚定在链上。独立评估越多，任何一批货的公允价格就越从市场中浮现——而不是某一家机构说了算。链是审计师，AI 是承保人，市场是定价委员会。
 
 > **一句话 Pitch：** *一个给真实世界风险定价的 AI Agent —— 市场为它的每一次判断付费。*
+
+### 🌍 真实问题 —— 为什么贸易金融是正确的主战场
+
+贸易金融是全球经济的血液循环系统，但它至今仍跑在纸质文件、电话沟通和数十年积累的机构信任之上。这不是一个边缘问题——是系统性痛点。
+
+**关键数据：**
+
+| 指标 | 数据 |
+|------|------|
+| 全球贸易融资缺口 | **2.5 万亿美元**（亚洲开发银行）——有真实订单、真实货物，却融不到资 |
+| 中小企业拒批率 | ~45% 的中小出口商贸易融资申请被银行拒绝 |
+| 在途资金冻结 | 发货到回款 30-45 天——出口商的现金流在此期间被锁死 |
+| eBL 渗透率 | ~5% 的提单是电子形式——其余仍是纸质、传真和国际快递 |
+
+**一张真实出口订单的时间线：**
+
+```text
+T0  接到订单            出口商开始备货、生产、采购，现金流开始流出
+T1  装船取得提单        出口商已履约一大步，但钱还未回来——资金缺口开始
+T2  海上运输（20-45天）  延误、天气、港口拥堵、价格波动、保险到期，风险层出不穷
+T3  到港付款            进口商付款赎单，提单权利转移，货物被提走
+T4  出口商回款          资金终于回流——开工后 45+ 天
+```
+
+AgentBL 切入的是 **T1 到 T4** 之间的现金流缺口。
+
+**为什么中小出口商被挡在门外：**
+
+| 痛点 | 意味着什么 |
+|------|-----------|
+| 接不了大单 | 买方要 500 万美元的货，出口商只有 100 万美元周转资金 |
+| 银行门槛高 | 银行看企业规模、流水、历史信用，而不是看这笔贸易本身是否真实可靠 |
+| 信息黑盒 | 资金方看不到货物实时状态、价格变化、保险是否仍然有效 |
+| 无预警机制 | 风险只在放款时评估一次，运输途中不再追踪 |
+| 纸质单据易造假 | 重复提单、高低开发票、幽灵货物——发现时为时已晚 |
+
+**为什么电子提单（eBL）是关键突破口：**
+
+提单是国际贸易的物权凭证——谁控制提单，谁就拥有对货物的主张权。把它电子化（eBL），就解锁了可编程性：
+
+- **唯一性** — 不能被无限复制、重复质押给多个资金方
+- **可验证性** — 签发方、承运人、货物、时间戳均由密码学签名
+- **可转让性** — 所有权可以在链上流转，不再依赖国际快递
+
+而法律基础正在快速到位：
+
+| 司法辖区 | 进展 |
+|---------|------|
+| UNCITRAL MLETR | 电子可转让记录示范法，已被多国采纳 |
+| 新加坡 ETA 2021 | 电子交易法明确承认 eBL 与纸质提单功能等同 |
+| 英国 ETDA 2023 | 电子贸易文件法赋予电子文件与纸质同等的占有法律地位 |
+| DCSA | 成员承运人目标 2030 年实现 100% eBL |
+
+> **窗口已开。** eBL 的法律基础设施已经到位。贸易融资缺口仍在扩大。AI 与区块链可以在正确的时间，以正确的技术，解决真正的问题——不是替代银行，而是让贸易风险变得透明、可审计、可动态定价。
 
 ### ✨ 项目特色 —— 为什么这不是「又一个 RWA dApp」
 
