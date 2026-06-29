@@ -268,17 +268,43 @@ function setView(name) {
   document.querySelectorAll('#nav .nav-tab').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   $('#view-market').hidden = name !== 'market';
   $('#view-mint').hidden = name !== 'mint';
-  $('#view-voyage').hidden = name !== 'voyage';
-  $('#view-intel').hidden = name !== 'intel';
-  if (name === 'intel') { stopMarketClock(); stopVoyageClock(); renderIntelMarket(); }
-  else if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
-  else {
-    stopVoyageClock();
-    if (name === 'market') { renderMarket(); startMarketClock(); }
-    else stopMarketClock();
-  }
+  
+  if (name === 'market') { renderMarket(); startMarketClock(); }
+  else { stopMarketClock(); stopVoyageClock(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+async function openDealDetailModal(caseId) {
+  if (caseId) {
+    await selectCase(caseId);
+  }
+  const modal = $('#deal-detail-modal');
+  if (modal) {
+    stopMarketClock();
+    renderVoyage();
+    startVoyageClock();
+    renderIntelMarket();
+    modal.showModal();
+  }
+}
+
+function closeDealDetailModal() {
+  const modal = $('#deal-detail-modal');
+  if (modal) modal.close();
+  stopVoyageClock();
+  startMarketClock();
+}
+
+// Add event listener for dialog close
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = $('#deal-detail-modal');
+  if (modal) {
+    modal.addEventListener('close', () => {
+      closeDealDetailModal();
+    });
+  }
+});
+
 
 function renderViewMint() {
   const quote = selectedQuote();
@@ -486,7 +512,7 @@ function renderMarketCard(entry, comparison) {
     renderMarketFunding(funding, paused),
     el('div', { class: 'market-card-actions' },
       el('button', { class: 'btn sm market-subscribe-shortcut', onclick: () => selectMarketCase(entry.case_id) }, t('market_card_subscribe')),
-      el('button', { class: 'btn ghost sm', onclick: () => { selectMarketCase(entry.case_id).then(() => setView('voyage')); } }, t('market_card_track'))
+      el('button', { class: 'btn ghost sm', onclick: () => { selectMarketCase(entry.case_id).then(() => openDealDetailModal(entry.case_id)); } }, t('market_card_track'))
     )
   );
 }
@@ -587,7 +613,7 @@ function renderMarketDetail() {
     el('div', { id: 'market-subscribe-readout', class: 'market-subscribe-readout' }),
     el('div', { class: 'market-detail-actions' },
       el('button', { class: 'btn ghost sm', onclick: () => setView('mint') }, t('market_open_pricing')),
-      el('button', { class: 'btn ghost sm', onclick: () => setView('voyage') }, t('market_open_voyage'))
+      el('button', { class: 'btn ghost sm', onclick: () => openDealDetailModal(state.caseId) }, t('market_open_voyage'))
     )
   );
 
