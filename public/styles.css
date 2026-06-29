@@ -265,11 +265,25 @@ strong { color: var(--text); }
 }
 .market-stat span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
 .market-stat strong { display: block; margin-top: 4px; font-size: 22px; color: #f8fafc; font-variant-numeric: tabular-nums; }
+/* x402 status-bar: status word is a label, not a metric — keep it readable, not 22px */
+.market-stat strong.market-stat-state { font-size: 14px; line-height: 1.35; color: #f59e0b; }
+.market-stat strong.market-stat-state.market-stat-state-ok { color: #2EA043; }
+/* x402 status bar: 3 stat cards sit in one full-width row under the hero copy */
+#x402-status-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .market-shell {
   display: grid; grid-template-columns: 220px minmax(0, 1fr) 330px; gap: 18px;
   align-items: start; margin-top: 18px;
 }
+/* The x402 panel lives in the narrow deal-modal column — the wide 2-up hero
+   (stats bottom-aligned on the right) leaves the top-right corner empty here.
+   Stack it: copy on top, full-width stat row below. */
+#view-intel .market-hero {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 16px;
+}
+#view-intel .market-hero h1 { max-width: none; }
 #view-intel .market-shell {
   grid-template-columns: 1fr;
 }
@@ -1228,6 +1242,14 @@ strong { color: var(--text); }
   50%      { box-shadow: 0 0 0 6px rgba(214, 51, 108, 0); }
 }
 .risk-pulse { animation: riskPulse 2s infinite; }
+
+/* Payment success pop — a clear lift + green ring on the unlocked impact card. */
+@keyframes x402ImpactPop {
+  0%   { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(46, 160, 67, 0); }
+  40%  { transform: scale(1.045); box-shadow: 0 0 0 5px rgba(46, 160, 67, 0.4); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 160, 67, 0); }
+}
+.x402-impact-pop { animation: x402ImpactPop 0.75s ease-out; }
 
 /* Green pulse for safe/low risk */
 @keyframes safePulse {

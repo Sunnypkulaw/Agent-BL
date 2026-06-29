@@ -1499,12 +1499,12 @@ function renderIntelMarket() {
 function renderX402StatusBar() {
   const el = $('#x402-status-bar');
   if (!el) return;
-  const badgeClass = x402Configured ? 'badge green' : 'badge';
-  const badgeText = x402Configured ? t('x402_ready') : t('x402_demo_mode');
+  const stateText = x402Configured ? t('x402_ready') : t('x402_demo_mode');
+  const stateClass = x402Configured ? ' market-stat-state-ok' : '';
   el.innerHTML = [
-    `<div class="stat"><span class="stat-val">${x402Services.length}</span><span class="stat-label">${t('x402_paid_services')}</span></div>`,
-    `<div class="stat"><span class="stat-val ${x402Configured ? 'green' : ''}">${badgeText}</span><span class="stat-label">${t('x402_network_label', { network: x402Network })}</span></div>`,
-    `<div class="stat"><span class="stat-val">0.001–0.002</span><span class="stat-label">${t('x402_price_range')}</span></div>`
+    `<div class="market-stat"><span>${t('x402_paid_services')}</span><strong>${x402Services.length}</strong></div>`,
+    `<div class="market-stat"><span>${t('x402_network_label', { network: x402Network })}</span><strong class="market-stat-state${stateClass}">${stateText}</strong></div>`,
+    `<div class="market-stat"><span>${t('x402_price_range')}</span><strong>0.001–0.002</strong></div>`
   ].join('');
 }
 
@@ -1527,7 +1527,27 @@ function renderX402ServiceList() {
   ].join('')).join('');
 }
 
+/** True when the user has asked the OS to minimise non-essential motion. */
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** Re-trigger a one-shot CSS animation class on an element (remove → reflow → add). */
+function pulseClass(node, cls) {
+  if (!node || prefersReducedMotion()) return;
+  node.classList.remove(cls);
+  void node.offsetWidth; // force reflow so the animation restarts
+  node.classList.add(cls);
+}
+
+/** Toggle the running "payment in transit" particle flow on the stepper rail. */
+function setX402FlowActive(on) {
+  const flow = $('#x402-flow');
+  if (flow) flow.classList.toggle('x402-flow-active', !!on);
+}
+
 function renderX402FlowReset() {
+  setX402FlowActive(false);
   const steps = ['challenge', 'pay', 'settle', 'unlock'];
   for (const s of steps) {
     const el = $(`#status-${s}`);
@@ -1572,16 +1592,29 @@ function updateX402PricingImpact(data) {
   const impact = $('#x402-pricing-impact');
   if (!impact || !data.intel_preview) return;
   impact.hidden = false;
+  pulseClass(impact, 'x402-impact-pop');
   const before = data.intel_preview.before_price;
   const after = data.intel_preview.after_price;
   const delta = data.intel_preview.price_delta;
   if (before !== undefined) $('#x402-price-before').textContent = '$' + before.toFixed(3);
-  if (after !== undefined) $('#x402-price-after').textContent = '$' + after.toFixed(3);
+  if (after !== undefined) {
+    const afterEl = $('#x402-price-after');
+    afterEl.textContent = '$' + after.toFixed(3);
+    // Flash the repriced figure so the AI's in-transit reprice is visible.
+    if (delta !== 0) pulseClass(afterEl, 'price-flash');
+  }
   if (delta !== undefined) {
     const deltaNote = $('#x402-delta-note');
     if (deltaNote) {
       const dir = delta < 0 ? t('x402_price_drop') : delta > 0 ? t('x402_price_rise') : t('x402_price_nochange');
       deltaNote.innerHTML = `<span class="${delta !== 0 ? 'badge red' : 'badge'}">${dir} — ${t('x402_delta', { delta: (delta >= 0 ? '+' : '') + '$' + delta.toFixed(3) })}</span>`;
+      // A price *rise* means the paid intel surfaced higher risk — pulse the badge
+      // briefly to draw the eye, then settle so it does not nag.
+      const badge = deltaNote.querySelector('.badge');
+      if (badge && delta > 0 && !prefersReducedMotion()) {
+        badge.classList.add('risk-pulse');
+        setTimeout(() => badge.classList.remove('risk-pulse'), 4200);
+      }
     }
   }
 }
@@ -1594,6 +1627,7 @@ async function runX402Smoke() {
   renderX402FlowReset();
 
   try {
+    setX402FlowActive(true);
     setX402Step('challenge', 'active', t('x402_challenge_status'));
     log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_challenge_log')}</span></p>`;
 
@@ -1631,6 +1665,8 @@ async function runX402Smoke() {
   } catch (e) {
     setX402Step('settle', 'error', t('x402_failed'));
     log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_fail_log', { msg: e.message })}</span></p>`;
+  } finally {
+    setX402FlowActive(false);
   }
 }
 
@@ -1657,6 +1693,7 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
 
   try {
     // ── Step 1: GET without payment → HTTP 402 ──
+    setX402FlowActive(true);
     setX402Step('challenge', 'active', t('x402_challenge_status'));
     log.innerHTML += `<p>• <span style="color:#D6336C;">${t('x402_challenge_log')}</span></p>`;
 
@@ -1783,6 +1820,8 @@ async function purchaseWithWallet(serviceId, priceUSDC, endpoint) {
     if (e.code === 4001 || e.code === 'REJECTED') {
       log.innerHTML += `<p>• <span style="color:#D29922;">⚠ User rejected in wallet</span></p>`;
     }
+  } finally {
+    setX402FlowActive(false);
   }
 }
 
