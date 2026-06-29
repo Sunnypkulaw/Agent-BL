@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createFacilitatorRequest } from '@injectivelabs/x402/protocol';
 import { SettleResponseSchema, VerifyResponseSchema } from '@injectivelabs/x402/schemas';
 import { x402Network, x402PayTo, x402RpcUrl, x402Usdc } from './config.js';
+import chainConfig from '../../scripts/lib/chain-config.cjs';
 
 export const SETTLEMENT_STATES = Object.freeze({
   CHALLENGED: 'CHALLENGED',
@@ -459,7 +460,8 @@ let compatibilityOracle;
 
 function loadPaymentOracleConfig() {
   try {
-    return JSON.parse(fsSync.readFileSync(path.join(compatibilityRoot, 'public', 'chain-config.json'), 'utf8'));
+    const raw = JSON.parse(fsSync.readFileSync(path.join(compatibilityRoot, 'public', 'chain-config.json'), 'utf8'));
+    return chainConfig.resolveNetworkConfig(raw, 'injective-testnet');
   } catch {
     return null;
   }

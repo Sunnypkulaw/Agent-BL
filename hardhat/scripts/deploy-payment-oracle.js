@@ -20,6 +20,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const hre = require('hardhat');
+const chainConfigLib = require('../../scripts/lib/chain-config.cjs');
 
 const { ethers, network, artifacts } = hre;
 
@@ -99,32 +100,21 @@ async function main() {
 
   // ── Merge into existing chain-config.json ──
   const configPath = path.join(__dirname, '..', '..', 'public', 'chain-config.json');
-  let chainConfig = {};
-  try {
-    chainConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  } catch {
-    // No existing config — create from scratch
-    chainConfig = {
-      network: meta.name,
-      chainId: '0x' + chainId.toString(16),
-      chainIdDecimal: Number(chainId),
-      explorerBase: meta.explorerBase,
-      deployedAt: new Date().toISOString()
-    };
-  }
-
-  // Preserve existing contracts, add PaymentOracle
-  chainConfig.contracts = { ...(chainConfig.contracts || {}), PaymentOracle: address };
-  chainConfig.paymentOracle = {
-    address,
-    deployTx,
-    deployedAt,
-    abi
-  };
-
-  fs.writeFileSync(configPath, JSON.stringify(chainConfig, null, 2));
+  const current = chainConfigLib.readRegistry(configPath);
+  const chainConfig = chainConfigLib.mergeNetworkConfig(current, 'injective-testnet', {
+    network: meta.name,
+    chainId: '0x' + chainId.toString(16),
+    chainIdDecimal: Number(chainId),
+    rpcUrls: [process.env.INJECTIVE_RPC_URL || 'https://k8s.testnet.json-rpc.injective.network/'],
+    explorerBase: meta.explorerBase,
+    contracts: { PaymentOracle: address },
+    abis: { PaymentOracle: abi },
+    deployments: { PaymentOracle: { address, deployTx, deployedAt } },
+    paymentOracle: { address, deployTx, deployedAt, abi }
+  });
+  chainConfigLib.atomicWriteRegistry(configPath, chainConfig);
   console.log('📄 Frontend config updated ->', configPath);
-  console.log('   Contracts:', Object.keys(chainConfig.contracts).join(', '));
+  console.log('   Contracts:', Object.keys(chainConfig.networks['injective-testnet'].contracts).join(', '));
 
   // ── Deployment record ──
   const outDir = path.join(__dirname, '..', 'deployments');

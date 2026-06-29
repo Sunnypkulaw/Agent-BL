@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import chainConfig from '../../scripts/lib/chain-config.cjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -27,7 +28,8 @@ export class McpWritePolicyError extends Error {
 
 function readChainConfig() {
   try {
-    return JSON.parse(fs.readFileSync(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+    const raw = JSON.parse(fs.readFileSync(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+    return chainConfig.resolveNetworkConfig(raw, 'injective-testnet');
   } catch {
     return {};
   }

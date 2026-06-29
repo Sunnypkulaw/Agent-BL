@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { ethers } from 'ethers';
+import chainConfigLib from './lib/chain-config.cjs';
 import { quoteFromCase } from '../src/core/pricingEngine.js';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -93,7 +94,10 @@ await loadDotEnv();
 const privateKey = process.env.DEPLOYER_PRIVATE_KEY?.trim();
 if (!privateKey) throw new Error('DEPLOYER_PRIVATE_KEY is required');
 
-const chain = JSON.parse(await fs.readFile(path.join(root, 'public', 'chain-config.json'), 'utf8'));
+const chain = chainConfigLib.resolveNetworkConfig(
+  JSON.parse(await fs.readFile(path.join(root, 'public', 'chain-config.json'), 'utf8')),
+  'injective-testnet'
+);
 assert.equal(chain.chainIdDecimal, 1439);
 const addresses = chain.contracts;
 for (const name of ['PaymentOracle', 'EBLRegistry', 'RWAOfferingPool', 'RiskPricingOracle']) {

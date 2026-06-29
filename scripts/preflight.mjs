@@ -9,6 +9,7 @@ import { MCP_RESOURCES } from '../src/mcp/resources.js';
 import { fetchPaidIntel } from '../src/x402/client.js';
 import { loadX402Config, X402_SERVICES, x402RpcUrl } from '../src/x402/config.js';
 import { assertPaidReportEnvelope, computeReportHash, createPaidReportEnvelope } from '../src/x402/paidReport.js';
+import chainConfigLib from './lib/chain-config.cjs';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -119,7 +120,7 @@ if (nodeTests.ok && !/# fail 0/u.test(nodeTests.output)) {
   results.at(-1).status = 'FAIL';
   results.at(-1).detail = 'test runner did not report # fail 0';
 }
-await command('Executable suites', 'Solidity contract suite (24 tests)', npm, ['test'], path.join(root, 'hardhat'));
+await command('Executable suites', 'Solidity contract suite (32 tests)', npm, ['test'], path.join(root, 'hardhat'));
 await command('Executable suites', 'Main API smoke flow', npm, ['run', 'smoke']);
 await command('Executable suites', 'Risk/pricing scenario regression', npm, ['run', 'scenarios']);
 if (runtimeMode.demoMode) await command('Executable suites', 'One-minute offline demo', npm, ['run', 'demo:once']);
@@ -217,7 +218,8 @@ else warn('Live readiness', 'Injective RPC reports the pinned chain', 'explicitl
 if (!runtimeMode.demoMode && process.env.X402_PAY_TO) await balanceCheck(process.env.X402_PAY_TO);
 else warn('Live readiness', 'Live wallet has readable INJ gas balance', 'explicitly skipped in Demo Mode');
 
-const chainConfig = JSON.parse(await text('public/chain-config.json'));
+const chainRegistry = JSON.parse(await text('public/chain-config.json'));
+const chainConfig = chainConfigLib.resolveNetworkConfig(chainRegistry, 'injective-testnet');
 const addressPattern = /^0x[0-9a-fA-F]{40}$/u;
 const transactionPattern = /^0x[0-9a-fA-F]{64}$/u;
 const paymentOracleAbi = chainConfig.paymentOracle?.abi ?? [];

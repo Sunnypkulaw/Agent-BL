@@ -24,13 +24,13 @@ const MARKET_PLAY_MS = 90000;
 const marketClock = { timer: 0, startedAt: 0 };
 
 /** Resolve the human-readable network name from chain-config. */
-const NETWORK_LABELS = { injective_testnet: 'Injective Testnet' };
+const NETWORK_LABELS = { injective_testnet: 'Injective Testnet', injective_mainnet: 'Injective Mainnet' };
 let _cachedNetworkName = null;
 async function networkName() {
   if (_cachedNetworkName) return _cachedNetworkName;
   try {
     const cfg = await web3.loadChainConfig();
-    _cachedNetworkName = NETWORK_LABELS[cfg?.network] || cfg?.network || 'Injective Testnet';
+    _cachedNetworkName = cfg?.displayName || NETWORK_LABELS[cfg?.network] || cfg?.network || 'Injective Testnet';
   } catch { _cachedNetworkName = 'Injective Testnet'; }
   return _cachedNetworkName;
 }
@@ -100,7 +100,10 @@ async function boot() {
   initVoyage();
   initPopupAssistant();
   onLangChange(onLangChanged);
-  reflectChainStatus();
+  await populateNetworkSelector();
+  await reflectChainStatus();
+  renderProtocolEvidence();
+  await restoreWalletIfSaved();
   refreshWalletUi();
   refreshLangBtn();
 
@@ -1358,17 +1361,57 @@ async function reflectChainStatus() {
   elx.className = `chain-status tone-${real ? 'ok' : 'muted'}`;
 }
 
+async function populateNetworkSelector() {
+  const select = $('#network-select');
+  if (!select) return;
+  const current = await web3.loadChainConfig();
+  const networks = await web3.configuredNetworks();
+  select.replaceChildren(...networks.map((network) => el('option', {
+    value: network.key,
+    text: `${network.displayName}${network.deployed ? '' : ' · not deployed'}`
+  })));
+  select.value = current?.key ?? current?.defaultNetwork ?? 'injective-testnet';
+}
+
+async function onNetworkChange(event) {
+  try {
+    await web3.selectNetwork(event.target.value);
+    _cachedNetworkName = null;
+    await reflectChainStatus();
+    await renderProtocolEvidence();
+  } catch (error) {
+    toast(error.message, true);
+    const cfg = await web3.loadChainConfig();
+    event.target.value = cfg?.key ?? 'injective-testnet';
+  }
+}
+
+const WALLET_META = {
+  metamask: { icon: '🦊', label: 'MetaMask' },
+  keplr: { icon: '🔭', label: 'Keplr' },
+  leap: { icon: '🟢', label: 'Leap' }
+};
+
 function refreshWalletUi() {
   const btn = $('#wallet-btn');
   if (!btn) return;
   const addr = web3.connectedAddress();
+  const walletType = web3.connectedWalletType();
+  const wallet = WALLET_META[walletType] ?? WALLET_META.metamask;
+  const picker = $('#wallet-picker');
+  const account = $('#wallet-account');
+  const networkSelect = $('#network-select');
+  if (networkSelect) networkSelect.disabled = Boolean(addr);
   if (addr) {
-    btn.textContent = `🦊 ${addr.slice(0, 6)}…${addr.slice(-4)} ▾`;
+    btn.textContent = `${wallet.icon} ${addr.slice(0, 6)}…${addr.slice(-4)} ▾`;
     btn.classList.add('connected');
+    if (picker) picker.hidden = true;
+    if (account) account.hidden = false;
   } else {
     btn.textContent = t('wallet_connect');
     btn.classList.remove('connected');
-    closeWalletMenu();
+    if (picker) picker.hidden = false;
+    if (account) account.hidden = true;
   }
 }
 
@@ -1377,26 +1420,38 @@ function refreshLangBtn() {
   if (btn) btn.textContent = t('lang_switch_to');
 }
 
-async function doConnect() {
-  const { address } = await web3.connectWallet();
-  state.wallet = { address };
+async function restoreWalletIfSaved() {
+  try {
+    const restored = await web3.restoreWalletSession();
+    if (restored) {
+      state.wallet = restored;
+      console.log('[boot] wallet session restored:', restored.walletType, restored.address?.slice(0, 10) + '…');
+    }
+  } catch (e) {
+    console.warn('[boot] silent reconnect failed:', e.message);
+  }
+}
+
+async function doConnect(walletType) {
+  const { address, kind } = await web3.connectWallet(walletType);
+  state.wallet = { address, walletType, kind };
   refreshWalletUi();
+  closeWalletMenu();
   const net = await networkName();
-  toast(t('t_wallet_connected', { network: net }));
+  toast(`${WALLET_META[walletType]?.label ?? walletType} connected · ${net}`);
   return address;
 }
 
 async function onWalletClick() {
-  // When already connected, the button opens an account menu (with Disconnect)
-  // rather than re-running the connect flow.
-  if (web3.isWalletConnected()) {
-    toggleWalletMenu();
-    return;
-  }
+  toggleWalletMenu();
+}
+
+async function onWalletChoice(event) {
+  const walletType = event.currentTarget.dataset.wallet;
   try {
-    await doConnect();
+    await doConnect(walletType);
   } catch (e) {
-    if (e.code === 'NO_WALLET') toast(t('t_no_wallet_sim'), true);
+    if (e.code === 'NO_WALLET') toast(`${WALLET_META[walletType]?.label ?? walletType} is not installed`, true);
     else if (e.code === 'REJECTED') toast(t('t_connect_cancel'), true);
     else toast(t('t_connect_fail', { msg: e.message || e }), true);
   }
@@ -1419,15 +1474,31 @@ async function openWalletMenu() {
   const btn = $('#wallet-btn');
   if (!menu || !btn) return;
   const addr = web3.connectedAddress();
-  if (!addr) return;
+  const availability = web3.walletAvailability();
+  document.querySelectorAll('.wallet-choice').forEach((choice) => {
+    const available = availability[choice.dataset.wallet];
+    choice.classList.toggle('unavailable', !available);
+    choice.title = available ? '' : `${WALLET_META[choice.dataset.wallet]?.label} extension not detected`;
+  });
+  refreshWalletUi();
+  if (!addr) {
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    return;
+  }
   const addrEl = $('#wallet-menu-address');
   if (addrEl) addrEl.textContent = `${addr.slice(0, 10)}…${addr.slice(-6)}`;
+  const walletType = web3.connectedWalletType();
+  const kind = $('#wallet-menu-kind');
+  if (kind) kind.textContent = `${WALLET_META[walletType]?.label ?? walletType} · ${state.wallet?.kind === 'cosmos' ? 'Injective native' : 'EVM'}`;
   // Point the explorer link at this address (best-effort; falls back to testnet).
   const explorer = $('#wallet-explorer-btn');
   if (explorer) {
     let base = 'https://testnet.blockscout.injective.network';
     try { base = (await web3.loadChainConfig())?.explorerBase || base; } catch { /* default */ }
-    explorer.href = `${base.replace(/\/$/u, '')}/address/${addr}`;
+    explorer.href = addr.startsWith('inj')
+      ? `https://testnet.explorer.injective.network/account/${addr}`
+      : `${base.replace(/\/$/u, '')}/address/${addr}`;
   }
   menu.hidden = false;
   btn.setAttribute('aria-expanded', 'true');
@@ -1460,6 +1531,73 @@ async function onWalletCopy() {
     toast(t('t_wallet_copy_fail'), true);
   }
   closeWalletMenu();
+}
+
+async function onWalletVerify() {
+  const button = $('#wallet-verify-btn');
+  const status = $('#wallet-verify-status');
+  if (!button || !status) return;
+  button.disabled = true;
+  status.textContent = 'Waiting for wallet signature…';
+  try {
+    const result = await web3.verifyWalletOnChain();
+    clear(status);
+    status.append(el('a', {
+      href: result.explorerUrl,
+      target: '_blank',
+      rel: 'noopener',
+      text: `Verified ${result.walletType}: ${f.shortHash(result.txHash, 10, 8)} ↗`
+    }));
+    agentLog(`${result.walletType} wallet verification tx confirmed: ${result.txHash}`, 'var(--ok)');
+  } catch (error) {
+    status.textContent = error.code === 'REJECTED' ? 'Signature rejected' : `Verification failed: ${error.message}`;
+    toast(status.textContent, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function renderProtocolEvidence() {
+  const contractsRoot = $('#protocol-contracts');
+  const eventsRoot = $('#pricing-events');
+  const accessRoot = $('#protocol-access-model');
+  if (!contractsRoot || !eventsRoot || !accessRoot) return;
+  try {
+    const deployment = await web3.protocolDeploymentInfo();
+    accessRoot.textContent = deployment.accessModel === 'permissionless'
+      ? `${deployment.displayName} · permissionless testnet access · any wallet may subscribe`
+      : `${deployment.displayName} · production compliance gate required`;
+    clear(contractsRoot);
+    for (const [name, address] of Object.entries(deployment.contracts)) {
+      contractsRoot.append(el('div', { class: 'protocol-contract' },
+        el('span', { text: name }),
+        el('a', {
+          href: `${deployment.explorerBase}/address/${address}`,
+          target: '_blank', rel: 'noopener',
+          text: `${address.slice(0, 8)}…${address.slice(-6)} ↗`
+        })));
+    }
+    eventsRoot.innerHTML = '<p class="muted">Reading PricingUpdated from RPC…</p>';
+    const events = await web3.readPricingUpdatedEvents(5);
+    clear(eventsRoot);
+    if (events.length === 0) {
+      eventsRoot.append(el('p', { class: 'muted', text: 'No PricingUpdated event found in the configured range.' }));
+      return;
+    }
+    const riskNames = ['LOW', 'MEDIUM', 'WARNING', 'CRITICAL'];
+    const actionNames = ['OPEN', 'OPEN_WARNING', 'REPRICE', 'PAUSE', 'FREEZE', 'LIQUIDATE', 'RESUME'];
+    for (const event of events) {
+      eventsRoot.append(el('div', { class: 'pricing-event' },
+        el('div', { class: 'pricing-event-head' },
+          el('strong', { text: `PricingUpdated · Pool #${event.poolId}` }),
+          el('a', { href: event.explorerUrl, target: '_blank', rel: 'noopener', text: `${f.shortHash(event.txHash, 8, 6)} ↗` })),
+        el('div', { text: `$${event.issuePriceUsd.toFixed(4)} · ${riskNames[event.riskLevel] ?? event.riskLevel} · ${actionNames[event.action] ?? event.action}` }),
+        el('code', { class: 'hash', title: event.evidenceHash, text: `evidence ${f.shortHash(event.evidenceHash, 9, 7)}` })));
+    }
+  } catch (error) {
+    eventsRoot.innerHTML = '';
+    eventsRoot.append(el('p', { class: 'muted', text: `Live event read unavailable: ${error.message}` }));
+  }
 }
 
 // ===========================================================================
@@ -2142,9 +2280,17 @@ function wireStaticHandlers() {
       if (b.dataset.view === 'market') renderPortfolio();
     }));
   $('#lang-btn').addEventListener('click', () => toggleLang());
+  $('#network-select')?.addEventListener('change', onNetworkChange);
   $('#wallet-btn').addEventListener('click', onWalletClick);
+  document.querySelectorAll('.wallet-choice').forEach((button) => button.addEventListener('click', onWalletChoice));
+  $('#wallet-verify-btn')?.addEventListener('click', onWalletVerify);
   $('#wallet-disconnect-btn')?.addEventListener('click', onWalletDisconnect);
   $('#wallet-copy-btn')?.addEventListener('click', onWalletCopy);
+  $('#protocol-refresh-btn')?.addEventListener('click', renderProtocolEvidence);
+  window.addEventListener('agentbl:walletchange', (event) => {
+    if (!event.detail?.address) state.wallet = null;
+    refreshWalletUi();
+  });
   // Close the wallet menu on an outside click or Escape.
   document.addEventListener('click', (e) => {
     if (isWalletMenuOpen() && !e.target.closest('.wallet-wrap')) closeWalletMenu();
@@ -2322,12 +2468,135 @@ function wireStaticHandlers() {
     eblUploadStatus.style.color = 'var(--accent)';
     eblUploadStatus.innerHTML = `Scanning ${files.length} documents...`;
     agentLog(`Agent received ${files.length} new documents for ENI verification.`);
-    
+
     setTimeout(() => {
       eblUploadStatus.style.color = 'var(--ok)';
       eblUploadStatus.innerHTML = '✔ Documents parsed. ENI signature verified.<br>✔ Trade case generated and sent to Risk Engine.';
       agentLog(`Documents verified. Generating mock trade case...`, 'var(--ok)');
     }, 1500);
+  }
+
+  // BE-15: Local agent activity logger (complements SSE stream)
+  function logAgentActivityUI(activity) {
+    if (!state.agentActivities) state.agentActivities = [];
+
+    const record = {
+      id: `ui-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      ...activity
+    };
+
+    state.agentActivities.unshift(record);
+
+    // Keep only last 100 activities in UI state
+    if (state.agentActivities.length > 100) {
+      state.agentActivities = state.agentActivities.slice(0, 100);
+    }
+
+    // Update timeline visualization
+    renderAgentTimeline();
+
+    return record;
+  }
+
+  // BE-15: Subscribe to real-time agent activity stream (SSE)
+  let agentActivityStream = null;
+
+  function subscribeToAgentActivity(caseId) {
+    // Close existing stream
+    if (agentActivityStream) {
+      agentActivityStream.close();
+      agentActivityStream = null;
+    }
+
+    if (!caseId) return;
+
+    try {
+      agentActivityStream = new EventSource(`/api/agent/activity/stream?case_id=${caseId}`);
+
+      agentActivityStream.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'connected') {
+          agentLog('🔗 Connected to Agent activity stream', 'var(--ok)');
+        } else if (data.type === 'activity') {
+          const emoji = getActivityEmoji(data.action);
+          agentLog(`${emoji} Agent: ${data.action}${data.details?.price ? ` → $${data.details.price}` : ''}`, 'var(--accent)');
+
+          logAgentActivityUI(data);
+
+          if (data.action === 'REPRICE_DECISION' || data.action === 'PAUSE_OFFERING') {
+            toast(`🤖 Agent: ${data.action}`);
+          }
+        }
+      };
+
+      agentActivityStream.onerror = () => {
+        agentLog('⚠️ SSE disconnected, reconnecting...', 'var(--warn)');
+        if (agentActivityStream) agentActivityStream.close();
+        setTimeout(() => subscribeToAgentActivity(caseId), 3000);
+      };
+    } catch (error) {
+      console.error('Failed to subscribe to agent activity:', error);
+    }
+  }
+
+  function getActivityEmoji(action) {
+    const emojiMap = {
+      'eBL_UPLOADED': '📄',
+      'COMPLIANCE_CHECK': '⚖️',
+      'VALUATION_COMPLETE': '💰',
+      'PRICING_QUOTE': '📊',
+      'RISK_ESCALATION': '⚠️',
+      'REPRICE_DECISION': '📉',
+      'PAUSE_OFFERING': '⏸️',
+      'RESUME_OFFERING': '▶️',
+      'ON_CHAIN_UPDATE': '⛓️',
+      'SUBSCRIPTION': '💵',
+      'SETTLE': '✅'
+    };
+    return emojiMap[action] || '🤖';
+  }
+
+  // BE-15: Render agent activity timeline
+  function renderAgentTimeline() {
+    const container = $('#agent-logs-container');
+    if (!container || !state.agentActivities || state.agentActivities.length === 0) return;
+
+    // Only show last 10 activities in timeline
+    const recentActivities = state.agentActivities.slice(0, 10);
+
+    let timelineHtml = '<div style="font-family: var(--mono); font-size: 13px; line-height: 1.8;">';
+    timelineHtml += '<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🤖 Agent Decision Timeline</div>';
+    timelineHtml += '<div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>';
+
+    recentActivities.forEach(activity => {
+      const time = new Date(activity.timestamp).toLocaleTimeString('en-US', { hour12: false });
+      const emoji = getActivityEmoji(activity.action);
+      const actionLabel = activity.action.replace(/_/g, ' ');
+
+      let detailStr = '';
+      if (activity.details) {
+        if (activity.details.fileName) detailStr = `→ ${activity.details.fileName}`;
+        else if (activity.details.price) detailStr = `→ $${activity.details.price}`;
+        else if (activity.details.status) detailStr = `→ ${activity.details.status}`;
+        else if (activity.details.newPrice) detailStr = `→ $${activity.details.newPrice}`;
+      }
+
+      timelineHtml += `<div style="color: var(--text-2); margin: 4px 0;">
+        <span style="color: var(--muted);">${time}</span>
+        ${emoji} <span style="color: var(--text-main);">${actionLabel}</span>
+        <span style="color: var(--accent);">${detailStr}</span>
+      </div>`;
+    });
+
+    timelineHtml += '</div>';
+
+    // Only update if we have a dedicated timeline container
+    const timelineContainer = $('#agent-timeline');
+    if (timelineContainer) {
+      timelineContainer.innerHTML = timelineHtml;
+    }
   }
 
   // FE-13: Agent Console Toggle

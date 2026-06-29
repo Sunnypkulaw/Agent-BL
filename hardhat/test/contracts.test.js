@@ -50,8 +50,6 @@ async function deployStack() {
   // wiring
   await (await token.setPool(await pool.getAddress())).wait();
   await (await pool.setOracle(await oracle.getAddress())).wait();
-  await (await pool.setPermissionedInvestor(investor.address, true)).wait();
-
   return { owner, investor, outsider, aiAgent, registry, token, pool, oracle };
 }
 
@@ -77,7 +75,7 @@ describe('AgentBL contracts', () => {
     expect(created[0].args.issuePrice).to.equal(900_000n);
   });
 
-  it('lets a permissioned investor subscribe and mints RWA shares', async () => {
+  it('lets an arbitrary testnet investor subscribe and mints RWA shares', async () => {
     const ctx = await deployStack();
     const poolId = await createDemoOffering(ctx);
 
@@ -96,17 +94,11 @@ describe('AgentBL contracts', () => {
     expect(minted[0].args.investor).to.equal(ctx.investor.address);
   });
 
-  it('rejects non-permissioned investors', async () => {
+  it('keeps testnet access permissionless by default', async () => {
     const ctx = await deployStack();
     const poolId = await createDemoOffering(ctx);
-
-    let reverted = false;
-    try {
-      await ctx.pool.connect(ctx.outsider).subscribe(poolId, 1n);
-    } catch (err) {
-      reverted = /not permissioned/.test(err.message);
-    }
-    expect(reverted).to.equal(true);
+    await (await ctx.pool.connect(ctx.outsider).subscribe(poolId, 1n)).wait();
+    expect(await ctx.token.balanceOf(poolId, ctx.outsider.address)).to.equal(1n);
   });
 
   it('writes evidence and quote hash on PricingUpdated and reprices the pool', async () => {

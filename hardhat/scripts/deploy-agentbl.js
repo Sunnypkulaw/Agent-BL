@@ -20,6 +20,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const hre = require('hardhat');
+const chainConfig = require('../../scripts/lib/chain-config.cjs');
 
 const { ethers, network, artifacts } = hre;
 
@@ -73,18 +74,19 @@ async function main() {
   console.log('   Tx:     ', deployTx);
 
   // 1) Frontend-readable config (served statically at /chain-config.json).
-  const chainConfig = {
+  const frontendPath = path.join(__dirname, '..', '..', 'public', 'chain-config.json');
+  const current = chainConfig.readRegistry(frontendPath);
+  const merged = chainConfig.mergeNetworkConfig(current, 'injective-testnet', {
     network: meta.name,
     chainId: '0x' + chainId.toString(16),
     chainIdDecimal: Number(chainId),
+    rpcUrls: [process.env.INJECTIVE_RPC_URL || 'https://k8s.testnet.json-rpc.injective.network/'],
     explorerBase: meta.explorerBase,
     contracts: { AgentBLRWA: address },
-    deployedAt: new Date().toISOString(),
-    deployTx,
-    abi
-  };
-  const frontendPath = path.join(__dirname, '..', '..', 'public', 'chain-config.json');
-  fs.writeFileSync(frontendPath, JSON.stringify(chainConfig, null, 2));
+    abis: { AgentBLRWA: abi },
+    deployments: { AgentBLRWA: { address, deployTx, deployedAt: new Date().toISOString() } }
+  });
+  chainConfig.atomicWriteRegistry(frontendPath, merged);
   console.log('📄 Frontend config ->', frontendPath);
 
   // 2) Deployment record.
@@ -100,7 +102,7 @@ async function main() {
     address,
     deployTx,
     explorer: `${meta.explorerBase}${meta.explorerAddressPath}${address}`,
-    deployedAt: chainConfig.deployedAt
+    deployedAt: merged.networks['injective-testnet'].deployments.AgentBLRWA.deployedAt
   }, null, 2));
   console.log('📄 Deployment record ->', recordPath);
 

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listHarnessCaseFiles } from '../core/scenarioRunner.js';
+import chainConfig from '../../scripts/lib/chain-config.cjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -57,7 +58,8 @@ async function caseCatalog() {
 }
 
 async function deploymentEvidence() {
-  const config = JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+  const raw = JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+  const config = chainConfig.resolveNetworkConfig(raw, 'injective-testnet');
   const gate = JSON.parse(await fs.readFile(path.join(rootDir, 'docs', 'evidence', 'wave-b-gate.json'), 'utf8'));
   const protocol = config.protocol ?? {};
   return {

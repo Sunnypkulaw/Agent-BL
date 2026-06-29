@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { ethers } from 'ethers';
+import chainConfigLib from './lib/chain-config.cjs';
 import { createInjectiveClient, parsePaymentResponseHeader } from '@injectivelabs/x402/client';
 import { injectivePaymentMiddleware } from '@injectivelabs/x402/middleware';
 import { buildPremiumRiskIntel } from '../src/x402/endpoints.js';
@@ -141,7 +142,10 @@ if (!recoveryPaymentTx && usdcBefore < amount) {
 }
 if (injBefore === 0n) throw new Error('Buyer/deployer has no testnet INJ for the oracle attestation');
 
-const chainConfig = JSON.parse(await fs.readFile(path.join(root, 'public', 'chain-config.json'), 'utf8'));
+const chainConfig = chainConfigLib.resolveNetworkConfig(
+  JSON.parse(await fs.readFile(path.join(root, 'public', 'chain-config.json'), 'utf8')),
+  'injective-testnet'
+);
 const oracleAddress = chainConfig.contracts?.PaymentOracle;
 const oracleAbi = chainConfig.paymentOracle?.abi;
 if (!ethers.isAddress(oracleAddress) || !Array.isArray(oracleAbi)) {

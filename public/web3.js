@@ -14,6 +14,10 @@ const ETHERS_CDNS = [
   'https://esm.sh/ethers@6.13.4',
   'https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm'
 ];
+const COSMOS_STARGATE_CDNS = [
+  'https://esm.sh/@cosmjs/stargate@0.33.1?bundle',
+  'https://cdn.jsdelivr.net/npm/@cosmjs/stargate@0.33.1/+esm'
+];
 
 // --- Chain presets ---
 const CHAIN_PRESETS = {
@@ -31,29 +35,58 @@ const CHAIN_PRESETS = {
 
 // --- module-level caches ---
 let _ethers = null;
+let _cosmosStargate = null;
+let _registry = null;
 let _config = null;
-let _session = null; // { provider, signer, address }
-let _cachedProvider = null; // detected EIP-1193 provider
+let _activeNetworkKey = null;
+let _session = null; // { kind, walletType, provider, signer, address }
+let _cachedProvider = null; // selected EIP-1193 provider
 
-/** Auto-detect the active EIP-1193 provider. Supports MetaMask, OKX, Trust, Bitget, Rabby, etc. */
-export function getEthereumProvider() {
-  if (_cachedProvider) return _cachedProvider;
+function injectedEvmProviders() {
   if (typeof window === 'undefined') return null;
-  // Prefer wallet-specific namespaces (e.g. OKX → window.okxwallet), fall back to window.ethereum.
-  _cachedProvider = window.okxwallet?.request ? window.okxwallet
-    : window.trustwallet?.request ? window.trustwallet
-    : window.bitkeep?.request ? window.bitkeep
-    : window.bitget?.request ? window.bitget
-    : window.rabby?.request ? window.rabby
-    : window.tokenpocket?.request ? window.tokenpocket
-    : window.ethereum?.request ? window.ethereum
-    : null;
+  const primary = window.ethereum;
+  const candidates = [
+    ...(Array.isArray(primary?.providers) ? primary.providers : []),
+    primary,
+    window.okxwallet,
+    window.trustwallet,
+    window.bitkeep,
+    window.bitget,
+    window.rabby,
+    window.tokenpocket
+  ];
+  return [...new Set(candidates.filter((provider) => provider?.request))];
+}
+
+export function walletAvailability() {
+  const providers = injectedEvmProviders() ?? [];
+  return {
+    metamask: providers.some((provider) => provider.isMetaMask && !provider.isRabby) || providers.length > 0,
+    keplr: typeof window !== 'undefined' && Boolean(window.keplr?.enable),
+    leap: typeof window !== 'undefined' && Boolean(window.leap?.enable)
+  };
+}
+
+function providerForWallet(walletType) {
+  if (typeof window === 'undefined') return null;
+  if (walletType === 'keplr') return window.keplr?.enable ? window.keplr : null;
+  if (walletType === 'leap') return window.leap?.enable ? window.leap : null;
+  const providers = injectedEvmProviders() ?? [];
+  return providers.find((provider) => provider.isMetaMask && !provider.isRabby) ?? providers[0] ?? null;
+}
+
+/** Return the selected EIP-1193 provider; only MetaMask uses this path. */
+export function getEthereumProvider() {
+  if (_session?.kind === 'evm') return _session.provider;
+  if (_cachedProvider) return _cachedProvider;
+  _cachedProvider = providerForWallet('metamask');
   return _cachedProvider;
 }
 
 /** Lazy-load ethers v6 from a CDN (cached). */
 export async function loadEthers() {
   if (_ethers) return _ethers;
+  if (typeof globalThis !== 'undefined' && globalThis._mockEthers) return globalThis._mockEthers;
   let lastErr;
   for (const url of ETHERS_CDNS) {
     try {
@@ -64,19 +97,82 @@ export async function loadEthers() {
   throw new Error('Failed to load ethers from CDN: ' + (lastErr?.message ?? 'unknown'));
 }
 
-/** Load /chain-config.json (cached). Never throws — returns null on failure. */
-export async function loadChainConfig() {
-  if (_config) return _config;
+async function loadCosmosStargate() {
+  if (_cosmosStargate) return _cosmosStargate;
+  let lastError;
+  for (const url of COSMOS_STARGATE_CDNS) {
+    try {
+      _cosmosStargate = await import(/* @vite-ignore */ url);
+      return _cosmosStargate;
+    } catch (error) { lastError = error; }
+  }
+  throw err('SDK_LOAD', `Failed to load Cosmos signing SDK: ${lastError?.message ?? 'unknown'}`);
+}
+
+export function resolveBrowserChainConfig(registry, requestedNetwork) {
+  if (registry?.schema !== 'agentbl-chain-config-v2' || !registry.networks) {
+    return registry;
+  }
+  const key = requestedNetwork || registry.defaultNetwork;
+  const network = registry.networks[key];
+  if (!network) throw err('NETWORK_CONFIG', `Unknown configured network: ${key}`);
+  const abis = network.abis ?? {};
+  return {
+    ...network,
+    key,
+    defaultNetwork: registry.defaultNetwork,
+    abi: abis.AgentBLRWA ?? [],
+    paymentOracle: network.paymentOracle ?? (network.contracts?.PaymentOracle ? {
+      address: network.contracts.PaymentOracle,
+      ...(network.deployments?.PaymentOracle ?? {}),
+      abi: abis.PaymentOracle ?? []
+    } : null)
+  };
+}
+
+/** Load /chain-config.json and resolve the active network without discarding the registry. */
+export async function loadChainConfig(requestedNetwork) {
+  const key = requestedNetwork || _activeNetworkKey;
+  if (_config && (!key || _config.key === key)) return _config;
   try {
-    const res = await fetch('/chain-config.json', { cache: 'no-store' });
-    if (!res.ok) return null;
-    _config = await res.json();
+    if (!_registry) {
+      const res = await fetch('/chain-config.json', { cache: 'no-store' });
+      if (!res.ok) return null;
+      _registry = await res.json();
+    }
+    _activeNetworkKey = key || _registry.defaultNetwork || 'injective-testnet';
+    _config = resolveBrowserChainConfig(_registry, _activeNetworkKey);
     return _config;
   } catch { return null; }
 }
 
+export async function configuredNetworks() {
+  await loadChainConfig();
+  return Object.entries(_registry?.networks ?? {}).map(([key, value]) => ({
+    key,
+    displayName: value.displayName ?? key,
+    chainId: value.chainId,
+    deployed: Object.values(value.contracts ?? {}).some(isAddress)
+  }));
+}
+
+export async function selectNetwork(networkKey) {
+  if (_session) throw err('WALLET_CONNECTED', 'Disconnect the wallet before switching application networks');
+  _activeNetworkKey = networkKey;
+  _config = null;
+  return loadChainConfig(networkKey);
+}
+
 /** Return the chain preset for the configured network (falls back to injective_testnet). */
 function getPreset(cfg) {
+  if (cfg?.rpcUrls?.length) {
+    return {
+      chainName: cfg.displayName,
+      nativeCurrency: cfg.nativeCurrency,
+      rpcUrls: cfg.rpcUrls,
+      blockExplorerUrls: [cfg.explorerBase]
+    };
+  }
   const net = cfg?.network || 'injective_testnet';
   return CHAIN_PRESETS[net] || CHAIN_PRESETS.injective_testnet;
 }
@@ -90,7 +186,7 @@ export async function isRealChainConfigured() {
 }
 
 export function hasInjectedWallet() {
-  return !!getEthereumProvider();
+  return Object.values(walletAvailability()).some(Boolean);
 }
 
 export function isWalletConnected() {
@@ -101,19 +197,73 @@ export function connectedAddress() {
   return _session?.address ?? null;
 }
 
+export function connectedWalletType() {
+  return _session?.walletType ?? null;
+}
+
 function err(code, message) {
   const e = new Error(message);
   e.code = code;
   return e;
 }
 
+/**
+ * Attempt silent reconnection using saved wallet type (for MetaMask: eth_accounts; for Keplr/Leap: restore native signer).
+ * @returns {Promise<{address:string,walletType:string,kind:string}|null>} session info or null if no saved wallet or silent reconnect fails
+ */
+export async function restoreWalletSession() {
+  let savedType;
+  try { savedType = window.localStorage?.getItem('agentbl.walletType'); } catch { /* */ }
+  if (!savedType) return null;
+
+  const wallet = providerForWallet(savedType);
+  if (!wallet) return null;
+
+  const cfg = await loadChainConfig();
+
+  try {
+    if (savedType === 'keplr' || savedType === 'leap') {
+      const cosmosChainId = cfg?.cosmosChainId;
+      if (!cosmosChainId) return null;
+      const signer = wallet.getOfflineSigner(cosmosChainId);
+      const accounts = await signer.getAccounts();
+      if (!accounts[0]?.address) return null;
+      _session = {
+        kind: 'cosmos', walletType: savedType, provider: wallet, signer,
+        address: accounts[0].address, cosmosChainId
+      };
+      if (typeof window !== 'undefined' && !window._agentblCosmosWalletWired) {
+        window._agentblCosmosWalletWired = true;
+        window.addEventListener('keplr_keystorechange', () => clearWalletSession('account'));
+        window.addEventListener('leap_keystorechange', () => clearWalletSession('account'));
+      }
+    } else {
+      const accounts = await wallet.request({ method: 'eth_accounts' });
+      if (!accounts || accounts.length === 0) return null;
+      const ethers = await loadEthers();
+      _cachedProvider = wallet;
+      const provider = new ethers.BrowserProvider(wallet);
+      const signer = await provider.getSigner();
+      _session = { kind: 'evm', walletType: 'metamask', provider: wallet, browserProvider: provider, signer, address: await signer.getAddress() };
+      if (!wallet._agentblWired) {
+        wallet._agentblWired = true;
+        wallet.on?.('accountsChanged', () => clearWalletSession('account'));
+        wallet.on?.('chainChanged', () => clearWalletSession('network'));
+      }
+    }
+    emitWalletChange('restored');
+    return { address: _session.address, walletType: _session.walletType, kind: _session.kind };
+  } catch {
+    return null;
+  }
+}
+
 /** Ensure the wallet is on the target chain (from chain-config.json), adding the network if unknown (EIP-3085). */
-async function ensureTargetChain() {
+async function ensureTargetChain(eth) {
   const cfg = await loadChainConfig();
   const preset = getPreset(cfg);
   const targetHex = cfg?.chainId || '0x59F'; // default: Injective Testnet
 
-  const eth = getEthereumProvider();
   const current = await eth.request({ method: 'eth_chainId' });
   if (current === targetHex) return;
 
@@ -138,38 +288,84 @@ async function ensureTargetChain() {
 }
 
 /**
- * Connect wallet (MetaMask / OKX / any EIP-1193 provider), ensure target chain, cache signer.
- * @returns {Promise<{address:string}>}
+ * Connect one explicit wallet. MetaMask signs EVM calls; Keplr/Leap use their
+ * Cosmos-native Injective signer and never masquerade as window.ethereum.
+ * @returns {Promise<{address:string,walletType:string,kind:string}>}
  * @throws {Error} with .code: NO_WALLET | REJECTED | NETWORK
  */
-export async function connectWallet() {
-  const eth = getEthereumProvider();
-  if (!eth) throw err('NO_WALLET', '未检测到浏览器钱包（请安装 MetaMask 或 OKX 钱包）');
-  const ethers = await loadEthers();
-  try {
-    await eth.request({ method: 'eth_requestAccounts' });
-  } catch (e) {
-    if (e?.code === 4001) throw err('REJECTED', '用户拒绝了连接请求');
-    throw e;
-  }
-  try {
-    await ensureTargetChain();
-  } catch (e) {
-    if (e?.code === 4001) throw err('REJECTED', '用户拒绝了网络切换');
-    throw err('NETWORK', '无法切换到目标网络：' + (e?.message ?? ''));
-  }
-  const provider = new ethers.BrowserProvider(eth);
-  const signer = await provider.getSigner();
-  const address = await signer.getAddress();
-  _session = { provider, signer, address };
+export async function connectWallet(walletType = 'metamask') {
+  const wallet = providerForWallet(walletType);
+  if (!wallet) throw err('NO_WALLET', `${walletType} wallet extension was not detected`);
+  const cfg = await loadChainConfig();
 
-  // Re-create the session if the user changes account/network mid-demo.
-  if (!eth._agentblWired) {
-    eth._agentblWired = true;
-    eth.on?.('accountsChanged', () => { _session = null; });
-    eth.on?.('chainChanged', () => { _session = null; });
+  if (walletType === 'keplr' || walletType === 'leap') {
+    const cosmosChainId = cfg?.cosmosChainId;
+    if (!cosmosChainId) throw err('NETWORK_CONFIG', 'Cosmos chain ID is missing from chain-config');
+    try {
+      await wallet.enable(cosmosChainId);
+      const signer = wallet.getOfflineSigner(cosmosChainId);
+      const accounts = await signer.getAccounts();
+      if (!accounts[0]?.address) throw err('NO_ACCOUNT', `${walletType} returned no Injective account`);
+      _session = {
+        kind: 'cosmos', walletType, provider: wallet, signer,
+        address: accounts[0].address, cosmosChainId
+      };
+    } catch (error) {
+      if (error?.code === 4001 || /reject|denied/iu.test(error?.message ?? '')) {
+        throw err('REJECTED', `User rejected the ${walletType} connection`);
+      }
+      throw error;
+    }
+    if (typeof window !== 'undefined' && !window._agentblCosmosWalletWired) {
+      window._agentblCosmosWalletWired = true;
+      window.addEventListener('keplr_keystorechange', () => clearWalletSession('account'));
+      window.addEventListener('leap_keystorechange', () => clearWalletSession('account'));
+    }
+  } else {
+    const ethers = await loadEthers();
+    try {
+      await wallet.request({ method: 'eth_requestAccounts' });
+      await ensureTargetChain(wallet);
+    } catch (error) {
+      if (error?.code === 4001) throw err('REJECTED', 'User rejected the wallet or network request');
+      throw err('NETWORK', `Unable to connect to the configured network: ${error?.message ?? error}`);
+    }
+    _cachedProvider = wallet;
+    const provider = new ethers.BrowserProvider(wallet);
+    const signer = await provider.getSigner();
+    _session = { kind: 'evm', walletType: 'metamask', provider: wallet, browserProvider: provider, signer, address: await signer.getAddress() };
+    if (!wallet._agentblWired) {
+      wallet._agentblWired = true;
+      wallet.on?.('accountsChanged', () => clearWalletSession('account'));
+      wallet.on?.('chainChanged', () => clearWalletSession('network'));
+    }
   }
-  return { address };
+
+  try { window.localStorage?.setItem('agentbl.walletType', walletType); } catch { /* storage optional */ }
+  emitWalletChange('connected');
+  return { address: _session.address, walletType: _session.walletType, kind: _session.kind };
+}
+
+function emitWalletChange(reason) {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return;
+  const detail = { reason, address: _session?.address ?? null, walletType: _session?.walletType ?? null };
+  const EventConstructor = window.CustomEvent ?? globalThis.CustomEvent;
+  if (EventConstructor) window.dispatchEvent(new EventConstructor('agentbl:walletchange', { detail }));
+}
+
+function clearWalletSession(reason) {
+  _session = null;
+  emitWalletChange(reason);
+}
+
+export function __resetWeb3ForTests() {
+  _ethers = null;
+  _cosmosStargate = null;
+  _registry = null;
+  _config = null;
+  _activeNetworkKey = null;
+  _session = null;
+  _cachedProvider = null;
 }
 
 /**
@@ -180,7 +376,7 @@ export async function connectWallet() {
  * @returns {Promise<{revoked:boolean}>}
  */
 export async function disconnect() {
-  const eth = getEthereumProvider();
+  const eth = _session?.kind === 'evm' ? _session.provider : null;
   let revoked = false;
   if (eth?.request) {
     try {
@@ -191,7 +387,8 @@ export async function disconnect() {
       // session is still cleared below; the wallet just stays authorized.
     }
   }
-  _session = null;
+  clearWalletSession('disconnected');
+  try { window.localStorage?.removeItem('agentbl.walletType'); } catch { /* storage optional */ }
   return { revoked };
 }
 
@@ -202,10 +399,13 @@ async function getContract(write = false) {
   console.log('[mint] chain-config:', { network: cfg?.network, address: address?.slice(0,10)+'…', abiLen: cfg?.abi?.length, hasAbi, session: !!_session });
   if (!isAddress(address)) throw err('NO_CONTRACT', 'AgentBLRWA 尚未部署（chain-config 无地址）');
   if (!_session) throw err('NO_SESSION', '钱包未连接');
+  if (_session.kind !== 'evm') {
+    throw err('EVM_WALLET_REQUIRED', 'This EVM contract action requires MetaMask; Keplr/Leap remain available for native Injective transactions');
+  }
   const ethers = await loadEthers();
   console.log('[mint] signer address:', await _session.signer.getAddress());
-  console.log('[mint] provider network:', await _session.provider.getNetwork());
-  return new ethers.Contract(address, cfg.abi, write ? _session.signer : _session.provider);
+  console.log('[mint] provider network:', await _session.browserProvider.getNetwork());
+  return new ethers.Contract(address, cfg.abi, write ? _session.signer : _session.browserProvider);
 }
 
 function explorerTx(cfg, hash) {
@@ -284,7 +484,7 @@ export async function mintOnChain(quote, financingUsd, onConfirmed) {
 
 async function pollForReceipt(txHash, contract, quote, financingUsd, a, cfg, onConfirmed) {
   const ethers = await loadEthers();
-  const pubProvider = new ethers.JsonRpcProvider('https://testnet.sentry.chain.json-rpc.injective.network');
+  const pubProvider = new ethers.JsonRpcProvider(cfg.rpcUrls?.[0]);
   const deadline = Date.now() + 120000;
 
   const poll = async () => {
@@ -353,6 +553,85 @@ export async function readBalance(poolId, address) {
   return Number(bal);
 }
 
+export async function protocolDeploymentInfo() {
+  const cfg = await loadChainConfig();
+  return {
+    networkKey: cfg.key,
+    displayName: cfg.displayName,
+    accessModel: cfg.accessModel,
+    explorerBase: cfg.explorerBase,
+    contracts: Object.fromEntries(Object.entries(cfg.contracts ?? {}).filter(([, address]) => isAddress(address)))
+  };
+}
+
+/** Read the latest real PricingUpdated events through the configured public RPC. */
+export async function readPricingUpdatedEvents(limit = 5) {
+  const cfg = await loadChainConfig();
+  const address = cfg.contracts?.RiskPricingOracle;
+  const abi = cfg.abis?.RiskPricingOracle;
+  if (!isAddress(address) || !Array.isArray(abi)) throw err('NO_CONTRACT', 'RiskPricingOracle deployment is missing');
+  const ethers = await loadEthers();
+  const provider = new ethers.JsonRpcProvider(cfg.rpcUrls[0], cfg.chainIdDecimal);
+  const contract = new ethers.Contract(address, abi, provider);
+  const latest = await provider.getBlockNumber();
+  const deployedBlock = Number(cfg.deployments?.RiskPricingOracle?.blockNumber ?? 0);
+  const fromBlock = Math.max(deployedBlock || 0, latest - 25_000);
+  const events = await contract.queryFilter(contract.filters.PricingUpdated(), fromBlock, latest);
+  return events.slice(-Math.max(1, Math.min(20, Number(limit) || 5))).reverse().map((event) => ({
+    poolId: event.args.poolId.toString(),
+    issuePriceE6: event.args.issuePrice.toString(),
+    issuePriceUsd: Number(event.args.issuePrice) / 1_000_000,
+    riskLevel: Number(event.args.riskLevel),
+    action: Number(event.args.action),
+    evidenceHash: event.args.evidenceHash,
+    quoteHash: event.args.quoteHash,
+    updater: event.args.updater,
+    blockNumber: event.blockNumber,
+    txHash: event.transactionHash,
+    explorerUrl: explorerTx(cfg, event.transactionHash)
+  }));
+}
+
+/** Send a minimal real self-transfer to prove the selected wallet can sign on Injective. */
+export async function verifyWalletOnChain() {
+  if (!_session) throw err('NO_SESSION', 'Connect a wallet first');
+  const cfg = await loadChainConfig();
+  if (_session.kind === 'evm') {
+    const tx = await _session.signer.sendTransaction({ to: _session.address, value: 0n });
+    const receipt = await tx.wait();
+    return {
+      walletType: _session.walletType,
+      kind: 'evm',
+      txHash: tx.hash,
+      blockNumber: receipt.blockNumber,
+      explorerUrl: explorerTx(cfg, tx.hash)
+    };
+  }
+
+  const { SigningStargateClient, GasPrice, calculateFee } = await loadCosmosStargate();
+  const gasPrice = GasPrice.fromString('500000000inj');
+  const client = await SigningStargateClient.connectWithSigner(cfg.cosmosRpcUrl, _session.signer, { gasPrice });
+  try {
+    const result = await client.sendTokens(
+      _session.address,
+      _session.address,
+      [{ denom: 'inj', amount: '1' }],
+      calculateFee(90_000, gasPrice),
+      `AgentBL ${_session.walletType} verification`
+    );
+    if (result.code !== 0) throw err('TX_FAILED', result.rawLog || `Cosmos transaction failed with code ${result.code}`);
+    return {
+      walletType: _session.walletType,
+      kind: 'cosmos',
+      txHash: result.transactionHash,
+      blockNumber: result.height,
+      explorerUrl: `${cfg.cosmosExplorerTxBase ?? ''}${result.transactionHash}` || null
+    };
+  } finally {
+    client.disconnect();
+  }
+}
+
 /**
  * Simulated mint fallback: a tx-shaped result from the existing
  * push_pricing_to_oracle MCP tool, so the View renders identically when no
@@ -388,6 +667,7 @@ export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, 
   if (!isAddress(address) || !abi) throw err('NO_CONTRACT', 'PaymentOracle 未部署');
 
   if (!_session) throw err('NO_SESSION', '钱包未连接');
+  if (_session.kind !== 'evm') throw err('EVM_WALLET_REQUIRED', 'PaymentOracle requires the MetaMask EVM path');
 
   const ethers = await loadEthers();
   const oracle = new ethers.Contract(address, abi, _session.signer);
@@ -405,7 +685,7 @@ export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, 
   console.log('[x402] tx sent:', tx.hash);
 
   // Background poll for confirmation
-  const pubProvider = new ethers.JsonRpcProvider('https://testnet.sentry.chain.json-rpc.injective.network');
+  const pubProvider = new ethers.JsonRpcProvider(cfg.rpcUrls?.[0]);
   const deadline = Date.now() + 120000;
   const poll = async () => {
     try {

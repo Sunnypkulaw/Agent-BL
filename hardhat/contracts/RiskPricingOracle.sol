@@ -21,6 +21,7 @@ contract RiskPricingOracle {
     mapping(address => bool) private _updaters;
     mapping(uint256 => bytes32) private _latestQuoteHash;
     mapping(uint256 => bytes32) private _latestEvidenceHash;
+    mapping(bytes32 => bool) private _processedDecision;
 
     event PricingUpdated(
         uint256 indexed poolId,
@@ -67,6 +68,11 @@ contract RiskPricingOracle {
         require(_updaters[msg.sender], "not updater");
         require(issuePrice > 0, "issuePrice=0");
         require(evidenceHash != bytes32(0), "evidenceHash=0");
+        require(quoteHash != bytes32(0), "quoteHash=0");
+
+        bytes32 decisionId = keccak256(abi.encode(poolId, issuePrice, action, evidenceHash, quoteHash));
+        require(!_processedDecision[decisionId], "decision replay");
+        _processedDecision[decisionId] = true;
 
         _latestQuoteHash[poolId] = quoteHash;
         _latestEvidenceHash[poolId] = evidenceHash;
@@ -82,5 +88,9 @@ contract RiskPricingOracle {
 
     function latestEvidenceHash(uint256 poolId) external view returns (bytes32) {
         return _latestEvidenceHash[poolId];
+    }
+
+    function isDecisionProcessed(bytes32 decisionId) external view returns (bool) {
+        return _processedDecision[decisionId];
     }
 }

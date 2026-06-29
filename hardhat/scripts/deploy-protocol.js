@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const hre = require('hardhat');
+const chainConfig = require('../../scripts/lib/chain-config.cjs');
 
 const { ethers, network, artifacts } = hre;
 const ROOT = path.resolve(__dirname, '../..');
@@ -128,8 +129,8 @@ async function main() {
   wiring.push(await send('RWAToken.setPool', token.contract.setPool(pool.address, CALL_OVERRIDES)));
   wiring.push(await send('RWAOfferingPool.setOracle', pool.contract.setOracle(oracle.address, CALL_OVERRIDES)));
   wiring.push(await send(
-    'RWAOfferingPool.setPermissionedInvestor',
-    pool.contract.setPermissionedInvestor(deployer.address, true, CALL_OVERRIDES)
+    'RWAOfferingPool.setAgentExecutor',
+    pool.contract.setAgentExecutor(deployer.address, true, CALL_OVERRIDES)
   ));
 
   const smoke = [];
@@ -172,9 +173,18 @@ async function main() {
   ));
   smoke.push(await send(
     'resume',
-    oracle.contract.updatePricing(poolId, 850_000n, 1, 0, ethers.id('wave-b:resume:evidence'), ethers.id('wave-b:resume:quote'), CALL_OVERRIDES)
+    oracle.contract.updatePricing(poolId, 850_000n, 1, 6, ethers.id('wave-b:resume:evidence'), ethers.id('wave-b:resume:quote'), CALL_OVERRIDES)
   ));
-  smoke.push(await send('settle', pool.contract.settle(poolId, 10_000n * 1_000_000n, CALL_OVERRIDES)));
+  const repaymentAmount = 10_000n * 1_000_000n;
+  smoke.push(await send(
+    'settlement:payment-proof',
+    pool.contract.recordImporterPayment(poolId, ethers.id('wave-b:importer-payment'), repaymentAmount, CALL_OVERRIDES)
+  ));
+  smoke.push(await send(
+    'settlement:arrival-proof',
+    pool.contract.recordCargoArrival(poolId, ethers.id('wave-b:cargo-arrival'), CALL_OVERRIDES)
+  ));
+  smoke.push(await send('settle', pool.contract.settle(poolId, repaymentAmount, CALL_OVERRIDES)));
 
   const finalState = Number(await pool.contract.stateOf(poolId));
   const finalPrice = (await pool.contract.issuePriceOf(poolId)).toString();
@@ -190,19 +200,30 @@ async function main() {
   for (const item of deployments) abis[item.name] = (await artifacts.readArtifact(item.name)).abi;
 
   const configPath = path.join(ROOT, 'public', 'chain-config.json');
-  const previous = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  const config = {
-    ...previous,
+  const previous = chainConfig.readRegistry(configPath);
+  const activeBefore = chainConfig.resolveNetworkConfig(previous, 'injective-testnet');
+  const config = chainConfig.mergeNetworkConfig(previous, 'injective-testnet', {
     network: 'injective_testnet',
+    displayName: 'Injective EVM Testnet',
     chainId: '0x59F',
     chainIdDecimal: 1439,
+    cosmosChainId: 'injective-888',
+    rpcUrls: [RPC_URL],
+    wsUrls: ['wss://k8s.testnet.ws.injective.network/'],
+    cosmosRpcUrl: 'https://testnet.sentry.tm.injective.network:443',
     explorerBase: EXPLORER,
-    contracts: { ...previous.contracts, ...addresses },
-    deployedAt,
-    deployTx: agent.txHash,
-    abi: abis.AgentBLRWA,
+    explorerApi: 'https://testnet.blockscout-api.injective.network/api',
+    accessModel: 'permissionless',
+    contracts: { ...activeBefore.contracts, ...addresses },
+    abis,
+    deployments: Object.fromEntries(deployments.map((item) => [item.name, {
+      address: item.address,
+      deployTx: item.txHash,
+      blockNumber: item.blockNumber,
+      deployedAt
+    }])),
     protocol: {
-      schema: 'agentbl-protocol-deployment-v1',
+      schema: 'agentbl-protocol-deployment-v2',
       network: 'injective_testnet',
       chainId: 1439,
       deployer: deployer.address,
@@ -224,11 +245,11 @@ async function main() {
         subscriberBalance: subscribedBalance
       }
     }
-  };
-  atomicJson(configPath, config);
+  });
+  chainConfig.atomicWriteRegistry(configPath, config);
 
   const record = {
-    schema: 'agentbl-protocol-deployment-v1',
+    schema: 'agentbl-protocol-deployment-v2',
     network: 'injective_testnet',
     chainId: 1439,
     deployer: deployer.address,
@@ -241,7 +262,7 @@ async function main() {
       explorer: `${EXPLORER}/address/${item.address}`
     }])),
     wiring,
-    smoke: config.protocol.smoke
+    smoke: config.networks['injective-testnet'].protocol.smoke
   };
   const recordPath = path.join(__dirname, '..', 'deployments', 'injective_testnet-protocol.json');
   atomicJson(recordPath, record);

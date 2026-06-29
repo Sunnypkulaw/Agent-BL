@@ -14,6 +14,7 @@ import { searchKnowledgeBase } from '../rag/search.js';
 import { checkDocumentConsistency } from '../agent/documentConsistency.js';
 import { authorizeMcpWrite, MCP_PINNED_NETWORK } from './security.js';
 import { X402_SERVICES } from '../x402/config.js';
+import chainConfigLib from '../../scripts/lib/chain-config.cjs';
 
 // Import Bowen's pricing engine — for real PricingQuote generation
 async function tryImportPricingEngine() {
@@ -245,7 +246,10 @@ export async function handlePushPricingToOracle({
     throw new Error('Missing required parameter: pricing_quote');
   }
 
-  const chainConfig = JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+  const chainConfig = chainConfigLib.resolveNetworkConfig(
+    JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8')),
+    'injective-testnet'
+  );
   const oracleAddress = contract ?? chainConfig.contracts?.RiskPricingOracle;
   if (!oracleAddress) throw new Error('RiskPricingOracle is not deployed in public/chain-config.json');
 
@@ -414,7 +418,10 @@ export async function handlePurchasePremiumAnalysis({
   const caseData = await loadCaseById(case_id);
 
   if (mode === 'live') {
-    const chainConfig = JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+    const chainConfig = chainConfigLib.resolveNetworkConfig(
+      JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8')),
+      'injective-testnet'
+    );
     authorizeMcpWrite({
       operation: 'x402_payment',
       network: MCP_PINNED_NETWORK,

@@ -1,6 +1,6 @@
 {
   "schema": "agentbl-injective-mcp-smoke-v1",
-  "verified_at": "2026-06-29T09:09:03.649Z",
+  "verified_at": "2026-06-29T14:20:46.802Z",
   "network": "injective_testnet",
   "chain_id": 1439,
   "official_server": "https://github.com/InjectiveLabs/mcp-server",
@@ -19,16 +19,16 @@
       "tool": "evm_broadcast",
       "arguments_summary": {
         "sender": "inj1l7r0qyxsqhg4h4p7ruj5cy4v40h6ugvdymdxve",
-        "to": "0x1e499819cfbD847a3152CdFaD313C3229b9148Ab",
+        "to": "0xC636aAA726dBb9298882CddA9BCedfa11CDe453b",
         "value": "0",
         "calldata_selector": "0x18e56131",
         "chain_id": 1439,
         "approved": true,
         "allowlisted": true
       },
-      "cosmos_tx_hash": "F14E765DF8DEF9BBBDCB55852ADA242D9CCF638B0E20167579184B59EF603352",
-      "evm_tx_hash": "0x1578c10144a6216d8580eabc1497ee02c99a435c20cd315c1492fc0d78d8984f",
-      "explorer": "https://testnet.blockscout.injective.network/tx/0x1578c10144a6216d8580eabc1497ee02c99a435c20cd315c1492fc0d78d8984f",
+      "cosmos_tx_hash": "E80E0554251D7460F051F55EE3234B984093EA1F6A727FD9576BD94E7BF6379B",
+      "evm_tx_hash": "0xcc663f17a3fb18e038e5b78497c8d6e94d95a18044fdb363cf363ca083661349",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0xcc663f17a3fb18e038e5b78497c8d6e94d95a18044fdb363cf363ca083661349",
       "status": "ok"
     }
   ],

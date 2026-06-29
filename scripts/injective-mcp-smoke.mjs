@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { ethers } from 'ethers';
 import { InjectiveMcpAdapter } from '../src/mcp/injectiveAdapter.js';
+import chainConfigLib from './lib/chain-config.cjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const explorer = 'https://testnet.blockscout.injective.network';
@@ -99,7 +100,10 @@ const defaultServerPath = path.join(os.tmpdir(), 'agentbl-injective-mcp-server',
 const serverPath = process.env.INJECTIVE_MCP_SERVER_PATH?.trim() || defaultServerPath;
 await fs.access(serverPath);
 
-const chain = JSON.parse(await fs.readFile(path.join(root, 'public', 'chain-config.json'), 'utf8'));
+const chain = chainConfigLib.resolveNetworkConfig(
+  JSON.parse(await fs.readFile(path.join(root, 'public', 'chain-config.json'), 'utf8')),
+  'injective-testnet'
+);
 const target = chain.contracts.AgentBLRWA;
 assert.ok(ethers.isAddress(target));
 const temporaryHome = path.join(os.tmpdir(), `agentbl-injective-mcp-home-${process.pid}`);

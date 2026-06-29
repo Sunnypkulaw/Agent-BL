@@ -5,6 +5,7 @@ import { runHarnessScenarios } from '../src/core/scenarioRunner.js';
 import { assertRiskReport, assertTradeCase } from '../src/core/schema.js';
 import { quoteFromCase } from '../src/core/pricingEngine.js';
 import { assertPricingQuote, PAYOUT_SPEEDS } from '../src/core/pricingSchema.js';
+import chainConfigLib from './lib/chain-config.cjs';
 
 const requiredFiles = [
   'README.md',
@@ -17,6 +18,7 @@ const requiredFiles = [
   'docs/evidence/wave-b-gate.json',
   'docs/evidence/wave-b-protocol.json',
   'docs/evidence/injective-mcp-smoke.json',
+  'public/chain-config.json',
   'data/demo-case.json',
   'data/scenarios/low-risk-approved.json',
   'data/scenarios/warning-margin-call.json',
@@ -39,8 +41,12 @@ const requiredFiles = [
   'src/mcp/tools.js',
   'src/skill/pricingAnalyst.js',
   'src/skill/demoOperator.js',
+  'scripts/lib/chain-config.cjs',
+  'scripts/migrate-chain-config.mjs',
   'tests/riskEngine.test.js',
   'tests/scenarioRunner.test.js',
+  'tests/chainConfig.test.js',
+  'tests/web3Wallets.test.js',
   'tests/smoke.test.js'
 ];
 
@@ -51,10 +57,20 @@ for (const file of requiredFiles) {
 const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
 for (const script of [
   'install', 'dev', 'test', 'check', 'demo', 'smoke', 'scenarios', 'mcp',
-  'mcp:stdio', 'deploy:protocol', 'verify:wave-b', 'smoke:mcp:injective'
+  'mcp:stdio', 'deploy:protocol', 'verify:wave-b', 'smoke:mcp:injective',
+  'migrate:chain-config'
 ]) {
   assert.ok(pkg.scripts[script], `Missing package script: ${script}`);
 }
+
+const chainRegistry = JSON.parse(await fs.readFile('public/chain-config.json', 'utf8'));
+chainConfigLib.assertRegistry(chainRegistry);
+assert.equal(chainRegistry.schema, 'agentbl-chain-config-v2');
+assert.equal(chainRegistry.defaultNetwork, 'injective-testnet');
+assert.ok(chainRegistry.networks['injective-testnet']);
+assert.ok(chainRegistry.networks['injective-mainnet']);
+assert.equal(chainRegistry.networks['injective-testnet'].accessModel, 'permissionless');
+assert.equal(chainRegistry.networks['injective-mainnet'].accessModel, 'compliance-gated');
 
 const data = JSON.parse(await fs.readFile('data/demo-case.json', 'utf8'));
 assertTradeCase(data);
@@ -100,4 +116,4 @@ for (const tool of MCP_TOOLS_MANIFEST) {
   assert.ok(tool.inputSchema, `Tool ${tool.name} must have an inputSchema`);
 }
 
-console.log('check passed: files, scripts, seed data, schema, knowledge base, MCP manifest and scenario harness are valid.');
+console.log('check passed: files, scripts, seed data, chain registry, schemas, knowledge base, MCP manifest and scenario harness are valid.');

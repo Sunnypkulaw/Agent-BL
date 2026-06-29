@@ -31,16 +31,27 @@
 
         <div class="topbar-right">
           <button id="lang-btn" class="btn ghost lang-btn" data-i18n-title="lang_btn_title">EN</button>
+          <select id="network-select" class="network-select" aria-label="Protocol network"></select>
           <div class="wallet-wrap">
             <button id="wallet-btn" class="btn ghost wallet-btn" data-i18n="wallet_connect" data-i18n-title="wallet_title" aria-haspopup="menu" aria-expanded="false">Connect Wallet</button>
             <div id="wallet-menu" class="wallet-menu" role="menu" hidden>
-              <div class="wallet-menu-addr">
-                <span class="wallet-menu-label" data-i18n="wallet_connected_label">Connected</span>
-                <code id="wallet-menu-address">0x…</code>
+              <div id="wallet-picker" class="wallet-picker">
+                <span class="wallet-menu-label">Choose wallet</span>
+                <button class="wallet-choice" data-wallet="metamask" type="button"><span>🦊</span><strong>MetaMask</strong><small>EVM contracts</small></button>
+                <button class="wallet-choice" data-wallet="keplr" type="button"><span>🔭</span><strong>Keplr</strong><small>Injective native</small></button>
+                <button class="wallet-choice" data-wallet="leap" type="button"><span>🟢</span><strong>Leap</strong><small>Injective native</small></button>
               </div>
-              <button id="wallet-copy-btn" class="wallet-menu-item" role="menuitem" type="button" data-i18n="wallet_copy">Copy address</button>
-              <a id="wallet-explorer-btn" class="wallet-menu-item" role="menuitem" target="_blank" rel="noopener" data-i18n="wallet_view_explorer">View on explorer</a>
-              <button id="wallet-disconnect-btn" class="wallet-menu-item danger" role="menuitem" type="button" data-i18n="wallet_disconnect">Disconnect</button>
+              <div id="wallet-account" hidden>
+                <div class="wallet-menu-addr">
+                  <span class="wallet-menu-label" id="wallet-menu-kind" data-i18n="wallet_connected_label">Connected</span>
+                  <code id="wallet-menu-address">0x…</code>
+                </div>
+                <button id="wallet-verify-btn" class="wallet-menu-item" role="menuitem" type="button">Sign testnet verification tx</button>
+                <div id="wallet-verify-status" class="wallet-verify-status"></div>
+                <button id="wallet-copy-btn" class="wallet-menu-item" role="menuitem" type="button" data-i18n="wallet_copy">Copy address</button>
+                <a id="wallet-explorer-btn" class="wallet-menu-item" role="menuitem" target="_blank" rel="noopener" data-i18n="wallet_view_explorer">View on explorer</a>
+                <button id="wallet-disconnect-btn" class="wallet-menu-item danger" role="menuitem" type="button" data-i18n="wallet_disconnect">Disconnect</button>
+              </div>
             </div>
           </div>
           <div class="live-pill" id="live-pill" data-i18n-title="live_tip">
@@ -249,6 +260,15 @@
               <h3 class="card-head-line" data-i18n="onchain_h">On-chain anchoring · AgentBLRWA</h3>
               <div class="hash-row"><span>quote_hash</span><code id="quote-hash" class="hash">—</code></div>
               <div class="hash-row"><span>evidence_hash</span><code id="evidence-hash" class="hash">—</code></div>
+              <div class="protocol-proof" id="protocol-proof">
+                <div class="protocol-proof-head">
+                  <strong>Live protocol evidence</strong>
+                  <button id="protocol-refresh-btn" class="btn ghost sm" type="button">Refresh events</button>
+                </div>
+                <p id="protocol-access-model" class="muted">Loading deployment…</p>
+                <div id="protocol-contracts" class="protocol-contracts"></div>
+                <div id="pricing-events" class="pricing-events"><p class="muted">Loading PricingUpdated…</p></div>
+              </div>
               <div id="mint-result" class="mint-result">
                 <p class="muted" data-i18n="mint_hint">Enter a financing amount and mint RWA on-chain. With a wallet and deployed contract, this creates a real testnet transaction; otherwise it falls back to simulation.</p>
               </div>

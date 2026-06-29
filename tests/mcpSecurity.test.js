@@ -7,8 +7,12 @@ import {
   MCP_PINNED_NETWORK,
   McpWritePolicyError
 } from '../src/mcp/security.js';
+import chainConfig from '../scripts/lib/chain-config.cjs';
 
-const config = JSON.parse(await fs.readFile('public/chain-config.json', 'utf8'));
+const config = chainConfig.resolveNetworkConfig(
+  JSON.parse(await fs.readFile('public/chain-config.json', 'utf8')),
+  'injective-testnet'
+);
 const target = config.contracts.RiskPricingOracle;
 const base = {
   operation: 'pricing_update',

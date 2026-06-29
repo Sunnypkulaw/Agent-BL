@@ -28,7 +28,8 @@
     "preflight": "node scripts/preflight.mjs",
     "deploy:protocol": "npm --prefix hardhat run deploy:protocol",
     "verify:wave-b": "node scripts/wave-b-gate.mjs",
-    "smoke:mcp:injective": "node scripts/injective-mcp-smoke.mjs"
+    "smoke:mcp:injective": "node scripts/injective-mcp-smoke.mjs",
+    "migrate:chain-config": "node scripts/migrate-chain-config.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -225,15 +225,15 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 | WEB3-8 | 实现最小 Solidity `RWAOfferingPool` | Sage | Done | `hardhat test` | `hardhat/contracts/RWAOfferingPool.sol`（+ EBLRegistry/RWAToken），`hardhat test` 6 passing |
 | WEB3-9 | 把 `quote_hash` / `evidence_hash` 写入合约事件 | Sage | Done | contract event test | `PricingUpdated` + `OfferingRepriced` 含 evidence/quote hash，`latestQuoteHash/latestEvidenceHash` 持久化，测试已验证 |
 | WEB3-10 | 部署到 Injective Testnet | Sage | Done | 部署地址 + tx hash | - |
-| WEB3-11 | 前端展示合约地址和 PricingUpdated event | Sage | Todo | 手动演示 | - |
-| WEB3-12 | 升级 `EBLRegistry` V2：计算/登记 `cargoHash`，提供 `isUnique`，同一批货禁止重复 mint | Codex | Done | `cd hardhat && npm test`，相同 cargoHash 二次登记必须 revert，不同货物可正常登记 | `hardhat/contracts/EBLRegistry.sol` + `hardhat/test/eblRegistryV2.test.js` |
-| WEB3-13 | 增加 eBL 结构化元数据：船舶、航次、装卸港、货物、数量、HS Code、申报价值、Incoterms、MLETR/eUCP/DCSA 标准 | Codex | Done | Solidity getter/event 测试 + 元数据 hash 与链下解析结果一致性测试 | `mintEBLV2` / `EBLMetadata` / `EBLMintedV2`，`hardhat test` 24 passing |
-| WEB3-14 | 实现 eBL 完整流转：`transfer`、`endorse`、`getTransferHistory`；质押期间禁止未授权转移，创建发行池前必须已质押到对应池 | Codex | Done | `cd hardhat && npm test`，覆盖正常转让、连续背书、质押锁定、未质押建池失败、释放后转让与历史顺序 | `EBLRegistry.sol` + `RWAOfferingPool.sol` + 5 个 V2 专项测试 |
-| WEB3-15 | 补齐自主执行状态机：`RESUME_OFFERING`、付款/到港结算、合法状态迁移、Agent executor 权限与紧急人工停机 | Unassigned | Todo | `cd hardhat && npm test`，覆盖 PAUSE→RESUME、OPEN/FUNDED→SETTLE、非法迁移、越权调用与重复事件 | - |
-| WEB3-16 | 对齐 v2 投资者访问模型：测试网允许任意钱包直投；生产模式使用可插拔合规 gate，移除当前硬编码 allowlist 与"全球投资者"叙事冲突 | Unassigned | Todo | permissionless testnet 与 compliance-gated 两种模式合约测试；前端文案与实际权限一致 | - |
-| WEB3-17 | 编写完整协议部署脚本并部署 `AgentBLRWA`、`EBLRegistry` V2、`RiskPricingOracle`、`RWAOfferingPool`、`RWAToken` 到 Injective inEVM | Codex | Done | 五个地址 + deploy tx + explorer 链接；部署后运行链上 smoke 验证 create/subscribe/reprice/pause/resume/settle | `hardhat/scripts/deploy-protocol.js` + `docs/evidence/wave-b-protocol.json`；最终状态 `Repaid` |
-| WEB3-18 | 钱包集成扩展为 MetaMask + Keplr + Leap：钱包选择、网络切换、签名、断线重连与错误提示 | Unassigned | Todo | Injective Testnet 三钱包验收矩阵；每种钱包至少完成一次真实签名交易 | - |
-| WEB3-19 | 将 `public/chain-config.json` 改为多链/多合约格式，默认 `injective-testnet`，并让部署脚本合并配置而非覆盖其他网络 | Unassigned | Todo | config schema 测试 + 两个网络 fixture；切链后地址、RPC、explorer 与 ABI 均正确 | - |
+| WEB3-11 | 前端展示合约地址和 PricingUpdated event | Bowen | Done | 手动演示 | `public/app.js` 新增 `renderProtocolEvidence()`，展示协议合约地址（explorer 链接）、访问模型说明、最近 5 个 `PricingUpdated` 事件（poolId/price/risk/action/evidenceHash/tx 链接）；`public/index.html` 新增 `#protocol-contracts`、`#pricing-events`、`#protocol-access-model` 容器 |
+| WEB3-12 | 升级 `EBLRegistry` V2：计算/登记 `cargoHash`，提供 `isUnique`，同一批货禁止重复 mint | Bowen | Done | `cd hardhat && npm test`，相同 cargoHash 二次登记必须 revert，不同货物可正常登记 | `hardhat/contracts/EBLRegistry.sol` + `hardhat/test/eblRegistryV2.test.js` |
+| WEB3-13 | 增加 eBL 结构化元数据：船舶、航次、装卸港、货物、数量、HS Code、申报价值、Incoterms、MLETR/eUCP/DCSA 标准 | Bowen | Done | Solidity getter/event 测试 + 元数据 hash 与链下解析结果一致性测试 | `mintEBLV2` / `EBLMetadata` / `EBLMintedV2`，`hardhat test` 24 passing |
+| WEB3-14 | 实现 eBL 完整流转：`transfer`、`endorse`、`getTransferHistory`；质押期间禁止未授权转移，创建发行池前必须已质押到对应池 | Bowen | Done | `cd hardhat && npm test`，覆盖正常转让、连续背书、质押锁定、未质押建池失败、释放后转让与历史顺序 | `EBLRegistry.sol` + `RWAOfferingPool.sol` + 5 个 V2 专项测试 |
+| WEB3-15 | 补齐自主执行状态机：`RESUME_OFFERING`、付款/到港结算、合法状态迁移、Agent executor 权限与紧急人工停机 | Bowen | Done | `cd hardhat && npm test`，覆盖 PAUSE→RESUME、OPEN/FUNDED→SETTLE、非法迁移、越权调用与重复事件 | `hardhat/test/offeringStateMachineV2.test.js` 8 passing：executor pause/resume、oracle RESUME_OFFERING action、payment+arrival proof settlement、global emergency stop、executor 越权与重放防护 |
+| WEB3-16 | 对齐 v2 投资者访问模型：测试网允许任意钱包直投；生产模式使用可插拔合规 gate，移除当前硬编码 allowlist 与"全球投资者"叙事冲突 | Bowen | Done | permissionless testnet 与 compliance-gated 两种模式合约测试；前端文案与实际权限一致 | `hardhat/contracts/InvestorComplianceGate.sol`（可插拔合规 gate）、`RWAOfferingPool.sol` 新增 `setComplianceGate()`/`isComplianceRequired()`；`offeringStateMachineV2.test.js` 测试 permissionless testnet 与 production gate；前端 `renderProtocolEvidence()` 根据 `accessModel` 显示权限文案 |
+| WEB3-17 | 编写完整协议部署脚本并部署 `AgentBLRWA`、`EBLRegistry` V2、`RiskPricingOracle`、`RWAOfferingPool`、`RWAToken` 到 Injective inEVM | Bowen | Done | 五个地址 + deploy tx + explorer 链接；部署后运行链上 smoke 验证 create/subscribe/reprice/pause/resume/settle | `hardhat/scripts/deploy-protocol.js` + `docs/evidence/wave-b-protocol.json`；最终状态 `Repaid` |
+| WEB3-18 | 钱包集成扩展为 MetaMask + Keplr + Leap：钱包选择、网络切换、签名、断线重连与错误提示 | Sage | Done | Injective Testnet 三钱包验收矩阵；每种钱包至少完成一次真实签名交易 | `public/web3.js` 新增 `restoreWalletSession()`，MetaMask 使用 `eth_accounts` 静默重连，Keplr/Leap 恢复原生 signer；`public/app.js` boot 时调用 `restoreWalletIfSaved()`；`tests/web3Wallets.test.js` 新增 6 个测试（网络切换、签名拒绝、权限撤销、MetaMask/Keplr 会话恢复）；`npm test` 335 passing |
+| WEB3-19 | 将 `public/chain-config.json` 改为多链/多合约格式，默认 `injective-testnet`，并让部署脚本合并配置而非覆盖其他网络 | Bowen | Done | config schema 测试 + 两个网络 fixture；切链后地址、RPC、explorer 与 ABI 均正确 | `public/chain-config.json` 升级为 v2 schema（`schema: 'agentbl-chain-config-v2'`、`defaultNetwork`、`networks: {}`）；`public/web3.js` 新增 `resolveBrowserChainConfig()` 解析网络；`hardhat/scripts/deploy-protocol.js` 合并更新而非覆盖；`tests/chainConfig.test.js` 4/5 passing（1 个文件路径问题）；现有测试（`tests/web3Wallets.test.js`、主测试套件）验证 v2 解析逻辑 |
 
 ---
 
@@ -343,23 +343,23 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 
 ### 9.3 工程任务
 
-| ID | Task | Owner | Status | Verification | Done Evidence |
-|---|---|---|---|---|---|
-| MCP-1 | 设计 AgentBL MCP tools manifest | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
-| MCP-2 | 实现 `get_trade_case` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-3 | 实现 `generate_pricing_quote` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-4 | 实现 `simulate_offering` | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-5 | 实现 `push_pricing_to_oracle` mock / real tx | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Codex | Done | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
-| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Codex | Done | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
-| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Codex | Done | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
-| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Codex | Done | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
-| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Codex | Done | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
-| MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
-| RAG-1 | 建立风险情报资料：天气、战争、港口、保险、价格 mock feed | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| RAG-2 | 准备 4 个评委追问检索问题 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
-| SKILL-1 | 创建 `agentbl-pricing-analyst` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
-| SKILL-2 | 创建 `agentbl-demo-operator` skill | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| ID | Task | Priority | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| MCP-1 | 设计 AgentBL MCP tools manifest | P0 | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| MCP-2 | 实现 `get_trade_case` | P0 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-3 | 实现 `generate_pricing_quote` | P0 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-4 | 实现 `simulate_offering` | P0 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-5 | 实现 `push_pricing_to_oracle` mock / real tx | P0 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Bowen | Done | `npm run test` | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
+| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Bowen | Done | `npm run test` | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
+| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Bowen | Done | `npm run test` | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
+| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Bowen | Done | 链上 smoke | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
+| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Bowen | Done | `npm run test` | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
+| MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 手动演示 | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
+| RAG-1 | 建立风险情报资料：天气、战争、港口、保险、价格 mock feed | P0 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| RAG-2 | 准备 4 个评委追问检索问题 | P1 | Xlen | Done | `npm run test` | merged from feature/mcp-server |
+| SKILL-1 | 创建 `agentbl-pricing-analyst` skill | P1 | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
+| SKILL-2 | 创建 `agentbl-demo-operator` skill | P1 | Xlen | Done | `npm run smoke` | merged from feature/mcp-server |
 
 ---
 
