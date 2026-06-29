@@ -46,13 +46,23 @@ function enrichCaseWithValuation(caseData, valuation) {
   };
 }
 
-function chooseAction({ parsing, documents, recommended }) {
+function chooseAction({ parsing, documents, recommended, preferences }) {
   if (parsing?.requires_human_review) {
     return { action: 'PAUSE_OFFERING', reason: 'Document extraction confidence is below the auto-execution threshold.' };
   }
   if (documents.has_critical) {
     return { action: 'PAUSE_OFFERING', reason: 'Critical cross-document inconsistency requires human review.' };
   }
+  
+  if (preferences && typeof preferences.min_acceptable_issue_price === 'number') {
+    if (recommended.final_issue_price_usd < preferences.min_acceptable_issue_price) {
+      return { 
+        action: 'PAUSE_OFFERING', 
+        reason: `Final issue price USD ${recommended.final_issue_price_usd.toFixed(2)} is below the exporter's minimum acceptable price of USD ${preferences.min_acceptable_issue_price.toFixed(2)}.`
+      };
+    }
+  }
+
   return { action: recommended.pricing_action, reason: recommended.investor_explanation };
 }
 
@@ -123,11 +133,19 @@ export class AgentOrchestrator {
     });
     const pricedCase = enrichCaseWithValuation(caseData, valuation);
     const comparison = this.compareSpeeds(pricedCase, {
-      requested_cash_usd: options.requested_cash_usd ?? pricedCase.financing.requested_cash_usd
+      requested_cash_usd: options.exporter_preferences?.target_financing_amount ?? options.requested_cash_usd ?? pricedCase.financing.requested_cash_usd
     });
     for (const quote of comparison.quotes) assertPricingQuote(quote, pricedCase);
-    const recommended = comparison.recommended_quote;
-    const selected = chooseAction({ parsing, documents: documentReport, recommended });
+    
+    let recommended = comparison.recommended_quote;
+    if (options.exporter_preferences?.payout_speed_preference) {
+      const preferredQuote = comparison.quotes.find(q => q.payout_speed === options.exporter_preferences.payout_speed_preference);
+      if (preferredQuote) {
+        recommended = preferredQuote;
+      }
+    }
+    
+    const selected = chooseAction({ parsing, documents: documentReport, recommended, preferences: options.exporter_preferences });
     const actionPayload = contractAction(selected.action, recommended);
     const inputSnapshot = {
       case_id: pricedCase.case_id,

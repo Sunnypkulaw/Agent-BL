@@ -109,7 +109,8 @@ export class AutonomousAgent {
       const result = await this.orchestrator.processEbl({ case_data: event.case_data, documents: event.documents }, {
         forceDeterministic: event.force_deterministic ?? true,
         parser: event.parser_options,
-        valuation: event.valuation_options
+        valuation: event.valuation_options,
+        exporter_preferences: event.exporter_preferences
       });
       action = normalizedPricingAction(result.action);
       reasoning = result.reasoning_summary;

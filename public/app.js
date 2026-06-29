@@ -294,13 +294,14 @@ function renderViewMint() {
 // ===========================================================================
 // View ⓪ — Investor marketplace
 // ===========================================================================
-async function getCaseComparison(entry) {
+async function getCaseComparison(entry, forceUpdate = false) {
   if (!entry?.case_id) throw new Error('Missing case id');
   const cached = state.marketComparisons[entry.case_id];
-  if (cached?.comparison) return cached.comparison;
-  if (cached?.promise) return cached.promise;
+  if (!forceUpdate && cached?.comparison) return cached.comparison;
+  if (!forceUpdate && cached?.promise) return cached.promise;
 
-  const promise = api.compareSpeeds(entry.case)
+  const minAcceptablePrice = $('#pref-min-price') ? Number($('#pref-min-price').value) : undefined;
+  const promise = api.compareSpeeds(entry.case, { min_acceptable_issue_price: minAcceptablePrice })
     .then((comparison) => {
       state.marketComparisons[entry.case_id] = { comparison };
       return comparison;
@@ -1676,6 +1677,31 @@ function wireStaticHandlers() {
   $('#mode-toggle-btn')?.addEventListener('click', onModeToggle);
   $('#demo-reset-btn')?.addEventListener('click', onDemoReset);
   $('#mint-btn').addEventListener('click', onMint);
+  $('#pref-min-price')?.addEventListener('change', async () => {
+    if (state.caseId) {
+      const entry = state.cases.find(c => c.case_id === state.caseId);
+      if (entry) {
+        setBusy(true);
+        try {
+          state.comparison = await getCaseComparison(entry, true);
+          renderMarket();
+          renderViewMint();
+        } catch(e) {
+          toast('Failed to reprice: ' + e.message, true);
+        } finally {
+          setBusy(false);
+        }
+      }
+    }
+  });
+  $('#pref-speed')?.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val) {
+      selectSpeed(val);
+    } else {
+      selectSpeed(state.comparison?.recommended_payout_speed ?? 'BALANCED');
+    }
+  });
   $('#mint-financing').addEventListener('input', () => {
     const q = selectedQuote();
     if (q && !$('#mint-financing').disabled) renderMintReadout(q);
