@@ -5,9 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AgentBL · eBL-backed RWA Investment Marketplace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=5" />
   </head>
   <body>
+    <!-- Ambient glowing backgrounds for glassmorphism -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
     <!-- ============ Sticky top bar: brand · nav tabs · lang · wallet · LIVE ============ -->
     <header class="topbar">
       <div class="topbar-inner">
@@ -20,10 +25,8 @@
         </div>
 
         <nav id="nav" class="nav" role="tablist" aria-label="views">
-          <button class="nav-tab active" data-view="market" role="tab" data-i18n="nav_market">Investment Marketplace</button>
-          <button class="nav-tab" data-view="mint" role="tab" data-i18n="nav_mint">Pricing & Mint</button>
-          <button class="nav-tab" data-view="voyage" role="tab" data-i18n="nav_voyage">Voyage Risk</button>
-          <button class="nav-tab" data-view="intel" role="tab" data-i18n="nav_intel">x402 风控报告</button>
+          <button class="nav-tab active" data-view="market" role="tab" data-i18n="nav_market">Investor Dashboard</button>
+          <button class="nav-tab" data-view="mint" role="tab" data-i18n="nav_mint">Exporter Portal (Mint)</button>
         </nav>
 
         <div class="topbar-right">
@@ -182,6 +185,23 @@
 
           <div class="mint-grid">
             <div class="card mint-form">
+              <label class="control-label" data-i18n="exporter_preferences">Exporter Preferences (Autonomous Agent Constraints)</label>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                <div class="mint-input-row">
+                  <span class="muted" style="width: 140px;">Min issue price (USD)</span>
+                  <input id="pref-min-price" type="number" step="0.01" min="0" max="1" value="0.75" />
+                </div>
+                <div class="mint-input-row">
+                  <span class="muted" style="width: 140px;">Speed preference</span>
+                  <select id="pref-speed" style="flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); color: var(--text-main);">
+                    <option value="">AI Recommended</option>
+                    <option value="FAST">FAST</option>
+                    <option value="BALANCED">BALANCED</option>
+                    <option value="LOW_COST">LOW_COST</option>
+                  </select>
+                </div>
+              </div>
+
               <label class="control-label" for="mint-financing" data-i18n="financing_label">Merchant financing amount (USD)</label>
               <div class="mint-input-row">
                 <input id="mint-financing" type="number" min="0" step="100000" inputmode="numeric" />
@@ -206,10 +226,20 @@
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW ② — Voyage tracking + live pricing + in-transit events         -->
+      <!-- Deal Detail Modal (Voyage tracking & x402 AI Risk)                  -->
       <!-- =================================================================== -->
-      <section class="view" id="view-voyage" hidden>
-        <section class="panel" id="voyage-panel">
+      <dialog id="deal-detail-modal" class="deal-modal">
+        <form method="dialog" class="modal-close-bar">
+          <div class="modal-header">
+            <h2 id="modal-title">Deal Details</h2>
+            <span class="muted" id="modal-subtitle">Voyage tracking & AI risk reports</span>
+          </div>
+          <button class="btn ghost sm close-btn">Close</button>
+        </form>
+        <div class="modal-content">
+          <!-- VIEW ② — Voyage tracking + live pricing + in-transit events -->
+          <section class="view-content" id="view-voyage">
+            <section class="panel" id="voyage-panel">
           <div class="panel-head">
             <h2><span class="seq">1</span> <span data-i18n="vp1_h">Voyage progress (virtual time)</span></h2>
             <p class="panel-sub" id="voyage-sub" data-i18n="vp1_sub">Hover over the ship to see its current virtual time and leg.</p>
@@ -309,11 +339,11 @@
         </section>
       </section>
 
-      <!-- =================================================================== -->
-      <!-- VIEW ③ — x402 AI Risk Report Market: pay-to-unlock AI analysis   -->
-      <!-- =================================================================== -->
-      <section class="view" id="view-intel" hidden>
-        <section class="market-hero" aria-labelledby="intel-title">
+          </section>
+
+          <!-- VIEW ③ — x402 AI Risk Report Market: pay-to-unlock AI analysis -->
+          <section class="view-content" id="view-intel">
+            <section class="market-hero" aria-labelledby="intel-title">
           <div class="market-hero-copy">
             <p class="eyebrow" data-i18n="x402_hero_eyebrow">x402 AI 风控报告市场</p>
             <h1 id="intel-title" data-i18n="x402_hero_h1">一份 AI 风控报告，一个 RWA 定价决策。链上审计。</h1>
@@ -443,8 +473,10 @@
             <!-- Result log -->
             <div id="x402-log" class="x402-log"></div>
           </section>
-        </section>
-      </section>
+            </section>
+          </section>
+        </div>
+      </dialog>
 
       <footer class="page-foot">
         <span data-i18n="footer_left">AgentBL Agent</span>

@@ -13,7 +13,7 @@ import { state, selectedQuote, liveQuote } from './store.js';
 import { $, el, clear, toast } from './dom.js';
 import * as f from './format.js';
 import * as api from './api.js';
-import { t } from './i18n.js';
+import { t, tData } from './i18n.js';
 
 const PLAY_MS = 60000; // wall-clock ms to play the full voyage (0 -> 100%)
 
@@ -139,9 +139,9 @@ function initialProgress() {
 }
 
 function renderRoute(bl) {
-  $('#dep-port').textContent = bl.port_of_loading || '—';
+  $('#dep-port').textContent = tData(bl.port_of_loading) || '—';
   $('#dep-date').textContent = f.fmtDate(depDate);
-  $('#arr-port').textContent = bl.port_of_discharge || '—';
+  $('#arr-port').textContent = tData(bl.port_of_discharge) || '—';
   $('#arr-date').textContent = f.fmtDate(etaDate);
   const voyageNo = bl.voyage_no ? t('voyage_voyage_no', { no: bl.voyage_no }) : '';
   const carrier = bl.carrier ? ` · ${bl.carrier}` : '';
@@ -166,7 +166,7 @@ function updateShip() {
   if (fill) fill.style.width = (p * 100) + '%';
 
   const when = f.fmtDateTime(f.dateAtProgress(depDate, etaDate, p));
-  const where = waypoint(p, bl.port_of_loading || '—', bl.port_of_discharge || '—');
+  const where = waypoint(p, tData(bl.port_of_loading) || '—', tData(bl.port_of_discharge) || '—');
   const tip = $('#ship-tooltip');
   if (tip) tip.textContent = `${when} · ${where}`;
   const scrub = $('#voyage-scrub');

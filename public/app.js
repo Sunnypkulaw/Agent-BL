@@ -14,7 +14,7 @@ import { $, el, clear, toast, setBusy } from './dom.js';
 import * as f from './format.js';
 import * as api from './api.js';
 import * as web3 from './web3.js';
-import { t, toggleLang, onLangChange, applyStaticI18n } from './i18n.js';
+import { t, tData, toggleLang, onLangChange, applyStaticI18n } from './i18n.js';
 import { initVoyage, renderVoyage, startVoyageClock, stopVoyageClock } from './voyage.js';
 import { initPopupAssistant } from './popup-assistant.js';
 import { getDeepSeekClient } from './llm-client.js';
@@ -268,17 +268,43 @@ function setView(name) {
   document.querySelectorAll('#nav .nav-tab').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   $('#view-market').hidden = name !== 'market';
   $('#view-mint').hidden = name !== 'mint';
-  $('#view-voyage').hidden = name !== 'voyage';
-  $('#view-intel').hidden = name !== 'intel';
-  if (name === 'intel') { stopMarketClock(); stopVoyageClock(); renderIntelMarket(); }
-  else if (name === 'voyage') { stopMarketClock(); renderVoyage(); startVoyageClock(); }
-  else {
-    stopVoyageClock();
-    if (name === 'market') { renderMarket(); startMarketClock(); }
-    else stopMarketClock();
-  }
+  
+  if (name === 'market') { renderMarket(); startMarketClock(); }
+  else { stopMarketClock(); stopVoyageClock(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+async function openDealDetailModal(caseId) {
+  if (caseId) {
+    await selectCase(caseId);
+  }
+  const modal = $('#deal-detail-modal');
+  if (modal) {
+    stopMarketClock();
+    renderVoyage();
+    startVoyageClock();
+    renderIntelMarket();
+    modal.showModal();
+  }
+}
+
+function closeDealDetailModal() {
+  const modal = $('#deal-detail-modal');
+  if (modal) modal.close();
+  stopVoyageClock();
+  startMarketClock();
+}
+
+// Add event listener for dialog close
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = $('#deal-detail-modal');
+  if (modal) {
+    modal.addEventListener('close', () => {
+      closeDealDetailModal();
+    });
+  }
+});
+
 
 function renderViewMint() {
   const quote = selectedQuote();
@@ -294,13 +320,14 @@ function renderViewMint() {
 // ===========================================================================
 // View ⓪ — Investor marketplace
 // ===========================================================================
-async function getCaseComparison(entry) {
+async function getCaseComparison(entry, forceUpdate = false) {
   if (!entry?.case_id) throw new Error('Missing case id');
   const cached = state.marketComparisons[entry.case_id];
-  if (cached?.comparison) return cached.comparison;
-  if (cached?.promise) return cached.promise;
+  if (!forceUpdate && cached?.comparison) return cached.comparison;
+  if (!forceUpdate && cached?.promise) return cached.promise;
 
-  const promise = api.compareSpeeds(entry.case)
+  const minAcceptablePrice = $('#pref-min-price') ? Number($('#pref-min-price').value) : undefined;
+  const promise = api.compareSpeeds(entry.case, { min_acceptable_issue_price: minAcceptablePrice })
     .then((comparison) => {
       state.marketComparisons[entry.case_id] = { comparison };
       return comparison;
@@ -451,6 +478,20 @@ function renderMarketCard(entry, comparison) {
   const act = quote ? f.actionMeta(quote.pricing_action) : null;
   const paused = quote && PAUSED_ACTIONS.has(quote.pricing_action);
 
+  let cargoType = 'alu'; // fallback
+  const cId = (entry.case_id || '').toLowerCase();
+  const cName = (bl.cargo || entry.cargo || '').toLowerCase();
+  const match = (kw) => cId.includes(kw) || cName.includes(kw);
+
+  if (match('copper') || match('cuconc') || match('-cu-') || match('铜')) cargoType = 'copper';
+  else if (match('crude') || match('refined') || match('-oil-') || match('oil') || match('petroleum') || match('油')) cargoType = 'oil';
+  else if (match('ironore') || match('iron ore') || match('铁')) cargoType = 'ore';
+  else if (match('rubber') || match('橡胶')) cargoType = 'rubber';
+  else if (match('soybean') || match('-soy-') || match('大豆')) cargoType = 'soybean';
+  else if (match('alu') || match('铝')) cargoType = 'alu';
+
+  const imgSrc = `/img/cargo/${cargoType}.jpg`;
+
   return el('article', {
     class: `market-card tone-${tone}${active ? ' active' : ''}${paused ? ' paused' : ''}`,
     'data-case': entry.case_id,
@@ -459,12 +500,14 @@ function renderMarketCard(entry, comparison) {
       selectMarketCase(entry.case_id);
     }
   },
-    el('div', { class: 'market-card-top' },
-      el('span', { class: `badge tone-${tone}`, text: f.riskLabel(risk) }),
-      act ? el('span', { class: `badge sm tone-${act.tone}`, text: act.label }) : el('span', { class: 'badge sm tone-muted', text: t('market_loading') })
+    el('div', { class: 'market-card-hero', style: `background-image: url('${imgSrc}');` },
+      el('div', { class: 'market-card-top' },
+        el('span', { class: `badge tone-${tone}`, text: f.riskLabel(risk) }),
+        act ? el('span', { class: `badge sm tone-${act.tone}`, text: act.label }) : el('span', { class: 'badge sm tone-muted', text: t('market_loading') })
+      )
     ),
-    el('h3', { class: 'market-card-title', text: bl.cargo || entry.cargo || shortLabel(entry) }),
-    el('p', { class: 'market-card-route', text: `${bl.port_of_loading || '?'} → ${bl.port_of_discharge || '?'}` }),
+    el('h3', { class: 'market-card-title', text: tData(bl.cargo || entry.cargo || shortLabel(entry)) }),
+    el('p', { class: 'market-card-route', text: `${tData(bl.port_of_loading) || '?'} → ${tData(bl.port_of_discharge) || '?'}` }),
     el('div', { class: 'market-price-row' },
       el('div', {},
         el('span', { class: 'metric-label', text: t('market_issue_price') }),
@@ -485,7 +528,7 @@ function renderMarketCard(entry, comparison) {
     renderMarketFunding(funding, paused),
     el('div', { class: 'market-card-actions' },
       el('button', { class: 'btn sm market-subscribe-shortcut', onclick: () => selectMarketCase(entry.case_id) }, t('market_card_subscribe')),
-      el('button', { class: 'btn ghost sm', onclick: () => { selectMarketCase(entry.case_id).then(() => setView('voyage')); } }, t('market_card_track'))
+      el('button', { class: 'btn ghost sm', onclick: () => { selectMarketCase(entry.case_id).then(() => openDealDetailModal(entry.case_id)); } }, t('market_card_track'))
     )
   );
 }
@@ -500,8 +543,8 @@ function fact(label, value) {
 function renderMarketVoyage(bl, progress) {
   return el('div', { class: 'market-voyage' },
     el('div', { class: 'market-port-row' },
-      el('span', { text: bl.port_of_loading || 'Departure' }),
-      el('span', { text: bl.port_of_discharge || 'Arrival' })
+      el('span', { text: tData(bl.port_of_loading) || 'Departure' }),
+      el('span', { text: tData(bl.port_of_discharge) || 'Arrival' })
     ),
     el('div', { class: 'market-voyage-track' },
       el('div', { class: 'market-voyage-fill', style: `width:${Math.round(progress * 100)}%` }),
@@ -550,7 +593,7 @@ function renderMarketDetail() {
     el('div', { class: 'market-detail-head' },
       el('span', { class: 'metric-label', text: t('market_detail_label') }),
       el('h2', { text: shortLabel(entry) }),
-      el('p', { text: `${bl.cargo || entry.cargo || 'Trade cargo'} · ${bl.port_of_loading || '?'} → ${bl.port_of_discharge || '?'}` })
+      el('p', { text: `${tData(bl.cargo || entry.cargo || 'Trade cargo')} · ${tData(bl.port_of_loading) || '?'} → ${tData(bl.port_of_discharge) || '?'}` })
     ),
     el('div', { class: 'market-detail-price' },
       el('div', {},
@@ -586,7 +629,7 @@ function renderMarketDetail() {
     el('div', { id: 'market-subscribe-readout', class: 'market-subscribe-readout' }),
     el('div', { class: 'market-detail-actions' },
       el('button', { class: 'btn ghost sm', onclick: () => setView('mint') }, t('market_open_pricing')),
-      el('button', { class: 'btn ghost sm', onclick: () => setView('voyage') }, t('market_open_voyage'))
+      el('button', { class: 'btn ghost sm', onclick: () => openDealDetailModal(state.caseId) }, t('market_open_voyage'))
     )
   );
 
@@ -748,9 +791,9 @@ function renderCaseSelector() {
 
 function shortLabel(c) {
   const bl = c.case?.bill_of_lading ?? {};
-  const cargo = shortCargoName(bl.cargo || c.cargo || c.case_id);
-  const load = bl.port_of_loading;
-  const disch = bl.port_of_discharge;
+  const cargo = shortCargoName(tData(bl.cargo || c.cargo || c.case_id));
+  const load = tData(bl.port_of_loading);
+  const disch = tData(bl.port_of_discharge);
   return load && disch ? `${cargo} · ${load} → ${disch}` : cargo;
 }
 
@@ -935,8 +978,8 @@ function renderDealStrip(quote) {
   clear(strip);
   const qty = bl.quantity_mt ? `${f.int(bl.quantity_mt)} MT` : (bl.quantity_bbl ? `${f.int(bl.quantity_bbl)} bbl` : '');
   const pills = [
-    [t('ds_route'), bl.port_of_loading && bl.port_of_discharge ? `${bl.port_of_loading} → ${bl.port_of_discharge}` : '—'],
-    [t('ds_cargo'), bl.cargo ? `${bl.cargo}${qty ? ` · ${qty}` : ''}` : '—'],
+    [t('ds_route'), bl.port_of_loading && bl.port_of_discharge ? `${tData(bl.port_of_loading)} → ${tData(bl.port_of_discharge)}` : '—'],
+    [t('ds_cargo'), bl.cargo ? `${tData(bl.cargo)}${qty ? ` · ${qty}` : ''}` : '—'],
     [t('ds_ebl'), bl.bl_id ? `${bl.bl_id}${bl.ebl_platform ? ` · ${bl.ebl_platform}` : ''}` : '—'],
     [t('ds_declared'), bl.declared_value_usd ? f.usd(bl.declared_value_usd) : '—'],
     [t('ds_collateral'), f.usd(quote.ai_verified_collateral_value_usd)]
@@ -1676,6 +1719,31 @@ function wireStaticHandlers() {
   $('#mode-toggle-btn')?.addEventListener('click', onModeToggle);
   $('#demo-reset-btn')?.addEventListener('click', onDemoReset);
   $('#mint-btn').addEventListener('click', onMint);
+  $('#pref-min-price')?.addEventListener('change', async () => {
+    if (state.caseId) {
+      const entry = state.cases.find(c => c.case_id === state.caseId);
+      if (entry) {
+        setBusy(true);
+        try {
+          state.comparison = await getCaseComparison(entry, true);
+          renderMarket();
+          renderViewMint();
+        } catch(e) {
+          toast('Failed to reprice: ' + e.message, true);
+        } finally {
+          setBusy(false);
+        }
+      }
+    }
+  });
+  $('#pref-speed')?.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val) {
+      selectSpeed(val);
+    } else {
+      selectSpeed(state.comparison?.recommended_payout_speed ?? 'BALANCED');
+    }
+  });
   $('#mint-financing').addEventListener('input', () => {
     const q = selectedQuote();
     if (q && !$('#mint-financing').disabled) renderMintReadout(q);

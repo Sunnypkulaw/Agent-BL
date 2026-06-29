@@ -49,17 +49,17 @@ function rawCase(caseData) {
   return caseData?.case ?? caseData;
 }
 
-/** BE-3: all three payout-speed quotes + a recommendation for a case. */
-export function compareSpeeds(caseData) {
-  return postJson('/api/pricing/quote', { case: rawCase(caseData), compare: true });
+export function compareSpeeds(caseData, prefs = {}) {
+  return postJson('/api/pricing/quote', { case: rawCase(caseData), compare: true, ...prefs });
 }
 
 /** BE-4: full RWA offering lifecycle. Pass speed, subscription, and in-transit events. */
-export function simulateOffering(caseData, { payout_speed, subscription_usd, events } = {}) {
+export function simulateOffering(caseData, { payout_speed, subscription_usd, events, min_acceptable_issue_price } = {}) {
   return postJson('/api/offering/simulate', {
     case: rawCase(caseData),
     payout_speed,
     subscription_usd,
+    min_acceptable_issue_price,
     events: events && events.length ? events : undefined
   });
 }

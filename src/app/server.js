@@ -148,6 +148,8 @@ async function resolvePricingRequest(body, url) {
   }
   if (errors.length > 0) throw new ValidationError('Invalid pricing request', errors);
 
+  const minAcceptablePrice = parseAmount(q.get('min_acceptable_issue_price') ?? wrapper.min_acceptable_issue_price, 'min_acceptable_issue_price', errors, { allowZero: true });
+
   const compareRaw = q.get('compare') ?? wrapper.compare;
   const options = {
     payout_speed: payoutSpeed === null ? undefined : payoutSpeed,
@@ -157,7 +159,8 @@ async function resolvePricingRequest(body, url) {
     paid_report_envelopes: wrapper.paid_report_envelopes
       ?? (wrapper.paid_report_envelope ? [wrapper.paid_report_envelope] : undefined),
     compare: compareRaw === true || compareRaw === 'true',
-    pool_id: q.get('pool_id') ?? wrapper.pool_id ?? undefined
+    pool_id: q.get('pool_id') ?? wrapper.pool_id ?? undefined,
+    min_acceptable_issue_price: minAcceptablePrice
   };
   return { caseData, options };
 }
@@ -168,6 +171,7 @@ function quoteOptions(options) {
   if (options.payout_speed !== undefined) out.payout_speed = options.payout_speed;
   if (options.requested_cash_usd !== undefined) out.requested_cash_usd = options.requested_cash_usd;
   if (options.paid_report_envelopes !== undefined) out.paid_report_envelopes = options.paid_report_envelopes;
+  if (options.min_acceptable_issue_price !== undefined) out.min_acceptable_issue_price = options.min_acceptable_issue_price;
   return out;
 }
 

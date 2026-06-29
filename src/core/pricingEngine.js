@@ -206,7 +206,9 @@ function buildExporterExplanation(q) {
     ? ` This is an aggressive share of your margin to give up for speed — consider a slower payout if you are not time-critical.`
     : '';
   const paused = q.pricing_action === 'PAUSE_OFFERING'
-    ? ` AI has PAUSED the offering: at current risk the financing would consume too much of your margin or exceed safe collateral coverage.`
+    ? (q.rejected_by_exporter
+       ? ` AI has PAUSED the offering: the final issue price of USD ${q.final_issue_price_usd.toFixed(2)} is below your minimum acceptable price of USD ${q.min_acceptable_issue_price.toFixed(2)}.`
+       : ` AI has PAUSED the offering: at current risk the financing would consume too much of your margin or exceed safe collateral coverage.`)
     : '';
   const collateral = q.binding_constraint === 'COLLATERAL'
     ? ` Note: the issue price was floored to keep redemption within safe collateral coverage, so you receive USD ${usd(q.expected_cash_to_exporter_usd)} of the USD ${usd(q.requested_cash_usd)} requested.`
@@ -313,16 +315,20 @@ export function priceRwaOffering(input) {
   const netProfit = round(profit - financingCost, 2);
   const impliedYieldBps = bps(target / finalPrice - 1);
 
-  // A *material* funding shortfall (requested cash cannot be served within safe
-  // collateral coverage) pauses the offering; sub-0.5% rounding shortfalls do not.
   const materialShortfall = expectedCash < cash * 0.995;
-  const pricingAction = pickPricingAction({
+  let pricingAction = pickPricingAction({
     riskLevel,
     paused: paused || materialShortfall,
     profitShare,
     payoutSpeed: speed,
     binding
   });
+
+  let rejectedByExporter = false;
+  if (typeof input.min_acceptable_issue_price === 'number' && finalPrice < input.min_acceptable_issue_price) {
+    pricingAction = 'PAUSE_OFFERING';
+    rejectedByExporter = true;
+  }
 
   const core = {
     case_id: input.case_id,
@@ -354,7 +360,9 @@ export function priceRwaOffering(input) {
     risk_level: riskLevel,
     risk_score_bps: riskScoreBps,
     risk_factors: input.risk_factors ?? [],
-    pricing_action: pricingAction
+    pricing_action: pricingAction,
+    rejected_by_exporter: rejectedByExporter,
+    min_acceptable_issue_price: input.min_acceptable_issue_price
   };
 
   // Evidence graph (AI-7) — each component with the evidence behind it.
@@ -485,6 +493,7 @@ export function quoteFromCase(caseData, options = {}) {
     ai_verified_collateral_value_usd: valuation.ai_verified_collateral_value_usd,
     redemption_coverage_limit: valuation.redemption_coverage_limit,
     target_redemption_value_usd: Number(financing.target_redemption_value_usd ?? 1),
+    min_acceptable_issue_price: options.min_acceptable_issue_price !== undefined ? Number(options.min_acceptable_issue_price) : undefined,
     risk_score_bps: risk.risk_score_bps,
     risk_level: risk.risk_level,
     risk_factors: risk.risk_factors,
