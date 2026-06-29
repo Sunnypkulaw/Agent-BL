@@ -1,21 +1,21 @@
 <div align="center">
 
-# 🛡️ AgentBL Agent
+# 🛡️ AgentBL
 
-### AI-priced, eBL-backed RWA trade-finance protocol · AI 动态定价的电子提单 RWA 贸易融资协议
+### When AI Agents Carry Real Financial Weight · 当 AI Agent 承担真实金融职责
 
-**The AI prices the risk. The chain enforces it. · AI 定价风险，链上强制执行。**
+**Your cargo is at sea. Your capital is locked for 45 days. An AI Agent watches the risk — and the market pays it to do so.**
 
-**🏆 你的货在海上漂，钱还要等 45 天。谁来替你盯风险？AgentBL 的 AI 风控 Agent。**
+**🏆 你的货在海上漂，钱还要等 45 天。谁来替你盯风险？AI Agent 盯——而且市场为它的每一次判断付费。**
 
-[![ETH Beijing](https://img.shields.io/badge/ETH_Beijing-2026-635BFF)](https://ethbeijing.xyz)
-[![Track](https://img.shields.io/badge/Track-AI_Agent_x_Blockchain-5A45FF)](#)
-[![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
+[![Injective Nova](https://img.shields.io/badge/Injective_Nova-2026-0B60FF)](https://injectivenova.com)
+[![Track](https://img.shields.io/badge/Track-AI_Payments_×_RWA-D6336C)](#)
+[![Award](https://img.shields.io/badge/Focus-Killer_AI_App-5A45FF)](#)
 [![tests](https://img.shields.io/badge/tests-300_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
 [![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
 [![MCP](https://img.shields.io/badge/MCP-Server-1F6FEB)](#)
-[![x402](https://img.shields.io/badge/x402-Enabled-D6336C)](#)
+[![x402](https://img.shields.io/badge/x402-Live_Settlement-D6336C)](#)
 [![deps](https://img.shields.io/badge/deps-x402_pinned-1F6FEB)](#)
 [![offline](https://img.shields.io/badge/demo-offline_ready-1F6FEB)](#)
 [![license](https://img.shields.io/badge/license-MIT-3FB950)](./LICENSE)
@@ -30,36 +30,72 @@
 
 ## 🇬🇧 English
 
-> Exporter pledges an electronic bill of lading → an **AI Pricing & Risk Agent** reads the cargo,
-> route, documents and live macro risk → it issues an **explainable, auditable RWA issue price**
-> → *the riskier the deal, the lower the price and the higher the investor's potential yield* →
-> every decision is **anchored on-chain**.
+### 💡 The Big Idea
 
-### 📖 What is AgentBL
+**An AI Agent doesn't just chat. It prices risk. The market pays it for every judgment. The chain makes it irreversible.**
 
-In global trade, the cargo ships but the cash is locked for 30–45 days. The exporter needs cash
-**now**; capital wants **collateralized, short-duration** yield. AgentBL connects the two — and
-puts an AI agent in charge of the dangerous part: **pricing real-world risk before investors are exposed.**
+In global trade, cargo ships but cash is locked for 30–45 days. Traditional trade finance relies on centralized institutions to assess risk and set prices — slow, opaque, and prone to single-point failure.
 
-1. The exporter pledges an **electronic bill of lading (eBL)** — title to the in-transit cargo — into a smart contract.
-2. An **AI Pricing & Risk Agent** values the cargo, then turns *"how fast the exporter wants cash"* and *"how risky this trade is"* into an **RWA issue discount** (e.g. 1 RWA = **$0.85**, target redemption **$1.00**).
-3. Investors subscribe at the discount; the exporter receives cash.
-4. When risk escalates in transit, the AI **reprices / pauses / liquidates** on-chain, writing every decision with its evidence hash into the `RiskPricingOracle`.
+AgentBL turns this around with three moves:
 
-> **One-line pitch:** *AI dynamically prices eBL-backed RWA, and the chain enforces it.*
+1. **An AI Pricing & Risk Agent underwrites every deal.** It reads the cargo, route, documents, and live world-risk signals — then issues an explainable, auditable issue price. Not a chatbot. An underwriter.
+
+2. **Every risk assessment is a paid transaction.** Through the **x402 protocol**, market participants pay micro-amounts (as low as $0.001 USDC) to unlock AI risk reports. Each payment is signed by the buyer's wallet, settled on-chain, and permanently recorded. The AI Agent earns its keep — literally.
+
+3. **The pricing gets smarter with every report.** Each paid report anchors risk evidence on-chain. As more independent assessments accumulate, the fair price of any cargo emerges from the market — not from a single institution. The chain is the auditor; the AI is the underwriter; the market is the pricing committee.
+
+> **One-line pitch:** *An AI Agent that prices real-world risk — and the market pays it for every call.*
 
 ### ✨ Highlights — why this is more than "another RWA dApp"
 
 | | Highlight | What makes it stand out |
 |---|---|---|
-| 🤖 | **The AI underwrites — it doesn't chat** | The agent decides the *issue price, financing cap and on-chain action*. It carries a real financial function, not a help-desk bubble. |
+| 🤖 | **The AI underwrites — it doesn't chat** | The agent decides the *issue price, financing cap and on-chain action*. It carries a real financial function, not a help-desk bubble. Every call is an economic event. |
+| 💰 | **x402 Paid Intel Market — AI reports are bought, not given away** | Market participants pay via **x402** (HTTP 402 + EIP-3009 in Live mode) to unlock risk, valuation, or anti-fraud reports. Each payment: wallet-signed authorization → facilitator settlement → `PaymentOracle` attestation → report delivered. The AI Agent earns revenue; the buyer earns an information edge. |
 | 🛡️ | **A genuine Security / Risk Agent** | Before pricing, it runs **anti-fraud document forensics**: cross-checks eBL vs invoice vs insurance for quantity mismatch, mis-invoicing, under-insurance, a policy expiring before arrival — each folded into the price in basis points. |
 | 🧠 | **Pricing grounded in verifiable profit** | The discount isn't a hand-waved LTV. It equals the exporter's *financing cost*, taken as a **share of verified trade profit** `P = invoice − cost_of_goods`. Fully explainable. |
 | 🔭 | **It sees through deceptive signals** | When war spikes the copper price, a price oracle thinks the collateral is *safer*. The agent knows war premium is a **correlated double-edge** (default ↑, insurance void, recovery ↓) and does the opposite: haircut + **PAUSE**. |
 | 🔗 | **Grounded, tool-using, retrieval-backed** | Tool calls for live LME price, regional premium and UN Comtrade historical comparables; a RAG retriever cites macro-risk intel with sources → an auditable **evidence graph**. |
 | 🌐 | **Live real-world risk via xAPI** | Pulls X/Twitter, Google News and prediction-market (Polymarket-style) signals through [xAPI](https://xapi.to), maps them to structured risk events, and folds them into the price — *the AI prices live world events on this cargo*. No key? Offline fixtures keep the demo running. |
-| 💰 | **x402 Paid Intel Market — users buy premium AI analysis** | Investors use **x402** (HTTP 402 + EIP-3009 in Live mode) to unlock risk, valuation, or anti-fraud reports. Live payments are attested in `PaymentOracle`; Demo receipts are visibly labelled and never presented as chain transactions. |
 | ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **300 Node + 24 Solidity tests** guard the invariants. |
+
+### 💰 x402 Paid Intel Market — the AI Agent earns its keep
+
+This is the economic engine of AgentBL. The AI doesn't just analyze risk — it **sells its analysis** through a live x402 payment rail.
+
+**How it works:**
+
+```
+Buyer clicks "Get AI Risk Report"
+        ↓
+Server returns HTTP 402 + challenge   ← "This report costs 0.001 USDC"
+        ↓
+Buyer signs EIP-3009 authorization    ← wallet signs TransferWithAuthorization
+        ↓
+Facilitator settles on-chain          ← USDC moves from buyer to protocol
+        ↓
+PaymentOracle attests the payment     ← immutable on-chain evidence
+        ↓
+AI report unlocks immediately         ← risk data feeds into RWA pricing engine
+```
+
+**Three reports, three prices:**
+
+| Service | Price | What you get |
+|---------|-------|-------------|
+| 🔍 Premium Risk Intelligence | 0.001 USDC | Live xAPI world-risk signals + RAG deep analysis with full citations |
+| 💎 Premium Cargo Valuation | 0.002 USDC | Real-time commodity prices + historical comparables + volatility forecast |
+| 🛡️ Anti-Fraud Document Review | 0.0015 USDC | Five-dimension eBL/invoice/insurance consistency check with pricing impact |
+
+**Why participants pay:**
+
+| Motive | Economic logic |
+|--------|---------------|
+| **Information edge** | Pay $0.001 to know before the market whether this cargo is risky — avoid a bad buy or catch an undervalued deal |
+| **Pricing influence** | Every purchased report feeds into the RWA pricing engine. Buy more reports → your judgment carries more weight in the market price |
+| **Audit trail protection** | Chain record proves due diligence: "68 out of 100 independent assessments flagged high risk — I priced accordingly" |
+
+> **x402 ≠ RWA subscription.** Paying cents over x402 *buys an AI report*; subscribing to an offering *invests capital*. Two different transactions — see [x402 vs RWA](./docs/x402-integration.md#two-different-businesses-x402-report-payment-vs-rwa-subscription).
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
 
@@ -460,33 +496,72 @@ insurance coverage. The demo uses permissioned mock investors only.
 
 ## 🇨🇳 简体中文
 
-> 出口商质押电子提单 → **AI 定价与风控 Agent** 读取货物 / 航线 / 单据 / 实时宏观风险 →
-> 给出**可解释、可审计的 RWA 发行价** → *风险越高，价格越低，投资者潜在收益越高* → 决策**上链锚定**。
+### 💡 核心创意
 
-### 📖 这是什么
+**AI Agent 不只是聊天。它给风险定价。市场为它的每一次判断付费。链上不可篡改。**
 
-国际贸易里，货已装船、钱还没回来。出口商想**立刻**拿到现金，资本想要**有抵押、短久期**的收益资产。
-AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent：**在投资者承担风险之前，先把真实世界的风险定准价。**
+国际贸易中，货已装船、钱还锁着 30–45 天。传统贸易金融靠中心化机构评估风险、制定价格——慢、不透明、单点故障。
 
-1. 出口商把**电子提单（eBL）**——在途货物的物权凭证——质押进智能合约。
-2. **AI 定价与风控 Agent** 给这批货估值，再把*「出口商想多快拿钱」*和*「这笔交易有多大风险」*折算成一个 **RWA 发行折价**（例如 1 RWA = **$0.85**，目标兑付 **$1.00**）。
-3. 投资者按折价认购、出资；出口商拿到现金。
-4. 运输途中风险升级时，AI 在链上**改价 / 暂停 / 清算**，并把每次决策连同证据哈希写进 `RiskPricingOracle`。
+AgentBL 用三步翻转这个局面：
 
-> **一句话 pitch：** *AI 动态定价 eBL-backed RWA，链上强制执行。*
+1. **AI 定价与风控 Agent 承保每笔交易。** 它读懂货物、航线、单据、实时世界风险信号，输出可解释、可审计的发行价。不是客服聊天框，是 AI 承保人。
+
+2. **每次风险评估都是一笔付费交易。** 通过 **x402 协议**，市场参与者支付微小金额（低至 0.001 USDC）解锁 AI 风险报告。每笔支付：钱包签名授权 → Facilitator 链上结算 → PaymentOracle 存证 → 报告即时交付。AI Agent 凭本事挣钱——字面意义上的。
+
+3. **报告越多，定价越准。** 每份付费报告将风险证据锚定在链上。独立评估越多，任何一批货的公允价格就越从市场中浮现——而不是某一家机构说了算。链是审计师，AI 是承保人，市场是定价委员会。
+
+> **一句话 Pitch：** *一个给真实世界风险定价的 AI Agent —— 市场为它的每一次判断付费。*
 
 ### ✨ 项目特色 —— 为什么这不是「又一个 RWA dApp」
 
 | | 特色 | 凭什么脱颖而出 |
 |---|---|---|
-| 🤖 | **AI 在做承保，不是在聊天** | Agent 决定的是*发行价、融资额度、链上动作*——它承担真实金融职责，而不是一个客服气泡。 |
+| 🤖 | **AI 在做承保，不是在聊天** | Agent 决定的是*发行价、融资额度、链上动作*——它承担真实金融职责，而不是一个客服气泡。每次调用都是一个经济事件。 |
+| 💰 | **x402 付费情报市场 — AI 报告靠卖，不靠送** | 市场参与者通过 **x402**（Live 模式为 HTTP 402 + EIP-3009）付费解锁风险、估值或反欺诈报告。每笔支付：钱包签名授权 → Facilitator 链上结算 → PaymentOracle 存证 → 报告交付。AI Agent 赚取收入，买家赚取信息优势。 |
 | 🛡️ | **一个真正的安全 / 风控 Agent** | 定价前先做**反欺诈审单**：交叉核验 eBL / 发票 / 保险——数量是否一致、发票是否高低开、保险是否不足额、保单是否在到港前过期，每项都折成风险基点压进价格。 |
 | 🧠 | **定价建立在可验证的利润上** | 折价不是拍脑袋的 LTV。它等于出口商的*融资成本*，并取自其**可验证贸易利润** `P = 发票 − 拿货成本` 的一个份额。完全可解释。 |
 | 🔭 | **能看穿欺骗性信号** | 战争推高铜价时，价格预言机以为抵押*更安全*；Agent 知道战争溢价是**相关性双刃剑**（违约↑、保险失效、回收↓），于是反向操作：haircut + **暂停**。 |
 | 🔗 | **有据可查：工具调用 + RAG 检索** | 调用实时 LME 铜价、区域升水、UN Comtrade 历史同类成交价；RAG 检索器带来源引用宏观风险情报 → 一张可审计的**证据图**。 |
 | 🌐 | **xAPI 实时世界风险** | 通过 [xAPI](https://xapi.to) 拉取 X/Twitter、Google 新闻、预测市场（Polymarket 类）信号，映射成结构化风险事件并入定价——*AI 为这批货实时给真实世界事件定价*。无密钥时走离线兜底，demo 永远能跑。 |
-| 💰 | **x402 付费情报市场 — 用户为 AI 分析付费** | 投资者用 **x402**（Live 模式为 HTTP 402 + EIP-3009）解锁风险、估值或反欺诈报告。Live 支付写入 `PaymentOracle`；Demo receipt 会明确标注，绝不冒充链上交易。 |
 | ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**300 个 Node + 24 个 Solidity 测试**守护不变量。 |
+
+### 💰 x402 付费情报市场 — AI Agent 凭本事挣钱
+
+这是 AgentBL 的经济引擎。AI 不只是分析风险——它**出售自己的分析**，通过一条活的 x402 支付链路。
+
+**购买流程：**
+
+```
+买家点击"获取 AI 风控报告"
+        ↓
+服务端返回 HTTP 402 + 支付挑战   ← "本报告售价 0.001 USDC"
+        ↓
+买家签署 EIP-3009 授权          ← 钱包签署 TransferWithAuthorization
+        ↓
+Facilitator 链上结算            ← USDC 从买家转入协议
+        ↓
+PaymentOracle 支付存证          ← 链上不可篡改的支付证据
+        ↓
+AI 报告即时解锁                 ← 风险数据直接注入 RWA 定价引擎
+```
+
+**三类报告，三个价位：**
+
+| 服务 | 价格 | 获得什么 |
+|------|------|---------|
+| 🔍 高级风险情报 | 0.001 USDC | 实时 xAPI 世界风险信号 + RAG 深度分析 + 完整引用 |
+| 💎 高级货值评估 | 0.002 USDC | 实时大宗商品价格 + 历史可比成交价 + 波动率预测 |
+| 🛡️ 反欺诈审单 | 0.0015 USDC | 五维 eBL/发票/保险一致性核验 + 定价影响量化 |
+
+**参与者为什么愿意付费：**
+
+| 动机 | 经济逻辑 |
+|------|---------|
+| **靠信息差赚钱** | 花 0.001 USDC 比别人先知道这批货有风险——避开坏交易，或抢先低价收进被低估的货 |
+| **影响市场定价** | 每份购买的报告都汇入 RWA 定价引擎。买得越多，你的判断对最终公允价的影响越大 |
+| **免责护身符** | 链上记录就是尽职证明："当时 100 份独立评估中有 68 份标注高风险——我是按公允价卖的" |
+
+> **x402 ≠ RWA 认购。** 用 x402 花几分钱*购买一份 AI 报告*；认购 offering 是*用资金投资 RWA*。这是两笔不同的交易——见 [x402 与 RWA 的区别](./docs/x402-integration.md#two-different-businesses-x402-report-payment-vs-rwa-subscription)。
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
 
@@ -870,4 +945,4 @@ AgentBL-AI/
 
 ---
 
-<div align="center"><sub>Built for ETHBeijing 2026 · The AI prices the risk, the chain enforces it.</sub></div>
+<div align="center"><sub>Built for Injective Nova 2026 · The AI prices the risk. The market pays. The chain enforces.</sub></div>
