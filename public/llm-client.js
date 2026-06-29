@@ -8,7 +8,7 @@
 // 依赖：fetch（浏览器原生）、TextDecoder
 
 const DEEPSEEK_CONFIG = {
-  API_KEY: 'sk-64b841c7f169475eaf8e469c9ddb1c7f',
+  API_KEY: '',
   BASE_URL: 'https://api.deepseek.com',
   MODEL: 'deepseek-chat',
   TIMEOUT_MS: 60000,

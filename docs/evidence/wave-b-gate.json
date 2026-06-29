@@ -1,0 +1,156 @@
+{
+  "schema": "agentbl-wave-b-gate-v1",
+  "verified_at": "2026-06-29T09:08:38.475Z",
+  "network": "eip155:1439",
+  "trace": [
+    "USDC payment transaction",
+    "PaidReportEnvelope commitment",
+    "PaymentAttested",
+    "PricingUpdated",
+    "RWA offering quote"
+  ],
+  "payment": {
+    "tx": "0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49",
+    "explorer": "https://testnet.blockscout.injective.network/tx/0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49",
+    "asset": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+    "amount_atomic": "1000",
+    "amount_usdc": "0.001",
+    "status": "ok"
+  },
+  "paidReportEnvelope": {
+    "report_id": "rpt_3e5fcba5f14518de2817bdf0a6e85f6bf076d77d210b7c233ac279a0a7d23334",
+    "report_hash": "0x994078c73bdb44f13007d7b6ff4ea899ff9dc44d11f1d3afae1320df418168ce",
+    "case_id": "CASE-EBL-2026-CU-SG-SHA",
+    "payment_tx": "0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49",
+    "network": "eip155:1439",
+    "asset": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+    "amount": "1000",
+    "settled_at": "2026-06-29T01:00:27.000Z",
+    "data_snapshot": "redacted: committed by report_hash",
+    "validation": "Runtime envelope passed assertPaidReportEnvelope during X402-15 live smoke"
+  },
+  "paymentAttested": {
+    "contract": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
+    "tx": "0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e",
+    "explorer": "https://testnet.blockscout.injective.network/tx/0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e",
+    "report_hash": "0x994078c73bdb44f13007d7b6ff4ea899ff9dc44d11f1d3afae1320df418168ce",
+    "payment_tx": "0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49",
+    "event": "PaymentAttested"
+  },
+  "pricingUpdated": {
+    "contract": "0xaE19a62e26B17B32B183DC89b365da898987618b",
+    "tx": "0xee6b6520c040662f3644c2514de628baa2351abe185623e9c22dbbcab76bbac3",
+    "explorer": "https://testnet.blockscout.injective.network/tx/0xee6b6520c040662f3644c2514de628baa2351abe185623e9c22dbbcab76bbac3",
+    "pool_id": 2,
+    "evidence_hash": "0x994078c73bdb44f13007d7b6ff4ea899ff9dc44d11f1d3afae1320df418168ce",
+    "quote_hash": "0x082e3f95c1cbf57d03fd5f8f69c739b07698fc0e1d874b20150cece94dcee36e",
+    "issue_price_e6": "800000",
+    "event": "PricingUpdated"
+  },
+  "offering": {
+    "contract": "0x61ac2E4E261fCa58725e5fe8a2E1aBEd48d6529d",
+    "pool_id": 2,
+    "ebl_id": 2,
+    "final_issue_price_usd": 0.8,
+    "final_issue_price_e6": 800000,
+    "risk_level": "MEDIUM",
+    "pricing_action": "OPEN_OFFERING",
+    "quote_hash": "0x082e3f95c1cbf57d03fd5f8f69c739b07698fc0e1d874b20150cece94dcee36e"
+  },
+  "transactions": [
+    {
+      "label": "mint eBL V2 commitment",
+      "txHash": "0x0a52f542a4168915cfeee7dc8c168e10a9ca8e7e45018b07c4fae39ad4f9c110",
+      "blockNumber": 131919454,
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x0a52f542a4168915cfeee7dc8c168e10a9ca8e7e45018b07c4fae39ad4f9c110",
+      "events": [
+        {
+          "name": "EBLMinted",
+          "args": [
+            "2",
+            "0x1bb8e8ab88ed54f4ace8279d7ed3477a393d0f4e7bc000026c69b2b67dd43bda",
+            "0xFf86f010D005d15bd43e1f254C12ACabEFae218d"
+          ],
+          "address": "0x99eBa4CD00B6650cac7dc57F3b1fB4Ed03Cfd6ae"
+        },
+        {
+          "name": "EBLMintedV2",
+          "args": [
+            "2",
+            "0xcbb79a2dc7946a1b0db32fa57833f07d5130915393acbf4315ddc3958383ad2f",
+            "0x1bb8e8ab88ed54f4ace8279d7ed3477a393d0f4e7bc000026c69b2b67dd43bda",
+            "0xFf86f010D005d15bd43e1f254C12ACabEFae218d"
+          ],
+          "address": "0x99eBa4CD00B6650cac7dc57F3b1fB4Ed03Cfd6ae"
+        }
+      ]
+    },
+    {
+      "label": "pledge eBL",
+      "txHash": "0x1bcefa03a77abbcd18a1c544d0bf9053886e7e31b3a402750f6d1e7154286225",
+      "blockNumber": 131919460,
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x1bcefa03a77abbcd18a1c544d0bf9053886e7e31b3a402750f6d1e7154286225",
+      "events": [
+        {
+          "name": "EBLPledged",
+          "args": [
+            "2",
+            "0x61ac2E4E261fCa58725e5fe8a2E1aBEd48d6529d",
+            "0xFf86f010D005d15bd43e1f254C12ACabEFae218d"
+          ],
+          "address": "0x99eBa4CD00B6650cac7dc57F3b1fB4Ed03Cfd6ae"
+        }
+      ]
+    },
+    {
+      "label": "create RWA offering",
+      "txHash": "0x591ed2a5bad61bd89f1aebc92b3c91ffe8b20f67e8c3501ab250054b7345554d",
+      "blockNumber": 131919464,
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x591ed2a5bad61bd89f1aebc92b3c91ffe8b20f67e8c3501ab250054b7345554d",
+      "events": [
+        {
+          "name": "OfferingCreated",
+          "args": [
+            "2",
+            "2",
+            "4125000",
+            "800000",
+            "1000000"
+          ],
+          "address": "0x61ac2E4E261fCa58725e5fe8a2E1aBEd48d6529d"
+        },
+        {
+          "name": "OfferingStateChanged",
+          "args": [
+            "2",
+            "0",
+            "2",
+            "0"
+          ],
+          "address": "0x61ac2E4E261fCa58725e5fe8a2E1aBEd48d6529d"
+        }
+      ]
+    },
+    {
+      "label": "bind paid report to PricingUpdated",
+      "txHash": "0xee6b6520c040662f3644c2514de628baa2351abe185623e9c22dbbcab76bbac3",
+      "blockNumber": 131919469,
+      "explorer": "https://testnet.blockscout.injective.network/tx/0xee6b6520c040662f3644c2514de628baa2351abe185623e9c22dbbcab76bbac3",
+      "events": [
+        {
+          "name": "PricingUpdated",
+          "args": [
+            "2",
+            "800000",
+            "1",
+            "0",
+            "0x994078c73bdb44f13007d7b6ff4ea899ff9dc44d11f1d3afae1320df418168ce",
+            "0x082e3f95c1cbf57d03fd5f8f69c739b07698fc0e1d874b20150cece94dcee36e",
+            "0xFf86f010D005d15bd43e1f254C12ACabEFae218d"
+          ],
+          "address": "0xaE19a62e26B17B32B183DC89b365da898987618b"
+        }
+      ]
+    }
+  ]
+}

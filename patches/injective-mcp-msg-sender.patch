@@ -1,0 +1,23 @@
+diff --git a/src/evm/index.ts b/src/evm/index.ts
+--- a/src/evm/index.ts
++++ b/src/evm/index.ts
+@@ -117,11 +117,12 @@
+  */
+ function buildEvmTxRaw(
+   rawEvmTx: Uint8Array,
++  from: Uint8Array,
+   memo: string,
+   gasPrice: bigint,
+   gasLimit: bigint,
+ ): TxRaw {
+-  const msg = MsgEthereumTx.create({ raw: rawEvmTx })
++  const msg = MsgEthereumTx.create({ raw: rawEvmTx, from })
+   const msgAny = Any.create({
+     typeUrl: EVM_MSG_TYPE_URL,
+     value: MsgEthereumTx.toBinary(msg),
+@@ -214,4 +215,4 @@
+-    const txRaw = buildEvmTxRaw(getBytes(signedTxHex), memo, gasPrice, gasLimit)
++    const txRaw = buildEvmTxRaw(getBytes(signedTxHex), getBytes(wallet.address), memo, gasPrice, gasLimit)
+     const response = await client.txApi.broadcast(txRaw, {
+       txTimeout: params.txTimeout,
+     })

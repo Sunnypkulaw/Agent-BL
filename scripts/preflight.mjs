@@ -5,6 +5,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { createServer } from '../src/app/server.js';
 import { MCP_TOOL_HANDLERS, MCP_TOOLS_MANIFEST } from '../src/mcp/mcpServer.js';
+import { MCP_RESOURCES } from '../src/mcp/resources.js';
 import { fetchPaidIntel } from '../src/x402/client.js';
 import { loadX402Config, X402_SERVICES, x402RpcUrl } from '../src/x402/config.js';
 import { assertPaidReportEnvelope, computeReportHash, createPaidReportEnvelope } from '../src/x402/paidReport.js';
@@ -118,7 +119,7 @@ if (nodeTests.ok && !/# fail 0/u.test(nodeTests.output)) {
   results.at(-1).status = 'FAIL';
   results.at(-1).detail = 'test runner did not report # fail 0';
 }
-await command('Executable suites', 'Solidity contract suite (19 tests)', npm, ['test'], path.join(root, 'hardhat'));
+await command('Executable suites', 'Solidity contract suite (24 tests)', npm, ['test'], path.join(root, 'hardhat'));
 await command('Executable suites', 'Main API smoke flow', npm, ['run', 'smoke']);
 await command('Executable suites', 'Risk/pricing scenario regression', npm, ['run', 'scenarios']);
 if (runtimeMode.demoMode) await command('Executable suites', 'One-minute offline demo', npm, ['run', 'demo:once']);
@@ -127,7 +128,8 @@ check('Executable suites', 'Critical JavaScript modules imported', true, 'server
 
 // 26-31: MCP business tools
 console.log('\n[MCP tools]');
-check('MCP tools', 'MCP manifest exposes registered tools', MCP_TOOLS_MANIFEST.length >= 5);
+check('MCP tools', 'MCP manifest exposes exactly 7 tools + 3 resources',
+  MCP_TOOLS_MANIFEST.length === 7 && MCP_RESOURCES.length === 3);
 await mcpCheck('get_trade_case', { case_id: 'CASE-EBL-2026-0001' });
 await mcpCheck('generate_pricing_quote', { case_id: 'CASE-EBL-2026-0001' });
 await mcpCheck('search_knowledge_base', { query: 'copper war risk' });
@@ -222,8 +224,16 @@ const paymentOracleAbi = chainConfig.paymentOracle?.abi ?? [];
 let liveEvidence = {};
 try { liveEvidence = JSON.parse(await text('docs/evidence/x402-live-smoke.json')); }
 catch { liveEvidence = {}; }
-check('Live readiness', 'Hardened PaymentOracle and x402 Live evidence are valid',
-  addressPattern.test(chainConfig.contracts?.AgentBLRWA)
+let protocolEvidence = {};
+let waveBGate = {};
+let officialMcpEvidence = {};
+try { protocolEvidence = JSON.parse(await text('docs/evidence/wave-b-protocol.json')); } catch { protocolEvidence = {}; }
+try { waveBGate = JSON.parse(await text('docs/evidence/wave-b-gate.json')); } catch { waveBGate = {}; }
+try { officialMcpEvidence = JSON.parse(await text('docs/evidence/injective-mcp-smoke.json')); } catch { officialMcpEvidence = {}; }
+const protocolNames = ['AgentBLRWA', 'EBLRegistry', 'RWAToken', 'RWAOfferingPool', 'RiskPricingOracle'];
+const officialWrite = officialMcpEvidence.tool_trace?.find((entry) => entry.tool === 'evm_broadcast');
+check('Live readiness', 'Wave B live payment, five-contract protocol, pricing, and official MCP evidence are valid',
+  protocolNames.every((name) => addressPattern.test(chainConfig.contracts?.[name]))
     && addressPattern.test(chainConfig.contracts?.PaymentOracle)
     && paymentOracleAbi.some((entry) => entry.type === 'function' && entry.name === 'attestPayment')
     && paymentOracleAbi.some((entry) => entry.type === 'event' && entry.name === 'PaymentAttested')
@@ -233,10 +243,23 @@ check('Live readiness', 'Hardened PaymentOracle and x402 Live evidence are valid
     && transactionPattern.test(liveEvidence.payment_tx ?? '')
     && transactionPattern.test(liveEvidence.attestation_tx ?? '')
     && transactionPattern.test(liveEvidence.report_hash ?? '')
-    && liveEvidence.event === 'PaymentAttested');
+    && liveEvidence.event === 'PaymentAttested'
+    && protocolEvidence.smoke?.finalState === 'Repaid'
+    && protocolNames.every((name) => protocolEvidence.contracts?.[name]?.address?.toLowerCase() === chainConfig.contracts[name].toLowerCase())
+    && waveBGate.network === 'eip155:1439'
+    && waveBGate.payment?.tx === liveEvidence.payment_tx
+    && waveBGate.paidReportEnvelope?.report_hash === liveEvidence.report_hash
+    && waveBGate.paymentAttested?.tx === liveEvidence.attestation_tx
+    && waveBGate.pricingUpdated?.evidence_hash === liveEvidence.report_hash
+    && transactionPattern.test(waveBGate.pricingUpdated?.tx ?? '')
+    && officialMcpEvidence.network === 'injective_testnet'
+    && officialWrite?.status === 'ok'
+    && transactionPattern.test(officialWrite?.evm_tx_hash ?? '')
+    && officialWrite?.arguments_summary?.to?.toLowerCase() === chainConfig.contracts.AgentBLRWA.toLowerCase());
 const readme = await text('README.md');
-check('Live readiness', 'README documents x402 CLI, smoke and mode boundary',
-  readme.includes('smoke:x402') && readme.includes('x402:intel') && /demo/i.test(readme) && app.includes('/api/demo/mode'));
+check('Live readiness', 'README documents x402, Wave B, stdio MCP, and mode boundary',
+  readme.includes('smoke:x402') && readme.includes('x402:intel') && readme.includes('verify:wave-b')
+    && readme.includes('mcp:stdio') && /demo/i.test(readme) && app.includes('/api/demo/mode'));
 
 if (results.length !== 54) {
   throw new Error(`Preflight definition error: expected 54 checks, produced ${results.length}`);

@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 interface IEBLRegistry {
     function holderOf(uint256 eblId) external view returns (address);
+    function pledgedTo(uint256 eblId) external view returns (address);
 }
 
 interface IRWATokenMintable {
@@ -103,6 +104,7 @@ contract RWAOfferingPool {
         require(issuePrice > 0, "issuePrice=0");
         require(tokenSupply > 0, "supply=0");
         require(eblRegistry.holderOf(eblId) != address(0), "ebl missing");
+        require(eblRegistry.pledgedTo(eblId) == address(this), "ebl not pledged to pool");
 
         poolId = nextPoolId++;
         offerings[poolId] = Offering({

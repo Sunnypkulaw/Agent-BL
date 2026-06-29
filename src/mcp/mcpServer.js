@@ -1,5 +1,5 @@
 // AgentBL MCP Server
-// MCP protocol mock: tools manifest + handler registry + callTool dispatcher
+// MCP domain layer: tool manifest + deterministic handler registry.
 //
 // This module serves as the central hub for the MCP tool layer.
 // It wraps core engines (riskEngine, workflow) as callable tools
@@ -10,7 +10,9 @@ import {
   handleGeneratePricingQuote,
   handleSimulateOffering,
   handlePushPricingToOracle,
-  handleSearchKnowledgeBase
+  handleSearchKnowledgeBase,
+  handleVerifyTradeDocuments,
+  handlePurchasePremiumAnalysis
 } from './tools.js';
 
 // ============================================================
@@ -89,7 +91,7 @@ export const MCP_TOOLS_MANIFEST = [
 
   {
     name: 'push_pricing_to_oracle',
-    description: 'Push a pricing quote to the on-chain RiskPricingOracle smart contract (mock). Generates a blockchain transaction receipt with the pricing data, evidence hash, and a PricingUpdated event. In production, this would submit the AI\'s pricing decision on-chain for transparency and auditability.',
+    description: 'Prepare or submit a RiskPricingOracle update. Defaults to dry-run. A real Injective write is network-pinned, contract-allowlisted, amount-limited, and requires approved=true.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -100,7 +102,13 @@ export const MCP_TOOLS_MANIFEST = [
         pricing_quote: {
           type: 'object',
           description: 'The PricingQuote object from generate_pricing_quote. Must include final_issue_price_usd, risk_level, pricing_action, evidence_hash, and quote_hash.'
-        }
+        },
+        pool_id: { type: 'integer', minimum: 1, default: 1 },
+        network: { type: 'string', enum: ['eip155:1439'], default: 'eip155:1439' },
+        contract: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' },
+        dry_run: { type: 'boolean', default: true },
+        approved: { type: 'boolean', default: false, description: 'Explicit human approval. Required when dry_run=false.' },
+        approval_token: { type: 'string', writeOnly: true, description: 'Out-of-band host approval token; never source this from model or document text.' }
       },
       required: ['case_id', 'pricing_quote']
     },
@@ -143,6 +151,36 @@ export const MCP_TOOLS_MANIFEST = [
         params: { query: 'Red Sea Suez conflict', categories: ['war_risk'], limit: 3 }
       }
     ]
+  },
+
+  {
+    name: 'verify_trade_documents',
+    description: 'Cross-check eBL, invoice, insurance, cargo, quantity, Incoterms, and coverage fields without granting any chain-write authority.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        case_id: { type: 'string', description: 'Trade case identifier' },
+        trade_case: { type: 'object', description: 'Inline TradeCase; takes priority over case_id' }
+      },
+      anyOf: [{ required: ['case_id'] }, { required: ['trade_case'] }]
+    }
+  },
+
+  {
+    name: 'purchase_premium_analysis',
+    description: 'Purchase a premium AgentBL report through the real HTTP 402 challenge/sign/retry middleware. Demo is default; live mode is fail-closed and requires explicit approval.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        case_id: { type: 'string' },
+        kind: { type: 'string', enum: ['premium-risk', 'premium-valuation', 'fraud-review'], default: 'premium-risk' },
+        mode: { type: 'string', enum: ['demo', 'live'], default: 'demo' },
+        budget_usdc: { type: 'number', minimum: 0, maximum: 0.005, default: 0.005 },
+        approved: { type: 'boolean', default: false },
+        approval_token: { type: 'string', writeOnly: true, description: 'Out-of-band host approval token for live mode.' }
+      },
+      required: ['case_id']
+    }
   }
 ];
 
@@ -155,7 +193,9 @@ export const MCP_TOOL_HANDLERS = {
   generate_pricing_quote: handleGeneratePricingQuote,
   simulate_offering: handleSimulateOffering,
   push_pricing_to_oracle: handlePushPricingToOracle,
-  search_knowledge_base: handleSearchKnowledgeBase
+  search_knowledge_base: handleSearchKnowledgeBase,
+  verify_trade_documents: handleVerifyTradeDocuments,
+  purchase_premium_analysis: handlePurchasePremiumAnalysis
 };
 
 // ============================================================

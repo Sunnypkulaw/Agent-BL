@@ -1,6 +1,6 @@
 // AgentBL MCP Tool Implementations
-// 5 tools: get_trade_case, generate_pricing_quote, simulate_offering,
-// push_pricing_to_oracle, search_knowledge_base
+// 7 tools: deterministic trade/pricing/document/report capabilities plus
+// policy-guarded oracle writes.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -11,6 +11,9 @@ import { simulateWorkflow } from '../core/workflow.js';
 import { assertTradeCase } from '../core/schema.js';
 import { listHarnessCaseFiles } from '../core/scenarioRunner.js';
 import { searchKnowledgeBase } from '../rag/search.js';
+import { checkDocumentConsistency } from '../agent/documentConsistency.js';
+import { authorizeMcpWrite, MCP_PINNED_NETWORK } from './security.js';
+import { X402_SERVICES } from '../x402/config.js';
 
 // Import Bowen's pricing engine — for real PricingQuote generation
 async function tryImportPricingEngine() {
@@ -225,7 +228,16 @@ export async function handleSimulateOffering({ case_id, trade_case } = {}) {
 // Tool 4: push_pricing_to_oracle
 // ============================================================
 
-export async function handlePushPricingToOracle({ case_id, pricing_quote } = {}) {
+export async function handlePushPricingToOracle({
+  case_id,
+  pricing_quote,
+  pool_id = 1,
+  network = MCP_PINNED_NETWORK,
+  contract,
+  dry_run = true,
+  approved = false,
+  approval_token
+} = {}) {
   if (!case_id) {
     throw new Error('Missing required parameter: case_id');
   }
@@ -233,48 +245,93 @@ export async function handlePushPricingToOracle({ case_id, pricing_quote } = {})
     throw new Error('Missing required parameter: pricing_quote');
   }
 
-  // Build a deterministic but unique transaction payload
+  const chainConfig = JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+  const oracleAddress = contract ?? chainConfig.contracts?.RiskPricingOracle;
+  if (!oracleAddress) throw new Error('RiskPricingOracle is not deployed in public/chain-config.json');
+
+  const policy = authorizeMcpWrite({
+    operation: 'pricing_update',
+    network,
+    contract: oracleAddress,
+    amount_usdc: 0,
+    dry_run,
+    approved,
+    approval_token
+  });
+  const riskLevels = { LOW: 0, MEDIUM: 1, WARNING: 2, CRITICAL: 3 };
+  const actions = {
+    OPEN_OFFERING: 0,
+    OPEN_WITH_WARNING: 1,
+    REPRICE_DOWN: 2,
+    PAUSE_OFFERING: 3,
+    FREEZE_POOL: 4,
+    TRIGGER_LIQUIDATION: 5
+  };
   const txPayload = {
     oracle_id: 'AgentBL-RiskPricingOracle-v1',
-    oracle_address: '0x' + crypto.createHash('sha256')
-      .update('AgentBL-RiskPricingOracle-v1')
-      .digest('hex').slice(0, 40),
-    pool_address: '0x' + crypto.createHash('sha256')
-      .update(case_id + '_pool')
-      .digest('hex').slice(0, 40),
+    oracle_address: oracleAddress,
+    pool_id: Number(pool_id),
     case_id,
-    final_price: pricing_quote.final_issue_price_usd,
-    risk_level: pricing_quote.risk_level,
-    pricing_action: pricing_quote.pricing_action,
+    issue_price_e6: Math.round(Number(pricing_quote.final_issue_price_usd) * 1_000_000),
+    risk_level: riskLevels[pricing_quote.risk_level] ?? 1,
+    pricing_action: actions[pricing_quote.pricing_action] ?? 1,
     evidence_hash: pricing_quote.evidence_hash,
-    quote_hash: pricing_quote.quote_hash,
-    timestamp: Math.floor(Date.now() / 1000)
+    quote_hash: pricing_quote.quote_hash
   };
 
-  // Generate mock transaction hash
-  const txHash = '0x' + crypto.createHash('sha256')
-    .update(JSON.stringify(txPayload) + crypto.randomBytes(8).toString('hex'))
-    .digest('hex');
+  if (policy.dry_run) {
+    return {
+      tool: 'push_pricing_to_oracle',
+      result: {
+        status: 'dry_run',
+        policy,
+        transaction: txPayload,
+        event: 'PricingUpdated',
+        evidence_hash: pricing_quote.evidence_hash,
+        quote_hash: pricing_quote.quote_hash,
+        tx_hash: null,
+        explorer_url: null
+      }
+    };
+  }
 
-  // Mock block number
-  const blockNumber = Math.floor(Math.random() * 50000) + 19200000;
+  const privateKey = process.env.DEPLOYER_PRIVATE_KEY?.trim();
+  if (!privateKey) throw new Error('DEPLOYER_PRIVATE_KEY is required for an approved oracle write');
+  const { ethers } = await import('ethers');
+  const rpcUrl = process.env.INJECTIVE_RPC_URL ?? 'https://k8s.testnet.json-rpc.injective.network';
+  const provider = new ethers.JsonRpcProvider(rpcUrl, 1439);
+  const wallet = new ethers.Wallet(privateKey, provider);
+  const artifactPath = path.join(rootDir, 'hardhat', 'artifacts', 'contracts', 'RiskPricingOracle.sol', 'RiskPricingOracle.json');
+  const artifact = JSON.parse(await fs.readFile(artifactPath, 'utf8'));
+  const oracle = new ethers.Contract(oracleAddress, artifact.abi, wallet);
+  const transaction = await oracle.updatePricing(
+    txPayload.pool_id,
+    txPayload.issue_price_e6,
+    txPayload.risk_level,
+    txPayload.pricing_action,
+    txPayload.evidence_hash,
+    txPayload.quote_hash
+  );
+  const mined = await transaction.wait();
+  const explorerUrl = `${chainConfig.explorerBase}/tx/${mined.hash}`;
 
   return {
     tool: 'push_pricing_to_oracle',
     result: {
-      tx_hash: txHash,
-      block_number: blockNumber,
-      block_hash: '0x' + crypto.createHash('sha256').update(String(blockNumber)).digest('hex'),
+      tx_hash: mined.hash,
+      block_number: mined.blockNumber,
+      block_hash: mined.blockHash,
       status: 'confirmed',
-      confirmations: 12,
-      gas_used: Math.floor(Math.random() * 50000) + 100000,
-      effective_gas_price_gwei: Math.floor(Math.random() * 30) + 5,
-      from: '0x' + crypto.createHash('sha256').update('oracle-operator').digest('hex').slice(0, 40),
-      to: txPayload.oracle_address,
-      contract_address: txPayload.oracle_address,
+      confirmations: await mined.confirmations(),
+      gas_used: mined.gasUsed.toString(),
+      from: mined.from,
+      to: mined.to,
+      contract_address: oracleAddress,
+      explorer_url: explorerUrl,
+      policy,
       event: 'PricingUpdated',
       event_args: {
-        poolId: case_id,
+        poolId: txPayload.pool_id,
         issuePrice: pricing_quote.final_issue_price_usd,
         riskLevel: pricing_quote.risk_level,
         pricingAction: pricing_quote.pricing_action,
@@ -306,6 +363,98 @@ export async function handleSearchKnowledgeBase({ query, categories, limit } = {
       matches: results,
       match_count: results.length,
       categories_searched: categories || 'all'
+    }
+  };
+}
+
+// ============================================================
+// Tool 6: verify_trade_documents
+// ============================================================
+
+export async function handleVerifyTradeDocuments({ case_id, trade_case } = {}) {
+  const caseData = trade_case || (case_id ? await loadCaseById(case_id) : null);
+  if (!caseData) throw new Error('Either case_id or trade_case must be provided');
+  assertTradeCase(caseData);
+  return {
+    tool: 'verify_trade_documents',
+    result: checkDocumentConsistency(caseData)
+  };
+}
+
+async function withEphemeralApp(run) {
+  const { createServer } = await import('../app/server.js');
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  try {
+    return await run(`http://127.0.0.1:${server.address().port}`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+// ============================================================
+// Tool 7: purchase_premium_analysis
+// ============================================================
+
+export async function handlePurchasePremiumAnalysis({
+  case_id,
+  kind = 'premium-risk',
+  mode = 'demo',
+  budget_usdc = 0.005,
+  approved = false,
+  approval_token
+} = {}) {
+  if (!case_id) throw new Error('Missing required parameter: case_id');
+  const service = X402_SERVICES.find((item) => item.serviceId === kind);
+  if (!service) throw new Error(`Unknown premium analysis kind: ${kind}`);
+  if (!['demo', 'live'].includes(mode)) throw new Error('mode must be demo or live');
+  const caseData = await loadCaseById(case_id);
+
+  if (mode === 'live') {
+    const chainConfig = JSON.parse(await fs.readFile(path.join(rootDir, 'public', 'chain-config.json'), 'utf8'));
+    authorizeMcpWrite({
+      operation: 'x402_payment',
+      network: MCP_PINNED_NETWORK,
+      contract: chainConfig.contracts?.PaymentOracle,
+      amount_usdc: service.priceUSDC,
+      dry_run: false,
+      approved,
+      approval_token
+    });
+    throw new Error('Live MCP purchase requires the V2 facilitator client; use npm run smoke:x402:live. Demo mode still traverses the HTTP 402 middleware.');
+  }
+
+  const { fetchPaidIntel } = await import('../x402/client.js');
+  const result = await withEphemeralApp((baseUrl) => fetchPaidIntel(baseUrl, service.endpoint, {
+    demoMode: true,
+    budgetUSDC: Number(budget_usdc),
+    caseData,
+    timeoutMs: 15_000
+  }));
+  if (!result.paid?.report_envelope) throw new Error(result.error?.error ?? 'Paid report was not unlocked');
+  const envelope = result.paid.report_envelope;
+  return {
+    tool: 'purchase_premium_analysis',
+    result: {
+      payment: {
+        mode: 'demo',
+        protocol: 'x402',
+        challenged: result.x402_required,
+        network: result.network,
+        amount_usdc: result.priceUSDC,
+        settlement_tx: envelope.payment_tx,
+        live: false
+      },
+      report: envelope,
+      oracle_proof: {
+        event: null,
+        attestation_tx: null,
+        onchain: false,
+        reason: 'demo_mode'
+      }
     }
   };
 }

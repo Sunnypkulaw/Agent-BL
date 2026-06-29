@@ -115,6 +115,24 @@ async function boot() {
   await selectCase(state.cases[0]?.case_id);
   setView('market');
   warmMarketQuotes();
+
+  // Initialize with sample agent activities for demo
+  initSampleAgentActivities();
+}
+
+function initSampleAgentActivities() {
+  const sampleActivities = [
+    { type: 'SYSTEM', action: 'AGENT_INITIALIZED', details: { status: 'ready' } },
+    { type: 'DOCUMENT', action: 'eBL_UPLOADED', details: { fileName: 'copper_ore_sg_sha.pdf' } }
+  ];
+
+  sampleActivities.forEach(activity => {
+    logAgentActivityUI({
+      ...activity,
+      caseId: state.caseId,
+      timestamp: new Date(Date.now() - Math.random() * 60000).toISOString()
+    });
+  });
 }
 
 async function loadDemoRuntimeMode() {
@@ -232,6 +250,10 @@ async function selectCase(caseId) {
   state.voyageEvents = [];
   highlightCase();
   setBusy(true);
+
+  // BE-15: Subscribe to real-time agent activity for this case
+  subscribeToAgentActivity(caseId);
+
   try {
     state.comparison = await getCaseComparison(entry);
     state.speed = state.comparison.recommended_payout_speed
@@ -2042,6 +2064,242 @@ function wireStaticHandlers() {
   const eblBrowseBtn = $('#ebl-browse-btn');
   const eblFileInput = $('#ebl-file-input');
   const eblUploadZone = $('#ebl-upload-zone');
+  const eblUploadStatus = $('#ebl-upload-status');
+
+  if (eblBrowseBtn && eblFileInput && eblUploadZone) {
+    // BE-14: Implement eBL document upload with ENI adapter
+    eblBrowseBtn.addEventListener('click', () => eblFileInput.click());
+
+    eblUploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      eblUploadZone.style.background = 'rgba(93, 63, 211, 0.1)';
+    });
+
+    eblUploadZone.addEventListener('dragleave', () => {
+      eblUploadZone.style.background = '';
+    });
+
+    eblUploadZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      eblUploadZone.style.background = '';
+      const files = Array.from(e.dataTransfer.files);
+      await handleEblUpload(files);
+    });
+
+    eblFileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      await handleEblUpload(files);
+      eblFileInput.value = ''; // Reset for reupload
+    });
+  }
+
+  async function handleEblUpload(files) {
+    if (!files || files.length === 0) return;
+
+    eblUploadStatus.innerHTML = `<span style="color: var(--text-accent);">⏳ Uploading ${files.length} file(s) to ENI...</span>`;
+
+    const results = [];
+    for (const file of files) {
+      try {
+        const fileData = {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        };
+
+        const response = await fetch('/api/ebl/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            file: fileData,
+            case_id: state.selectedCaseId
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+          results.push({
+            name: file.name,
+            success: true,
+            documentId: data.document.documentId,
+            documentHash: data.document.documentHash,
+            eniMode: data.eni_mode
+          });
+
+          // BE-15: Log agent activity for document upload
+          logAgentActivityUI({
+            type: 'DOCUMENT',
+            action: 'eBL_UPLOADED',
+            caseId: state.selectedCaseId,
+            details: {
+              fileName: file.name,
+              documentId: data.document.documentId,
+              status: 'verified'
+            }
+          });
+        } else {
+          results.push({ name: file.name, success: false, error: data.error });
+        }
+      } catch (error) {
+        results.push({ name: file.name, success: false, error: error.message });
+      }
+    }
+
+    // Display results
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.length - successCount;
+
+    let statusHtml = '';
+    if (successCount > 0) {
+      statusHtml += `<div style="color: var(--text-success); margin-bottom: 8px;">✅ ${successCount} document(s) uploaded successfully</div>`;
+    }
+    if (failCount > 0) {
+      statusHtml += `<div style="color: var(--text-error); margin-bottom: 8px;">❌ ${failCount} upload(s) failed</div>`;
+    }
+
+    statusHtml += '<div style="font-size: 12px; margin-top: 8px;">';
+    results.forEach(r => {
+      if (r.success) {
+        statusHtml += `<div style="color: var(--text-muted); margin: 4px 0;">
+          📄 ${r.name} → <code style="font-size: 11px;">${r.documentHash.slice(0, 16)}...</code>
+          <span style="color: var(--text-accent); font-size: 10px;">[${r.eniMode.toUpperCase()}]</span>
+        </div>`;
+      } else {
+        statusHtml += `<div style="color: var(--text-error); margin: 4px 0;">📄 ${r.name} → ${r.error}</div>`;
+      }
+    });
+    statusHtml += '</div>';
+
+    eblUploadStatus.innerHTML = statusHtml;
+
+    if (successCount > 0) {
+      toast(`${successCount} document(s) uploaded to ENI`);
+    }
+  }
+
+  // BE-15: Local agent activity logger (complements SSE stream)
+  function logAgentActivityUI(activity) {
+    if (!state.agentActivities) state.agentActivities = [];
+
+    const record = {
+      id: `ui-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      ...activity
+    };
+
+    state.agentActivities.unshift(record);
+
+    // Keep only last 100 activities in UI state
+    if (state.agentActivities.length > 100) {
+      state.agentActivities = state.agentActivities.slice(0, 100);
+    }
+
+    // Update timeline visualization
+    renderAgentTimeline();
+
+    return record;
+  }
+
+  // BE-15: Subscribe to real-time agent activity stream (SSE)
+  let agentActivityStream = null;
+
+  function subscribeToAgentActivity(caseId) {
+    // Close existing stream
+    if (agentActivityStream) {
+      agentActivityStream.close();
+      agentActivityStream = null;
+    }
+
+    if (!caseId) return;
+
+    try {
+      agentActivityStream = new EventSource(`/api/agent/activity/stream?case_id=${caseId}`);
+
+      agentActivityStream.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'connected') {
+          agentLog('🔗 Connected to Agent activity stream', 'var(--ok)');
+        } else if (data.type === 'activity') {
+          const emoji = getActivityEmoji(data.action);
+          agentLog(`${emoji} Agent: ${data.action}${data.details?.price ? ` → $${data.details.price}` : ''}`, 'var(--accent)');
+
+          logAgentActivityUI(data);
+
+          if (data.action === 'REPRICE_DECISION' || data.action === 'PAUSE_OFFERING') {
+            toast(`🤖 Agent: ${data.action}`);
+          }
+        }
+      };
+
+      agentActivityStream.onerror = () => {
+        agentLog('⚠️ SSE disconnected, reconnecting...', 'var(--warn)');
+        if (agentActivityStream) agentActivityStream.close();
+        setTimeout(() => subscribeToAgentActivity(caseId), 3000);
+      };
+    } catch (error) {
+      console.error('Failed to subscribe to agent activity:', error);
+    }
+  }
+
+  function getActivityEmoji(action) {
+    const emojiMap = {
+      'eBL_UPLOADED': '📄',
+      'COMPLIANCE_CHECK': '⚖️',
+      'VALUATION_COMPLETE': '💰',
+      'PRICING_QUOTE': '📊',
+      'RISK_ESCALATION': '⚠️',
+      'REPRICE_DECISION': '📉',
+      'PAUSE_OFFERING': '⏸️',
+      'RESUME_OFFERING': '▶️',
+      'ON_CHAIN_UPDATE': '⛓️',
+      'SUBSCRIPTION': '💵',
+      'SETTLE': '✅'
+    };
+    return emojiMap[action] || '🤖';
+  }
+
+  // BE-15: Render agent activity timeline
+  function renderAgentTimeline() {
+    const container = $('#agent-logs-container');
+    if (!container || !state.agentActivities || state.agentActivities.length === 0) return;
+
+    // Only show last 10 activities in timeline
+    const recentActivities = state.agentActivities.slice(0, 10);
+
+    let timelineHtml = '<div style="font-family: var(--mono); font-size: 13px; line-height: 1.8;">';
+    timelineHtml += '<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🤖 Agent Decision Timeline</div>';
+    timelineHtml += '<div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>';
+
+    recentActivities.forEach(activity => {
+      const time = new Date(activity.timestamp).toLocaleTimeString('en-US', { hour12: false });
+      const emoji = getActivityEmoji(activity.action);
+      const actionLabel = activity.action.replace(/_/g, ' ');
+
+      let detailStr = '';
+      if (activity.details) {
+        if (activity.details.fileName) detailStr = `→ ${activity.details.fileName}`;
+        else if (activity.details.price) detailStr = `→ $${activity.details.price}`;
+        else if (activity.details.status) detailStr = `→ ${activity.details.status}`;
+        else if (activity.details.newPrice) detailStr = `→ $${activity.details.newPrice}`;
+      }
+
+      timelineHtml += `<div style="color: var(--text-2); margin: 4px 0;">
+        <span style="color: var(--muted);">${time}</span>
+        ${emoji} <span style="color: var(--text-main);">${actionLabel}</span>
+        <span style="color: var(--accent);">${detailStr}</span>
+      </div>`;
+    });
+
+    timelineHtml += '</div>';
+
+    // Only update if we have a dedicated timeline container
+    const timelineContainer = $('#agent-timeline');
+    if (timelineContainer) {
+      timelineContainer.innerHTML = timelineHtml;
+    }
+  }
   const eblUploadStatus = $('#ebl-upload-status');
 
   if (eblBrowseBtn && eblFileInput) {

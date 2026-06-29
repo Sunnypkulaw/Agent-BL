@@ -741,6 +741,109 @@ export async function handleRequest(request, response) {
         return;
       }
 
+      // BE-14: eBL Document Upload with ENI Adapter
+      if (request.method === 'POST' && url.pathname === '/api/ebl/upload') {
+        const body = await readJsonBody(request);
+        const { eniAdapter } = await import('./eniAdapter.js');
+
+        if (!body || !body.file) {
+          sendJson(response, 400, { ok: false, error: 'Missing file object in request body' });
+          return;
+        }
+
+        try {
+          const result = await eniAdapter.uploadDocument(body.file);
+
+          // Trigger AI-13 orchestrator if case_id is provided
+          if (body.case_id) {
+            if (!storeState.eblDocuments) storeState.eblDocuments = new Map();
+            storeState.eblDocuments.set(result.documentId, {
+              ...result,
+              caseId: body.case_id,
+              orchestrationTriggered: true
+            });
+          }
+
+          sendJson(response, 200, {
+            ok: true,
+            document: result,
+            message: 'Document uploaded successfully',
+            eni_mode: eniAdapter.mode
+          });
+        } catch (error) {
+          sendJson(response, 400, { ok: false, error: error.message });
+        }
+        return;
+      }
+
+      // BE-14: Get Document Status
+      if (request.method === 'GET' && url.pathname === '/api/ebl/document-status') {
+        const documentId = url.searchParams.get('document_id');
+        if (!documentId) {
+          sendJson(response, 400, { ok: false, error: 'Missing document_id parameter' });
+          return;
+        }
+
+        const { eniAdapter } = await import('./eniAdapter.js');
+        const status = await eniAdapter.getDocumentStatus(documentId);
+
+        sendJson(response, 200, { ok: true, ...status });
+        return;
+      }
+
+      // BE-15: Agent Activity Query API
+      if (request.method === 'GET' && url.pathname === '/api/agent/activity') {
+        const caseId = url.searchParams.get('case_id');
+        const poolId = url.searchParams.get('pool_id');
+
+        if (!storeState.agentActivities) storeState.agentActivities = [];
+
+        let activities = storeState.agentActivities;
+
+        if (caseId) {
+          activities = activities.filter(a => a.caseId === caseId);
+        }
+        if (poolId) {
+          activities = activities.filter(a => a.poolId === poolId);
+        }
+
+        sendJson(response, 200, {
+          ok: true,
+          activities: activities.slice(-50),
+          count: activities.length
+        });
+        return;
+      }
+
+      // BE-15: Agent Activity Real-time Subscription (SSE)
+      if (request.method === 'GET' && url.pathname === '/api/agent/activity/stream') {
+        response.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive'
+        });
+
+        const caseId = url.searchParams.get('case_id');
+        const poolId = url.searchParams.get('pool_id');
+
+        response.write('data: ' + JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() }) + '\n\n');
+
+        if (!storeState.sseClients) storeState.sseClients = [];
+        const client = { response, caseId, poolId };
+        storeState.sseClients.push(client);
+
+        // IncomingMessage "close" can fire as soon as the request body is
+        // complete even while the SSE response is intentionally still open.
+        // Track the writable response lifecycle so live subscribers are not
+        // removed before the first activity broadcast.
+        response.on('close', () => {
+          const index = storeState.sseClients.indexOf(client);
+          if (index > -1) storeState.sseClients.splice(index, 1);
+        });
+
+        return;
+      }
+
       if (request.method === 'GET') {
         await serveStatic(url.pathname, response);
         return;
@@ -750,6 +853,45 @@ export async function handleRequest(request, response) {
     } catch (error) {
       sendError(response, error);
     }
+}
+
+export function broadcastAgentActivity(activity) {
+  if (!storeState.sseClients) return;
+
+  // Preserve the SSE envelope discriminator even when the domain activity has
+  // its own `type` (PRICING, RISK, TEST, ...).
+  const message = 'data: ' + JSON.stringify({ ...activity, activityType: activity.type, type: 'activity' }) + '\n\n';
+
+  storeState.sseClients.forEach(client => {
+    if (client.caseId && activity.caseId !== client.caseId) return;
+    if (client.poolId && activity.poolId !== client.poolId) return;
+
+    try {
+      client.response.write(message);
+    } catch (err) {
+      // Client disconnected
+    }
+  });
+}
+
+export function logAgentActivity(activity) {
+  if (!storeState.agentActivities) storeState.agentActivities = [];
+
+  const record = {
+    id: `activity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    timestamp: new Date().toISOString(),
+    ...activity
+  };
+
+  storeState.agentActivities.push(record);
+
+  if (storeState.agentActivities.length > 1000) {
+    storeState.agentActivities = storeState.agentActivities.slice(-1000);
+  }
+
+  broadcastAgentActivity(record);
+
+  return record;
 }
 
 export function createServer() {

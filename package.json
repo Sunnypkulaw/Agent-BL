@@ -19,12 +19,16 @@
     "qa": "node scripts/judge-qa.mjs",
     "intel": "node scripts/world-intel.mjs",
     "mcp": "node scripts/mcp.mjs",
+    "mcp:stdio": "node src/mcp/standalone-server.js",
     "smoke:x402": "node scripts/smoke-x402.mjs",
     "smoke:x402:live": "node scripts/live-x402-smoke.mjs",
     "x402:intel": "node scripts/x402-intel.mjs",
     "mcp:serve": "node src/mcp/standalone-server.js",
     "demo:once": "node scripts/demo-once.mjs",
-    "preflight": "node scripts/preflight.mjs"
+    "preflight": "node scripts/preflight.mjs",
+    "deploy:protocol": "npm --prefix hardhat run deploy:protocol",
+    "verify:wave-b": "node scripts/wave-b-gate.mjs",
+    "smoke:mcp:injective": "node scripts/injective-mcp-smoke.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -40,8 +44,10 @@
   "license": "MIT",
   "dependencies": {
     "@injectivelabs/x402": "0.0.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "ethers": "6.17.0",
-    "express": "5.2.1"
+    "express": "5.2.1",
+    "zod": "^4.3.6"
   },
   "overrides": {
     "ws": "8.21.0"

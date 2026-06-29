@@ -13,6 +13,10 @@ const requiredFiles = [
   'docs/acceptance.md',
   'docs/award-roadmap.md',
   'docs/tasks.md',
+  'docs/wave-b.md',
+  'docs/evidence/wave-b-gate.json',
+  'docs/evidence/wave-b-protocol.json',
+  'docs/evidence/injective-mcp-smoke.json',
   'data/demo-case.json',
   'data/scenarios/low-risk-approved.json',
   'data/scenarios/warning-margin-call.json',
@@ -28,6 +32,10 @@ const requiredFiles = [
   'src/rag/search.js',
   'src/rag/judgeQA.js',
   'src/mcp/mcpServer.js',
+  'src/mcp/standalone-server.js',
+  'src/mcp/resources.js',
+  'src/mcp/security.js',
+  'src/mcp/injectiveAdapter.js',
   'src/mcp/tools.js',
   'src/skill/pricingAnalyst.js',
   'src/skill/demoOperator.js',
@@ -41,7 +49,10 @@ for (const file of requiredFiles) {
 }
 
 const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
-for (const script of ['install', 'dev', 'test', 'check', 'demo', 'smoke', 'scenarios', 'mcp']) {
+for (const script of [
+  'install', 'dev', 'test', 'check', 'demo', 'smoke', 'scenarios', 'mcp',
+  'mcp:stdio', 'deploy:protocol', 'verify:wave-b', 'smoke:mcp:injective'
+]) {
   assert.ok(pkg.scripts[script], `Missing package script: ${script}`);
 }
 
@@ -75,7 +86,13 @@ assert.equal(kbErrors.length, 0, `Knowledge base validation errors: ${kbErrors.j
 
 // Validate MCP manifest
 const { MCP_TOOLS_MANIFEST, MCP_TOOL_HANDLERS } = await import('../src/mcp/mcpServer.js');
-assert.equal(MCP_TOOLS_MANIFEST.length, 5, 'MCP manifest must have exactly 5 tools');
+const { MCP_RESOURCES } = await import('../src/mcp/resources.js');
+assert.equal(MCP_TOOLS_MANIFEST.length, 7, 'MCP manifest must have exactly 7 tools');
+assert.deepEqual(MCP_RESOURCES.map((resource) => resource.uri).sort(), [
+  'agentbl://cases/catalog',
+  'agentbl://contracts/deployments',
+  'agentbl://risk/methodology'
+]);
 for (const tool of MCP_TOOLS_MANIFEST) {
   assert.ok(MCP_TOOL_HANDLERS[tool.name], `Missing handler for MCP tool: ${tool.name}`);
   assert.ok(tool.name, 'Tool must have a name');

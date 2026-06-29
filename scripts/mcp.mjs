@@ -170,16 +170,13 @@ try {
     pricing_quote: pricingQuote
   });
   const tx = result.result;
-  info('Transaction Hash', tx.tx_hash);
-  info('Block Number', tx.block_number.toLocaleString());
   info('Status', tx.status);
-  info('Confirmations', tx.confirmations);
-  info('Gas Used', tx.gas_used.toLocaleString());
-  info('Contract', tx.contract_address);
+  info('Transaction Hash', tx.tx_hash ?? '(none — dry run)');
+  info('Contract', tx.transaction?.oracle_address ?? tx.contract_address);
   console.log('');
   info('Event', tx.event);
-  info('Event Args', JSON.stringify(tx.event_args, null, 2).replace(/^/gm, '    '));
-  success('Pricing pushed to oracle');
+  info('Payload', JSON.stringify(tx.transaction ?? tx.event_args, null, 2).replace(/^/gm, '    '));
+  success(tx.status === 'dry_run' ? 'Pricing write safely prepared (dry run)' : 'Pricing pushed to oracle');
 } catch (err) {
   fail(`push_pricing_to_oracle failed: ${err.message}`);
 }

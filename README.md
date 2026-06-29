@@ -11,7 +11,7 @@
 [![ETH Beijing](https://img.shields.io/badge/ETH_Beijing-2026-635BFF)](https://ethbeijing.xyz)
 [![Track](https://img.shields.io/badge/Track-AI_Agent_x_Blockchain-5A45FF)](#)
 [![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
-[![tests](https://img.shields.io/badge/tests-257_passing-2EA043)](#)
+[![tests](https://img.shields.io/badge/tests-300_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
 [![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
 [![MCP](https://img.shields.io/badge/MCP-Server-1F6FEB)](#)
@@ -59,7 +59,7 @@ puts an AI agent in charge of the dangerous part: **pricing real-world risk befo
 | 🔗 | **Grounded, tool-using, retrieval-backed** | Tool calls for live LME price, regional premium and UN Comtrade historical comparables; a RAG retriever cites macro-risk intel with sources → an auditable **evidence graph**. |
 | 🌐 | **Live real-world risk via xAPI** | Pulls X/Twitter, Google News and prediction-market (Polymarket-style) signals through [xAPI](https://xapi.to), maps them to structured risk events, and folds them into the price — *the AI prices live world events on this cargo*. No key? Offline fixtures keep the demo running. |
 | 💰 | **x402 Paid Intel Market — users buy premium AI analysis** | Investors use **x402** (HTTP 402 + EIP-3009 in Live mode) to unlock risk, valuation, or anti-fraud reports. Live payments are attested in `PaymentOracle`; Demo receipts are visibly labelled and never presented as chain transactions. |
-| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **257 + 19 tests** guard the invariants. |
+| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **300 Node + 24 Solidity tests** guard the invariants. |
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
 
@@ -140,7 +140,7 @@ So for the same cargo: **more urgency or more risk → lower issue price → hig
                         │                                │
    ┌────────────────────┴───────────┐      ┌─────────────┴──────────────────┐
    │   AI pricing engine (src/core) │      │   MCP / RAG / Skill (src/…)     │
-   │  pricingEngine · scoreRisk ·   │      │  5 tools · risk-intel retrieval │
+   │  pricingEngine · scoreRisk ·   │      │  7 tools · 3 JSON resources     │
    │  offeringSimulator · oracle    │      │  judge Q&A assistant            │
    └────────────────────┬───────────┘      └─────────────────────────────────┘
                         │ quote_hash / evidence_hash
@@ -280,13 +280,16 @@ set). Commands explicitly containing `:live` perform testnet network writes.
 | `npm run scenarios` | Multi-scenario regression: legacy RiskReport + AI pricing (fast / balanced / reprice / pause) |
 | `npm run qa` | Judge Q&A rehearsal (real pricing numbers + RAG citations; `-- "your question"` for one question) |
 | `npm run mcp` | Demo the MCP tool chain (get_trade_case → search → price → simulate → push oracle) |
+| `npm run mcp:stdio` | Start the standards-compliant MCP SDK stdio server (exactly 7 tools + 3 resources) |
 | `npm run agent:value` | Run the AI cargo-valuation tools (live price / historical comparables / valuation; offline fallback) |
 | `npm run intel` | **Live world-risk via xAPI**: X/Twitter + news + prediction-market signals → risk events → re-priced quote (offline fixtures with no key) |
 | `npm run smoke:x402` | **Demo-safe x402 end-to-end**: HTTP 402 challenge → signed retry → simulated settlement → premium intel unlocked |
 | `npm run smoke:x402:live` | **Testnet-only Live proof**: official V2/EIP-3009 → real USDC tx → paid report → `PaymentAttested` (requires funded test wallet) |
 | `npm run x402:intel` | CLI paid intel query — pay for and display premium risk/valuation data |
+| `npm run verify:wave-b` | Re-verify payment → report → attestation → pricing → quote on Injective Testnet |
+| `npm run smoke:mcp:injective` | Official Injective MCP query + controlled allowlisted raw-EVM smoke (funded test wallet required) |
 | `npm run check` | Low-cost self-check: files, scripts, seed data, engine integrity |
-| `npm run test` | Full unit / integration suite (`node --test`, **257 passing**) |
+| `npm run test` | Full unit / integration suite (`node --test`, **300 passing**) |
 | `npm run smoke` | Spin up a temp server and smoke-test the key APIs |
 
 The hardened PaymentOracle is deployed on Injective Testnet at
@@ -296,6 +299,13 @@ X402-15 passed on 2026-06-29 using an explicit test-only self-transfer: the offi
 unlocked report `rpt_3e5f…3334`, and emitted
 [`PaymentAttested`](https://testnet.blockscout.injective.network/tx/0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e).
 The reproducible evidence is saved in `docs/evidence/x402-live-smoke.json`.
+
+**Wave B is complete:** the same paid-report hash now links the payment and `PaymentAttested` above to
+[`PricingUpdated`](https://testnet.blockscout.injective.network/tx/0xee6b6520c040662f3644c2514de628baa2351abe185623e9c22dbbcab76bbac3)
+and the final `$0.80` RWA quote. Five protocol contracts are deployed and lifecycle-smoked; the MCP server is
+a real SDK stdio server with 7 tools + 3 resources, and the official Injective MCP adapter has a successful
+[controlled raw-EVM transaction](https://testnet.blockscout.injective.network/tx/0x1578c10144a6216d8580eabc1497ee02c99a435c20cd315c1492fc0d78d8984f).
+See [`docs/wave-b.md`](./docs/wave-b.md) for addresses, commands, evidence, and the upstream compatibility note.
 
 > One-shot pre-demo verification:
 > ```bash
@@ -365,22 +375,22 @@ curl -s -X POST http://localhost:3000/api/offering/simulate \
 cd hardhat
 npm install
 npx hardhat compile
-npx hardhat test          # 11 passing
+npx hardhat test          # 24 passing
 ```
 
 | Contract | Role |
 |---|---|
 | `AgentBLRWA.sol` | **The deployed, permissionless demo contract.** `tokenize(...)` mints RWA from an AI quote and emits `Tokenized`; `reprice(...)` emits `Repriced`. Carries `quoteHash` / `evidenceHash`. |
 | `RiskPricingOracle.sol` | `updatePricing(poolId, issuePrice, riskLevel, action, evidenceHash)` → emits `PricingUpdated`, persists the latest quote/evidence hash |
-| `RWAOfferingPool.sol` | `createOffering / subscribe / settle / pause` |
-| `EBLRegistry.sol` · `RWAToken.sol` | eBL `mint / pledge / release`; investor RWA share token |
+| `RWAOfferingPool.sol` | Pledged-eBL-gated `createOffering / subscribe / reprice / pause / resume / settle` |
+| `EBLRegistry.sol` · `RWAToken.sol` | eBL V2 cargo uniqueness, structured metadata, transfer/endorsement/pledge history; investor RWA share token |
 
 The backend's `/api/oracle/pricing-update` payload maps one-to-one onto the oracle call; the frontend
 "Push to oracle" sends exactly that payload.
 
 ### 🧩 MCP / RAG / Skill (agentic extras)
 
-- **MCP server** (`src/mcp/`): 5 tools — `get_trade_case` / `generate_pricing_quote` / `simulate_offering` / `push_pricing_to_oracle` / `search_knowledge_base`. `generate_pricing_quote` reuses the same `quoteFromCase`, so MCP, backend and frontend emit an **identical PricingQuote**.
+- **MCP server** (`src/mcp/`): official SDK stdio lifecycle with exactly 7 tools and 3 read-only JSON resources. It adds `verify_trade_documents` and a real 402 middleware traversal in `purchase_premium_analysis`; chain writes are pinned, allowlisted, capped, approval-gated, and dry-run by default. `generate_pricing_quote` still reuses the same `quoteFromCase`, so MCP, backend and frontend emit an **identical PricingQuote**.
 - **RAG** (`src/rag/` + `data/risk-intel/`): a macro-risk intelligence corpus (war / sanctions / port / weather / commodity / FX); the AI cites entries when widening the risk discount.
 - **Skill** (`src/skill/`): `pricingAnalyst` (pricing analysis) and `demoOperator` (one-click demo orchestration).
 - **Judge Q&A assistant** (`src/agent/judgeAssistant.js`): `npm run qa` — answers with real pricing numbers + intel citations, never contradicts the engine, always keeps the "not capital-guaranteed" framing.
@@ -408,7 +418,7 @@ AgentBL-AI/
 │   ├── mcp/  ·  rag/  ·  skill/
 ├── hardhat/               # Solidity contracts + tests
 ├── scripts/               # check / demo / smoke / scenarios / price / qa / mcp / agent-valuation
-├── tests/                 # node --test (257 passing)
+├── tests/                 # node --test (300 passing)
 └── docs/                  # PRD · background · contracts · tasks · acceptance · award-roadmap
 ```
 
@@ -417,11 +427,12 @@ AgentBL-AI/
 | Command | Verifies | Status |
 |---|---|---|
 | `npm run check` | files / scripts / seed / engine integrity | ✅ |
-| `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 257 passing |
+| `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 300 passing |
 | `npm run smoke` | key APIs end-to-end | ✅ |
 | `npm run smoke:x402` | x402 paid-intel flow (HTTP 402 → payment → settlement → intel) | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause regression | ✅ |
-| `cd hardhat && npx hardhat test` | Solidity contract suite | ✅ 11 passing |
+| `cd hardhat && npx hardhat test` | Solidity contract suite | ✅ 24 passing |
+| `npm run verify:wave-b` | live payment/report/attestation/pricing/quote trace | ✅ testnet evidence |
 
 ### 🔒 Compliance boundary
 
@@ -475,7 +486,7 @@ AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent
 | 🔗 | **有据可查：工具调用 + RAG 检索** | 调用实时 LME 铜价、区域升水、UN Comtrade 历史同类成交价；RAG 检索器带来源引用宏观风险情报 → 一张可审计的**证据图**。 |
 | 🌐 | **xAPI 实时世界风险** | 通过 [xAPI](https://xapi.to) 拉取 X/Twitter、Google 新闻、预测市场（Polymarket 类）信号，映射成结构化风险事件并入定价——*AI 为这批货实时给真实世界事件定价*。无密钥时走离线兜底，demo 永远能跑。 |
 | 💰 | **x402 付费情报市场 — 用户为 AI 分析付费** | 投资者用 **x402**（Live 模式为 HTTP 402 + EIP-3009）解锁风险、估值或反欺诈报告。Live 支付写入 `PaymentOracle`；Demo receipt 会明确标注，绝不冒充链上交易。 |
-| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**257 + 19 个测试**守护不变量。 |
+| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**300 个 Node + 24 个 Solidity 测试**守护不变量。 |
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
 
@@ -555,7 +566,7 @@ issue_price     = cash / (cash + share × P)              ← 发行价（对 $1
                             │                                │
         ┌───────────────────┴────────┐          ┌────────────┴───────────────┐
         │   AI 定价引擎 (src/core)     │          │  MCP / RAG / Skill (src/…)  │
-        │  pricingEngine · scoreRisk  │          │  5 个工具 · 风险情报检索     │
+        │  pricingEngine · scoreRisk  │          │  7 个工具 · 3 个 JSON 资源   │
         │  offeringSimulator · oracle │          │  Q&A 助手               │
         └───────────────────┬─────────┘          └─────────────────────────────┘
                             │ quote_hash / evidence_hash
@@ -691,13 +702,16 @@ x402 支付层精确锁定 `@injectivelabs/x402@0.0.1` 与 `express@5.2.1`。由
 | `npm run scenarios` | 多场景回归：legacy RiskReport + AI 定价（fast / balanced / reprice / pause） |
 | `npm run qa` | 评委 Q&A 彩排（真实定价数字 + RAG 引用；`-- "你的问题"` 问单题） |
 | `npm run mcp` | 演示 MCP 工具链（get_trade_case → search → price → simulate → push oracle） |
+| `npm run mcp:stdio` | 启动标准 MCP SDK stdio server（固定 7 tools + 3 resources） |
 | `npm run agent:value` | 跑 AI 货值估值工具（实时价 / 历史成交价 / 估值，离线有 fallback） |
 | `npm run intel` | **xAPI 实时世界风险**：X/Twitter + 新闻 + 预测市场信号 → 风险事件 → 重新定价（无密钥走离线兜底） |
 | `npm run smoke:x402` | Demo 安全的 402 → 签名 → 模拟结算 → 报告解锁闭环 |
 | `npm run smoke:x402:live` | 测试网真实 V2/EIP-3009 → USDC tx → 报告 → `PaymentAttested`（需测试钱包有 USDC） |
 | `npm run x402:intel` | 购买并展示风险/估值/反欺诈报告的 CLI |
+| `npm run verify:wave-b` | 复验 payment → report → attestation → pricing → quote 测试网闭环 |
+| `npm run smoke:mcp:injective` | 官方 Injective MCP 查询 + allowlist 受控 raw-EVM smoke（需测试钱包） |
 | `npm run check` | 最低成本自检：文件、脚本、seed 数据、引擎完好 |
-| `npm run test` | 全部单元 / 集成测试（`node --test`，**257 passing**） |
+| `npm run test` | 全部单元 / 集成测试（`node --test`，**300 passing**） |
 | `npm run smoke` | 启动临时 server，冒烟测试关键 API |
 
 硬化 PaymentOracle 已部署在 Injective Testnet：
@@ -707,6 +721,12 @@ X402-15 已于 2026-06-29 通过（显式测试用 self-transfer）：官方 V2 
 解锁报告 `rpt_3e5f…3334`，并产生
 [`PaymentAttested`](https://testnet.blockscout.injective.network/tx/0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e)。
 可复验证据保存在 `docs/evidence/x402-live-smoke.json`。
+
+**Wave B 已完成：**同一个付费报告哈希已把上述支付和 `PaymentAttested` 连接到
+[`PricingUpdated`](https://testnet.blockscout.injective.network/tx/0xee6b6520c040662f3644c2514de628baa2351abe185623e9c22dbbcab76bbac3)
+与最终 `$0.80` RWA 报价。五合约协议已部署并完成全生命周期 smoke；标准 MCP 已达到 7 tools + 3 resources；
+官方 Injective MCP adapter 也完成了[受控 raw-EVM 交易](https://testnet.blockscout.injective.network/tx/0x1578c10144a6216d8580eabc1497ee02c99a435c20cd315c1492fc0d78d8984f)。
+地址、命令、证据与上游兼容说明见 [`docs/wave-b.md`](./docs/wave-b.md)。
 
 > 演示前一键全验证：
 > ```bash
@@ -773,21 +793,21 @@ curl -s -X POST http://localhost:3000/api/offering/simulate \
 cd hardhat
 npm install
 npx hardhat compile
-npx hardhat test          # 11 passing
+npx hardhat test          # 24 passing
 ```
 
 | 合约 | 职责 |
 |---|---|
 | `AgentBLRWA.sol` | **已部署的许可型 demo 合约。** `tokenize(...)` 按 AI 定价铸造 RWA 并 emit `Tokenized`；`reprice(...)` emit `Repriced`。携带 `quoteHash` / `evidenceHash`。 |
 | `RiskPricingOracle.sol` | `updatePricing(poolId, issuePrice, riskLevel, action, evidenceHash)` → emit `PricingUpdated`，持久化最新 quote/evidence 哈希 |
-| `RWAOfferingPool.sol` | `createOffering / subscribe / settle / pause` |
-| `EBLRegistry.sol` · `RWAToken.sol` | eBL `mint / pledge / release`；投资者 RWA 份额凭证 |
+| `RWAOfferingPool.sol` | 以已质押 eBL 为前置的 `createOffering / subscribe / reprice / pause / resume / settle` |
+| `EBLRegistry.sol` · `RWAToken.sol` | eBL V2 货物唯一性、结构化元数据、转让/背书/质押历史；投资者 RWA 份额凭证 |
 
 后端 `/api/oracle/pricing-update` 产出的载荷字段与 oracle 调用一一对应，前端「Push to oracle」即发送这份载荷。
 
 ### 🧩 MCP / RAG / Skill（Agent 能力加分项）
 
-- **MCP Server**（`src/mcp/`）：5 个工具 `get_trade_case` / `generate_pricing_quote` / `simulate_offering` / `push_pricing_to_oracle` / `search_knowledge_base`。`generate_pricing_quote` 直接复用同一个 `quoteFromCase`，与后端 / 前端**输出完全一致的 PricingQuote**。
+- **MCP Server**（`src/mcp/`）：基于官方 SDK 的标准 stdio lifecycle，固定 7 tools + 3 个只读 JSON resources；新增 `verify_trade_documents` 和真实经过 402 middleware 的 `purchase_premium_analysis`。写链固定网络、allowlist、限额、人工批准且默认 dry-run；定价仍复用同一个 `quoteFromCase`。
 - **RAG**（`src/rag/` + `data/risk-intel/`）：宏观风险情报知识库（战争 / 制裁 / 港口 / 天气 / 商品波动 / FX），AI 加风险折价时引用其中条目。
 - **Skill**（`src/skill/`）：`pricingAnalyst`（定价分析）与 `demoOperator`（一键演示编排）。
 - **Judge Q&A 助手**（`src/agent/judgeAssistant.js`）：`npm run qa`，用真实定价数字 + 情报引用作答，永不与引擎自相矛盾，始终保留「非保本」口径。
@@ -815,7 +835,7 @@ AgentBL-AI/
 │   ├── mcp/  ·  rag/  ·  skill/
 ├── hardhat/               # Solidity 合约 + 测试
 ├── scripts/               # check / demo / smoke / scenarios / price / qa / mcp / agent-valuation
-├── tests/                 # node --test（257 passing）
+├── tests/                 # node --test（300 passing）
 └── docs/                  # PRD · background · contracts · tasks · acceptance · award-roadmap
 ```
 
@@ -824,10 +844,11 @@ AgentBL-AI/
 | 命令 | 验证什么 | 现状 |
 |---|---|---|
 | `npm run check` | 文件 / 脚本 / seed / 引擎完好 | ✅ |
-| `npm run test` | 单元 + 集成（定价不变量、自主 Agent、schema、MCP、合约 mock…） | ✅ 257 passing |
+| `npm run test` | 单元 + 集成（定价不变量、自主 Agent、schema、MCP、合约 mock…） | ✅ 300 passing |
 | `npm run smoke` | 关键 API 端到端 | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause 场景回归 | ✅ |
-| `cd hardhat && npx hardhat test` | Solidity 合约测试 | ✅ 11 passing |
+| `cd hardhat && npx hardhat test` | Solidity 合约测试 | ✅ 24 passing |
+| `npm run verify:wave-b` | 真实支付/报告/存证/定价/报价追踪 | ✅ 测试网证据 |
 
 ### 🔒 合规边界
 

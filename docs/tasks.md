@@ -11,10 +11,10 @@
 
 | 能力 | 真实状态 | 结论 / 下一步 |
 |---|---|---|
-| AI 定价、反欺诈审单、风险场景、RAG、xAPI | ✅ 已有 | `npm test` 实测 **257/257 passed**；继续作为产品主线，不重做 |
-| Solidity 合约 | 🟡 部分已有 | `hardhat test` 实测 **19/19 passed**；硬化 PaymentOracle 已部署，完整五合约协议仍待补齐 |
-| Injective Testnet | 🟡 已有单合约真实交易 | 已有 chainId `1439`、合约地址和 explorer；仍需完整协议部署与事件回读 |
-| MCP Server | 🟡 只有 5-tool mock | 当前是自定义 handler + HTTP mock，不是标准 MCP stdio server；没有 resources，不能宣称“7 工具 + 3 资源” |
+| AI 定价、反欺诈审单、风险场景、RAG、xAPI | ✅ 已有 | `npm test` 实测 **300/300 passed**；继续作为产品主线，不重做 |
+| Solidity 合约 | ✅ 五合约协议已部署 | `hardhat test` 实测 **24/24 passed**；EBLRegistry V2、发行池、RWA Token、定价 Oracle 与 AgentBLRWA 已部署并完成全生命周期 smoke |
+| Injective Testnet | ✅ 完整链上证据 | chainId `1439`；真实 USDC 支付、PaymentAttested、PricingUpdated、五合约部署及协议 smoke 均有 explorer 证据 |
+| MCP Server | ✅ 标准 7 tools + 3 resources | 官方 MCP SDK stdio lifecycle 已实测；另通过安全 adapter 完成官方 Injective MCP 查询和受控 raw EVM testnet 交易 |
 | Demo Mode | ✅ 已完成 | `DEMO_MODE=true` 默认、顶部常驻 banner、Live toggle、一键 reset；Live 配置不足时显式失败，不伪造链上 tx |
 | x402 | ✅ Live 支付闭环已验证；全部 P0 + P1 动效完成 | X402-1~16（含 P1 动效 X402-12）已完成；真实 V2/EIP-3009 支付、PaidReportEnvelope 与 PaymentAttested 已由 explorer 证据串联；前端付费市场含 TTL 重读、支付流光/priceFlash/riskPulse/impact-pop（reduced-motion 安全）；仅 X402-17(P2 discovery) 待做 |
 | Preflight | ✅ 已完成 | 固定 54 项总闸门；Demo 环境实测 50 PASS / 4 项显式 Live WARN / 0 FAIL，覆盖 Node、Solidity、smoke、scenarios、MCP、x402 与 UI |
@@ -57,7 +57,7 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 ```text
 1. X402-1/3/4/6/8/11/14：先让付费情报流水可演示、可测试
 2. X402-9/15：能真实上链就绑定 PaymentOracle；facilitator 不支持 1439 时明确展示 Demo 标签
-3. MCP-6/7/8：把“5-tool mock”升级成可验证的 7 tools + 3 resources stdio server
+3. MCP-6/7/8：已把原 5-tool mock 升级成可验证的 7 tools + 3 resources stdio server
 4. DEMO-1/4/5/6/7：Demo Mode、preflight、路演和视频兜底
 5. 其余任务提交后按 Wave B/C/D 继续，不在最后数小时重构核心协议
 ```
@@ -142,8 +142,8 @@ AI 的目标不是“写一段解释”，而是产出可被后端、前端和�
 | BE-11 | 实现市场服务 API：`GET /api/market/listings` + `POST /api/market/search`，只返回活跃池并复用 AI-19 推荐逻辑 | Unassigned | Done | `node --test tests/marketApi.test.js`，覆盖筛选、排序、分页、暂停池排除和自然语言搜索 | tests/marketApi.test.js passed |
 | BE-12 | 实现发行池 API：`POST /api/pool/subscribe` + `GET /api/pool/status`，真实链模式返回 tx/event，离线模式保持确定性 fallback | Unassigned | Done | `node --test tests/poolApi.test.js` + `npm run smoke`，重复认购、暂停池、金额越界均被正确处理 | tests/poolApi.test.js passed |
 | BE-13 | 实现角色中心 API：`GET /api/exporters/dashboard` + `GET /api/investors/portfolio`，持久化 eBL、池状态、持仓、收益与兑付记录 | Unassigned | Done | `node --test tests/dashboardApi.test.js`，服务重启后数据可恢复且只能读取当前钱包的数据 | tests/dashboardApi.test.js passed |
-| BE-14 | 实现 eBL 文档接入与 ENI adapter：上传 eBL/发票/保险单、校验类型/大小、获取可信文件标识与哈希，并触发 AI-13 编排器；ENI 不可用时提供明确 mock fallback | Unassigned | Todo | `node --test tests/eblIngestion.test.js`，真实/模拟 ENI 两条路径均产出可追溯 document hash，重复上传保持幂等 | - |
-| BE-15 | 实现 Agent 活动查询与实时订阅 API（SSE 或 WebSocket）：按 case/pool 返回持久化决策、执行状态、证据与 tx，供 FE-13 使用 | Unassigned | Todo | `node --test tests/agentActivityApi.test.js`，断线重连不丢事件且不暴露内部原始 chain-of-thought | - |
+| BE-14 | 实现 eBL 文档接入与 ENI adapter：上传 eBL/发票/保险单、校验类型/大小、获取可信文件标识与哈希，并触发 AI-13 编排器；ENI 不可用时提供明确 mock fallback | Unassigned | Done | `node --test tests/eblIngestion.test.js`，真实/模拟 ENI 两条路径均产出可追溯 document hash，重复上传保持幂等 | tests/eblIngestion.test.js passed (7 tests) |
+| BE-15 | 实现 Agent 活动查询与实时订阅 API（SSE 或 WebSocket）：按 case/pool 返回持久化决策、执行状态、证据与 tx，供 FE-13 使用 | Unassigned | Done | `node --test tests/agentActivityApi.test.js`，断线重连不丢事件且不暴露内部原始 chain-of-thought | tests/agentActivityApi.test.js passed (7 tests) |
 
 ## 5. Frontend
 
@@ -177,10 +177,13 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 |---|---|---|
 | WEB3-1 ~ WEB3-4 | Done | 冻结设计见 `docs/contracts.md` |
 | WEB3-5 | Done | JS contract mock：`src/core/contractHarness.js` |
-| WEB3-6 ~ WEB3-9 | Done | Hardhat 合约 + 测试：`hardhat/`，`hardhat test` 6 passing |
-| WEB3-10 | Done | `AgentBLRWA` Demo 合约已部署 Injective Testnet；不等同于完整协议合约部署 |
+| WEB3-6 ~ WEB3-9 | Done | Hardhat 合约 + 测试：`hardhat/`，完整合约套件 `hardhat test` 24 passing |
+| WEB3-10 | Done | `AgentBLRWA` 已随完整协议重新部署到 Injective Testnet |
 | WEB3-11 | Todo | 前端合约地址与事件展示 |
-| WEB3-12 ~ WEB3-19 | Todo | gap analysis v2：eBL V2、自主动作、访问模型、完整协议部署、多钱包与多链配置 |
+| WEB3-12 ~ WEB3-14 | Done | eBL V2 唯一性、结构化元数据、流转/背书/质押约束均有合约测试 |
+| WEB3-15 ~ WEB3-16 | Todo | 自主状态机权限与 v2 投资者访问模型仍在后续 wave |
+| WEB3-17 | Done | 五合约部署、wiring 与 create/subscribe/reprice/pause/resume/settle 链上 smoke 已完成 |
+| WEB3-18 ~ WEB3-19 | Todo | 多钱包与多链配置仍在后续 wave |
 
 | ID | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|
@@ -195,12 +198,12 @@ Web3 目标：把 AI 定价结果写成链上可验证事件，而不是只在�
 | WEB3-9 | 把 `quote_hash` / `evidence_hash` 写入合约事件 | Sage | Done | contract event test | `PricingUpdated` + `OfferingRepriced` 含 evidence/quote hash，`latestQuoteHash/latestEvidenceHash` 持久化，测试已验证 |
 | WEB3-10 | 部署到 Injective Testnet | Sage | Done | 部署地址 + tx hash | - |
 | WEB3-11 | 前端展示合约地址和 PricingUpdated event | Sage | Todo | 手动演示 | - |
-| WEB3-12 | 升级 `EBLRegistry` V2：计算/登记 `cargoHash`，提供 `isUnique`，同一批货禁止重复 mint | Unassigned | Todo | `cd hardhat && npm test`，相同 cargoHash 二次登记必须 revert，不同货物可正常登记 | - |
-| WEB3-13 | 增加 eBL 结构化元数据：船舶、航次、装卸港、货物、数量、HS Code、申报价值、Incoterms、MLETR/eUCP/DCSA 标准 | Unassigned | Todo | Solidity getter/event 测试 + 元数据 hash 与链下解析结果一致性测试 | - |
-| WEB3-14 | 实现 eBL 完整流转：`transfer`、`endorse`、`getTransferHistory`；质押期间禁止未授权转移，创建发行池前必须已质押到对应池 | Unassigned | Todo | `cd hardhat && npm test`，覆盖正常转让、连续背书、质押锁定、未质押建池失败、释放后转让与历史顺序 | - |
+| WEB3-12 | 升级 `EBLRegistry` V2：计算/登记 `cargoHash`，提供 `isUnique`，同一批货禁止重复 mint | Codex | Done | `cd hardhat && npm test`，相同 cargoHash 二次登记必须 revert，不同货物可正常登记 | `hardhat/contracts/EBLRegistry.sol` + `hardhat/test/eblRegistryV2.test.js` |
+| WEB3-13 | 增加 eBL 结构化元数据：船舶、航次、装卸港、货物、数量、HS Code、申报价值、Incoterms、MLETR/eUCP/DCSA 标准 | Codex | Done | Solidity getter/event 测试 + 元数据 hash 与链下解析结果一致性测试 | `mintEBLV2` / `EBLMetadata` / `EBLMintedV2`，`hardhat test` 24 passing |
+| WEB3-14 | 实现 eBL 完整流转：`transfer`、`endorse`、`getTransferHistory`；质押期间禁止未授权转移，创建发行池前必须已质押到对应池 | Codex | Done | `cd hardhat && npm test`，覆盖正常转让、连续背书、质押锁定、未质押建池失败、释放后转让与历史顺序 | `EBLRegistry.sol` + `RWAOfferingPool.sol` + 5 个 V2 专项测试 |
 | WEB3-15 | 补齐自主执行状态机：`RESUME_OFFERING`、付款/到港结算、合法状态迁移、Agent executor 权限与紧急人工停机 | Unassigned | Todo | `cd hardhat && npm test`，覆盖 PAUSE→RESUME、OPEN/FUNDED→SETTLE、非法迁移、越权调用与重复事件 | - |
 | WEB3-16 | 对齐 v2 投资者访问模型：测试网允许任意钱包直投；生产模式使用可插拔合规 gate，移除当前硬编码 allowlist 与“全球投资者”叙事冲突 | Unassigned | Todo | permissionless testnet 与 compliance-gated 两种模式合约测试；前端文案与实际权限一致 | - |
-| WEB3-17 | 编写完整协议部署脚本并部署 `AgentBLRWA`、`EBLRegistry` V2、`RiskPricingOracle`、`RWAOfferingPool`、`RWAToken` 到 Injective inEVM | Unassigned | Todo | 五个地址 + deploy tx + explorer 链接；部署后运行链上 smoke 验证 create/subscribe/reprice/pause/resume/settle | - |
+| WEB3-17 | 编写完整协议部署脚本并部署 `AgentBLRWA`、`EBLRegistry` V2、`RiskPricingOracle`、`RWAOfferingPool`、`RWAToken` 到 Injective inEVM | Codex | Done | 五个地址 + deploy tx + explorer 链接；部署后运行链上 smoke 验证 create/subscribe/reprice/pause/resume/settle | `hardhat/scripts/deploy-protocol.js` + `docs/evidence/wave-b-protocol.json`；最终状态 `Repaid` |
 | WEB3-18 | 钱包集成扩展为 MetaMask + Keplr + Leap：钱包选择、网络切换、签名、断线重连与错误提示 | Unassigned | Todo | Injective Testnet 三钱包验收矩阵；每种钱包至少完成一次真实签名交易 | - |
 | WEB3-19 | 将 `public/chain-config.json` 改为多链/多合约格式，默认 `injective-testnet`，并让部署脚本合并配置而非覆盖其他网络 | Unassigned | Todo | config schema 测试 + 两个网络 fixture；切链后地址、RPC、explorer 与 ABI 均正确 | - |
 
@@ -408,7 +411,7 @@ x402 Resource Server ──402 + PaymentRequirements──► wallet
 
 ## 15. 标准 MCP 与 Agent 可组合性（P1）
 
-当前 `src/mcp/mcpServer.js` 是好用的内部工具注册表，但不是可被 Claude/Bowen/其他 Agent 直接连接的标准 MCP server。保留核心 handlers，新增协议 transport，不重写业务逻辑。
+`src/mcp/mcpServer.js` 保留确定性业务 handlers，`standalone-server.js` 已增加官方 SDK stdio transport，因此 Claude/其他 MCP client 可直接连接且无需复制业务逻辑。
 
 ### 15.1 冻结为 7 tools
 
@@ -432,11 +435,11 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 
 | ID | Task | Priority | Owner | Status | Verification / Definition of Done |
 |---|---|---|---|---|---|
-| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Unassigned | Todo | MCP Inspector/真实 client 可 initialize、listTools、callTool、listResources、readResource；stdout 不混入日志 |
-| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Unassigned | Todo | `tests/mcpProtocol.test.js` 对 7 工具逐一 schema/call；购买工具返回 payment + report + oracle proof |
-| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Unassigned | Todo | list/read 正常；未知 URI 返回标准错误；资源与当前部署配置一致 |
-| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Unassigned | Todo | 由 Agent 发起一次真实 Injective 查询和一次受控 raw EVM testnet 交易；日志含 tool name、参数摘要、tx hash |
-| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Unassigned | Todo | 未批准写入、超限金额、错网、未知合约全部拒绝；不能让 prompt injection 任意转账 |
+| MCP-6 | 使用官方 MCP SDK 实现 stdio transport 与 JSON-RPC lifecycle，handlers 继续复用现有确定性引擎 | P1 | Codex | Done | `src/mcp/standalone-server.js` + `tests/mcpProtocol.test.js`：真实 SDK client 完成 initialize/list/call/read；stdout 仅协议帧 |
+| MCP-7 | 增加 `verify_trade_documents` 与 `purchase_premium_analysis`，工具总数固定为 7；后者完整处理 402 支付而不是绕过 middleware | P1 | Codex | Done | 7 个工具逐一真实调用；购买工具走 402 challenge/sign/retry，并返回 payment + report + oracle proof |
+| MCP-8 | 增加 3 个只读 resources，设置 MIME type、URI 校验和敏感字段脱敏 | P1 | Codex | Done | `agentbl://cases/catalog`、`agentbl://risk/methodology`、`agentbl://contracts/deployments`；未知 URI 协议错误 |
+| MCP-9 | 接入官方 Injective MCP Server 作为外部链执行/查询 adapter，优先使用其 chain query、transfer、raw EVM transaction 能力 | P1 | Codex | Done | `usdc_native_info` 查询 + allowlist 合约受控 `evm_broadcast`：`0x1578c1…984f`；见 `docs/evidence/injective-mcp-smoke.json` |
+| MCP-10 | 为链上写操作加入 human approval、金额上限、allowlist、network pinning、dry-run；读操作可自动 | P0 | Codex | Done | `security.js` + 专项测试：默认 dry-run；真实写入需 out-of-band token，未批准/超限/错网/未知合约/未知 calldata selector 全拒绝 |
 | MCP-11 | 提供 `npm run mcp:stdio`、示例 client config、30 秒录屏和离线 protocol fixture | P1 | Unassigned | Todo | 全新环境按 README 可连接；没有 Injective MCP 时仍可演示 AgentBL 只读/模拟能力 |
 
 ## 16. 赞助方技术使用清单（多用，但每一项都要有业务理由）
@@ -478,7 +481,7 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | DEMO-2 | 首页只保一个主 CTA：“购买这笔 RWA 的 AI 风控报告”；二级入口再放融资/市场/航运 | P0 | Unassigned | Todo | 5 秒可用性测试：新用户能说出谁付钱、买什么、链上发生什么 |
 | DEMO-3 | 完成支付流水、riskPulse、priceFlash、waterfall、Agent activity 的同屏联动 | P1 | Unassigned | Todo | 同一 `report_id/decision_id/tx_hash` 贯穿各面板；没有随机日志或不一致数字 |
 | DEMO-4 | 编写 30 秒 / 1 分钟 / 3 分钟中文路演稿与英文 tagline，三版数字、角色和叙事完全一致 | P0 | Unassigned | Todo | 交叉检查 README、PRD、demo-script、video-script；至少 3 次计时彩排 |
-| DEMO-5 | 新建 `npm run preflight`，汇总 54 项检查：环境、文件/schema、257 Node tests、19 contract tests、smoke/scenarios、MCP、x402、RPC/facilitator、余额、合约地址、UI asset、文档一致性 | P0 | Bowen | Done | `scripts/preflight.mjs` 固定 54 项并真正执行全部套件；Demo 实测 50 PASS / 4 Live WARN / 0 FAIL；关键失败 exit 1 |
+| DEMO-5 | 新建 `npm run preflight`，汇总 54 项检查：环境、文件/schema、300 Node tests、24 contract tests、smoke/scenarios、MCP、x402、RPC/facilitator、余额、合约地址、UI asset、文档一致性 | P0 | Bowen | Done | `scripts/preflight.mjs` 固定 54 项并真正执行全部套件；Demo 实测 50 PASS / 4 Live WARN / 0 FAIL；关键失败 exit 1 |
 | DEMO-6 | 评委追问预案：为什么 AI、谁承担货损、为何不是证券保本、报告是否能伪造、支付失败怎么办、为何必须 Injective、与 TradeGo/银行差异 | P0 | Unassigned | Todo | 每题 20 秒答案 + 可点击证据/代码/tx；不做未经律师确认的法律断言 |
 | DEMO-7 | 录制 Live 主视频 + Demo Mode 兜底视频，准备本地 MP4、关键截图和 CLI 兜底 | P0 | Unassigned | Todo | 飞行模式也能播放；视频中的 tx 链接和当前部署配置一致 |
 | DEMO-8 | 做一次“故障彩排”：RPC、facilitator、LLM、xAPI、钱包分别失效 | P0 | Unassigned | Todo | 每种故障 15 秒内切到正确兜底；不刷新整场、不暴露堆栈/密钥 |
@@ -510,12 +513,12 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | 19 | case/cargo/payment/report ID 无重复 | 46 | reduced-motion 模式无强闪烁动效 |
 | 20 | README 覆盖当前全部环境变量 | 47 | Demo reset 后状态完全可重放 |
 | 21 | `npm run check` | 48 | 1 分钟主流程计时 ≤65 秒 |
-| 22 | `npm test` 且不少于当前 257 tests | 49 | 30 秒/1 分钟/3 分钟数字与角色一致 |
+| 22 | `npm test` 且不少于当前 300 tests | 49 | 30 秒/1 分钟/3 分钟数字与角色一致 |
 | 23 | `npm run smoke` | 50 | README/UI/视频中的 explorer 链接可打开 |
 | 24 | `npm run scenarios` | 51 | Live 模式无 `mock/random/demo tx` |
 | 25 | `npm run demo` | 52 | 日志与 telemetry 隐私/secret 扫描 |
 | 26 | `hardhat compile` | 53 | 本地 CLI、截图、MP4 兜底资产齐全 |
-| 27 | `hardhat test` 且不少于当前 19 tests | 54 | 输出 commit SHA、build time、dirty tree 警告 |
+| 27 | `hardhat test` 且不少于当前 24 tests | 54 | 输出 commit SHA、build time、dirty tree 警告 |
 
 ## 18. AI 质量、安全与可信度
 
@@ -534,7 +537,7 @@ agentbl://contracts/deployments   # network、合约地址、ABI 版本、explor
 | 评审维度 | 评委必须看到的证据 | 对应任务 | Gate |
 |---|---|---|---|
 | Innovation | “AI 报告本身可按次交易”，支付证据与报告哈希绑定，报告再驱动 RWA 定价 | X402-7~11、X402-15 | 一次真实 402 + 一次真实 oracle event |
-| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、257+19 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
+| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、300+24 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
 | Use Case & Impact | 45 天回款痛点、银行/保险/投资者/Agent 都能买报告、明确收费与市场入口 | PM-8、X402-8、TRUST-7 | 1 分钟说清 payer/buyer/value/revenue |
 | Product & UX | 402→支付→结算→解锁一屏看懂；证据可展开；钱包失败可恢复 | X402-11/12、DEMO-1~3 | 5 秒理解测试 + 60 秒 demo |
 | Ecosystem Fit | 官方 Injective x402、MCP、EVM、Explorer、可选 precompile；Azure eval/tracing | SP-1~10 | 每个 logo 都能指向代码、配置、trace 或 tx |
@@ -550,7 +553,7 @@ DEMO-1 → DEMO-5
 
 Gate A：Demo Mode 能稳定出现 402、结算、解锁三个不同付费结果；12+ x402 tests 全绿。若 testnet facilitator 不支持，必须在此时决定 mainnet 小额实付或显式 demo，不把不确定性拖到最后。
 
-**Gate A 状态：✅ 已达成。** 三类 Demo 报告完成 402→签名→结算→解锁，专项测试与 257 个 Node tests 全绿；Live V2/EIP-3009 已完成一笔 0.001 USDC 真实支付，并由 `PaymentAttested` 将 payment tx、报告哈希和 case 绑定。
+**Gate A 状态：✅ 已达成。** 三类 Demo 报告完成 402→签名→结算→解锁，当前 300 个 Node tests 全绿；Live V2/EIP-3009 已完成一笔 0.001 USDC 真实支付，并由 `PaymentAttested` 将 payment tx、报告哈希和 case 绑定。
 
 ### Wave B：链上可信与 Agent 可组合
 
@@ -559,6 +562,8 @@ X402-7/9/10/15 → WEB3-17 → MCP-6/7/8/10 → MCP-9
 ```
 
 Gate B：一笔真实支付能从 payment tx 追到 `PaidReportEnvelope`、`PaymentAttested`、`PricingUpdated` 和最终 RWA 报价；MCP Inspector 能列出 7 tools + 3 resources。
+
+**Gate B 状态：✅ 已达成。** 0.001 USDC 真实 payment tx → 脱敏 `PaidReportEnvelope` 承诺 → `PaymentAttested` → 以同一 `report_hash` 为 `evidenceHash` 的 `PricingUpdated` → pool #2 最终报价 `$0.80`；官方 SDK stdio client 已逐一调用 7 tools 并读取 3 resources，官方 Injective MCP 也完成查询和受控 raw EVM testnet 交易。总证据见 `docs/wave-b.md` 与 `docs/evidence/wave-b-gate.json`。
 
 ### Wave C：AI 证据与产品打磨
 

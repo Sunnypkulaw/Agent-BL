@@ -10,8 +10,8 @@ import { KNOWLEDGE_BASE } from '../src/rag/knowledgeBase.js';
 // MCP-1: Manifest Tests
 // ============================================================
 
-test('MCP tools manifest has exactly 5 tools', () => {
-  assert.equal(MCP_TOOLS_MANIFEST.length, 5);
+test('MCP tools manifest has exactly 7 tools', () => {
+  assert.equal(MCP_TOOLS_MANIFEST.length, 7);
 });
 
 test('manifest contains all expected tool names', () => {
@@ -21,6 +21,8 @@ test('manifest contains all expected tool names', () => {
   assert.ok(names.includes('simulate_offering'));
   assert.ok(names.includes('push_pricing_to_oracle'));
   assert.ok(names.includes('search_knowledge_base'));
+  assert.ok(names.includes('verify_trade_documents'));
+  assert.ok(names.includes('purchase_premium_analysis'));
 });
 
 test('each tool in manifest has required fields', () => {
@@ -207,27 +209,28 @@ test('simulate_offering: offers inline trade_case', async () => {
 // MCP-5: push_pricing_to_oracle Tests
 // ============================================================
 
-test('push_pricing_to_oracle: returns mock tx receipt', async () => {
+test('push_pricing_to_oracle: defaults to a policy-checked dry run', async () => {
   const quote = await callTool('generate_pricing_quote', { case_id: 'CASE-EBL-2026-0001' });
   const result = await callTool('push_pricing_to_oracle', {
     case_id: 'CASE-EBL-2026-0001',
     pricing_quote: quote.result
   });
   assert.equal(result.tool, 'push_pricing_to_oracle');
-  assert.ok(result.result.tx_hash.startsWith('0x'));
-  assert.equal(result.result.status, 'confirmed');
-  assert.ok(result.result.block_number > 0);
-  assert.ok(result.result.confirmations >= 1);
-  assert.ok(result.result.gas_used > 0);
-  assert.ok(result.result.event, 'PricingUpdated');
-  assert.ok(result.result.event_args);
+  assert.equal(result.result.tx_hash, null);
+  assert.equal(result.result.status, 'dry_run');
+  assert.equal(result.result.policy.dry_run, true);
+  assert.equal(result.result.event, 'PricingUpdated');
+  assert.equal(result.result.transaction.case_id, 'CASE-EBL-2026-0001');
+  assert.equal(result.result.transaction.issue_price_e6, Math.round(quote.result.final_issue_price_usd * 1_000_000));
+  assert.equal(result.result.transaction.evidence_hash, quote.result.evidence_hash);
 });
 
-test('push_pricing_to_oracle: each call produces unique tx hash', async () => {
+test('push_pricing_to_oracle: repeated dry runs are deterministic and never invent tx hashes', async () => {
   const quote = await callTool('generate_pricing_quote', { case_id: 'CASE-EBL-2026-0001' });
   const r1 = await callTool('push_pricing_to_oracle', { case_id: 'CASE-EBL-2026-0001', pricing_quote: quote.result });
   const r2 = await callTool('push_pricing_to_oracle', { case_id: 'CASE-EBL-2026-0001', pricing_quote: quote.result });
-  assert.notEqual(r1.result.tx_hash, r2.result.tx_hash, 'Each push should produce a unique tx hash');
+  assert.equal(r1.result.tx_hash, null);
+  assert.deepEqual(r1.result.transaction, r2.result.transaction);
 });
 
 test('push_pricing_to_oracle: requires pricing_quote', async () => {
@@ -323,7 +326,7 @@ test('full MCP tool chain executes end-to-end', async () => {
     case_id: caseResult.result.case_id,
     pricing_quote: quoteResult.result
   });
-  assert.equal(oracleResult.result.status, 'confirmed');
+  assert.equal(oracleResult.result.status, 'dry_run');
 
   // All 5 steps passed
 });

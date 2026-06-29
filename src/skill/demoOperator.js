@@ -107,7 +107,9 @@ export async function runDemoOperator({ case_id } = {}) {
       step: 5,
       tool: 'push_pricing_to_oracle',
       status: 'ok',
-      summary: `Tx: ${oracleResult.result.tx_hash.slice(0, 18)}... | ${oracleResult.result.status} | Block ${oracleResult.result.block_number}`
+      summary: oracleResult.result.status === 'dry_run'
+        ? `Dry run: ${oracleResult.result.transaction.oracle_address} | explicit approval required for write`
+        : `Tx: ${oracleResult.result.tx_hash.slice(0, 18)}... | ${oracleResult.result.status} | Block ${oracleResult.result.block_number}`
     });
   } catch (err) {
     errors.push(err.message);
@@ -144,7 +146,12 @@ export async function runDemoOperator({ case_id } = {}) {
         { stage: '2. Risk Intelligence Gathered', detail: `${outputs.search_knowledge_base.match_count} risk events identified on the ${bl.port_of_loading} → ${bl.port_of_discharge} route` },
         { stage: '3. AI Priced RWA', detail: `Issue price $${quote.final_issue_price_usd} (${quote.risk_discount_bps} bps risk discount, ${quote.implied_gross_yield_bps} bps implied yield)` },
         { stage: '4. Offering Simulated', detail: `Workflow reached "${offering ? offering.final_state : 'unknown'}" state with action ${quote.pricing_action}` },
-        { stage: '5. Oracle Updated', detail: `Pricing pushed on-chain: ${quote.evidence_hash.slice(0, 18)}... via tx ${oracle ? oracle.tx_hash.slice(0, 18) : 'N/A'}...` }
+        {
+          stage: oracle?.status === 'dry_run' ? '5. Oracle Write Prepared' : '5. Oracle Updated',
+          detail: oracle?.status === 'dry_run'
+            ? `Pricing payload prepared: ${quote.evidence_hash.slice(0, 18)}... (dry-run; explicit approval required)`
+            : `Pricing pushed on-chain: ${quote.evidence_hash.slice(0, 18)}... via tx ${oracle?.tx_hash?.slice(0, 18) ?? 'N/A'}...`
+        }
       ],
       chain: ['get_trade_case', 'search_knowledge_base', 'generate_pricing_quote', 'simulate_offering', 'push_pricing_to_oracle']
     },

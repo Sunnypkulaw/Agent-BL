@@ -97,7 +97,7 @@ try {
   // MCP endpoints
   const mcpTools = await fetch(`${baseUrl}/api/mcp/tools`).then((r) => r.json());
   assert.equal(mcpTools.ok, true);
-  assert.equal(mcpTools.tools.length, 5);
+  assert.equal(mcpTools.tools.length, 7);
 
   const mcpCall = await fetch(`${baseUrl}/api/mcp/call`, {
     method: 'POST',

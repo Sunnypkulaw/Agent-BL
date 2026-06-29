@@ -1,0 +1,36 @@
+{
+  "schema": "agentbl-injective-mcp-smoke-v1",
+  "verified_at": "2026-06-29T09:09:03.649Z",
+  "network": "injective_testnet",
+  "chain_id": 1439,
+  "official_server": "https://github.com/InjectiveLabs/mcp-server",
+  "official_server_path": "C:\\Users\\lubw1\\AppData\\Local\\Temp\\agentbl-injective-mcp-server\\dist\\mcp\\server.js",
+  "tool_trace": [
+    {
+      "tool": "usdc_native_info",
+      "arguments_summary": {},
+      "result_summary": {
+        "symbol": "USDC",
+        "evm_address": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+        "network": "testnet"
+      }
+    },
+    {
+      "tool": "evm_broadcast",
+      "arguments_summary": {
+        "sender": "inj1l7r0qyxsqhg4h4p7ruj5cy4v40h6ugvdymdxve",
+        "to": "0x1e499819cfbD847a3152CdFaD313C3229b9148Ab",
+        "value": "0",
+        "calldata_selector": "0x18e56131",
+        "chain_id": 1439,
+        "approved": true,
+        "allowlisted": true
+      },
+      "cosmos_tx_hash": "F14E765DF8DEF9BBBDCB55852ADA242D9CCF638B0E20167579184B59EF603352",
+      "evm_tx_hash": "0x1578c10144a6216d8580eabc1497ee02c99a435c20cd315c1492fc0d78d8984f",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x1578c10144a6216d8580eabc1497ee02c99a435c20cd315c1492fc0d78d8984f",
+      "status": "ok"
+    }
+  ],
+  "secrets_logged": false
+}

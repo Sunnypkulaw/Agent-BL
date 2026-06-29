@@ -4,11 +4,15 @@
   "chainIdDecimal": 1439,
   "explorerBase": "https://testnet.blockscout.injective.network",
   "contracts": {
-    "AgentBLRWA": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",
-    "PaymentOracle": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571"
+    "AgentBLRWA": "0x1e499819cfbD847a3152CdFaD313C3229b9148Ab",
+    "PaymentOracle": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
+    "EBLRegistry": "0x99eBa4CD00B6650cac7dc57F3b1fB4Ed03Cfd6ae",
+    "RWAToken": "0xDD32B186536d05d0E6218dAA834B5EB312642668",
+    "RWAOfferingPool": "0x61ac2E4E261fCa58725e5fe8a2E1aBEd48d6529d",
+    "RiskPricingOracle": "0xaE19a62e26B17B32B183DC89b365da898987618b"
   },
-  "deployedAt": "2026-06-21T14:22:21.850Z",
-  "deployTx": "0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128",
+  "deployedAt": "2026-06-29T09:08:01.232Z",
+  "deployTx": "0xd666868dadc99a1020a697ba71e40e8886c2dbe382259cefef65ba581749819e",
   "abi": [
     {
       "anonymous": false,
@@ -856,5 +860,2189 @@
         "type": "function"
       }
     ]
+  },
+  "protocol": {
+    "schema": "agentbl-protocol-deployment-v1",
+    "network": "injective_testnet",
+    "chainId": 1439,
+    "deployer": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
+    "deployedAt": "2026-06-29T09:08:01.232Z",
+    "deployTransactions": {
+      "AgentBLRWA": "0xd666868dadc99a1020a697ba71e40e8886c2dbe382259cefef65ba581749819e",
+      "EBLRegistry": "0xec930a68ac9ab9a2f6d5d9c6f1c12be165708a6603d722e9d8bb3e0aba96d808",
+      "RWAToken": "0x1be641cf6d6d6cdfdbff557277019974b908f13cb7c41e276223a2e692c17e55",
+      "RWAOfferingPool": "0x5a915ad39ba7421301c6d714c87496425b00a93a38ac4d9727b8df1cf1536724",
+      "RiskPricingOracle": "0x24f3fcf0f34ea73f0f2e1da3be1de4fef5d56d3a8ee40d93937ddabf00782d78"
+    },
+    "explorerAddresses": {
+      "AgentBLRWA": "https://testnet.blockscout.injective.network/address/0x1e499819cfbD847a3152CdFaD313C3229b9148Ab",
+      "EBLRegistry": "https://testnet.blockscout.injective.network/address/0x99eBa4CD00B6650cac7dc57F3b1fB4Ed03Cfd6ae",
+      "RWAToken": "https://testnet.blockscout.injective.network/address/0xDD32B186536d05d0E6218dAA834B5EB312642668",
+      "RWAOfferingPool": "https://testnet.blockscout.injective.network/address/0x61ac2E4E261fCa58725e5fe8a2E1aBEd48d6529d",
+      "RiskPricingOracle": "https://testnet.blockscout.injective.network/address/0xaE19a62e26B17B32B183DC89b365da898987618b"
+    },
+    "abis": {
+      "AgentBLRWA": [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "oldIssuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "newIssuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "action",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint32",
+              "name": "newRiskScoreBps",
+              "type": "uint32"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "newRiskLevel",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "name": "Repriced",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "blId",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "issuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "mintedAmount",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "collateralValueUsd",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint32",
+              "name": "riskScoreBps",
+              "type": "uint32"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "riskLevel",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "Tokenized",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "who",
+              "type": "address"
+            }
+          ],
+          "name": "balanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "nextPoolId",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "offeringOf",
+          "outputs": [
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "creator",
+                  "type": "address"
+                },
+                {
+                  "internalType": "string",
+                  "name": "blId",
+                  "type": "string"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "issuePriceE6",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "tokenSupply",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "minted",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "collateralValueUsd",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint32",
+                  "name": "riskScoreBps",
+                  "type": "uint32"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "riskLevel",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "quoteHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "evidenceHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "exists",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct AgentBLRWA.Offering",
+              "name": "",
+              "type": "tuple"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "offerings",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "blId",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "issuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minted",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "collateralValueUsd",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint32",
+              "name": "riskScoreBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "riskLevel",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bool",
+              "name": "exists",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "newIssuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "action",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint32",
+              "name": "newRiskScoreBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "newRiskLevel",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "string",
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "name": "reprice",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "rwaBalance",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "blId",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "issuePriceE6",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "financingUsd",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "collateralValueUsd",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint32",
+              "name": "riskScoreBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "riskLevel",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "tokenize",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "mintedAmount",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      "EBLRegistry": [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "endorsementHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "EBLEndorsed",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "metadataHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "holder",
+              "type": "address"
+            }
+          ],
+          "name": "EBLMinted",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "cargoHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "metadataHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "holder",
+              "type": "address"
+            }
+          ],
+          "name": "EBLMintedV2",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "pool",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "holder",
+              "type": "address"
+            }
+          ],
+          "name": "EBLPledgeReleased",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "pool",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "holder",
+              "type": "address"
+            }
+          ],
+          "name": "EBLPledged",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            }
+          ],
+          "name": "EBLTransferred",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "cargoHashOf",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "cargoHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "eblIdForCargo",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "endorsementHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "endorse",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "getTransferHistory",
+          "outputs": [
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "endorser",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "endorsementHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "timestamp",
+                  "type": "uint64"
+                }
+              ],
+              "internalType": "struct EBLRegistry.TransferRecord[]",
+              "name": "",
+              "type": "tuple[]"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "holderOf",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "cargoHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "isUnique",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "metadataHashOf",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "metadataOf",
+          "outputs": [
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "vessel",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "voyage",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "portOfLoading",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "portOfDischarge",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "cargo",
+                  "type": "string"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "quantity",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "quantityUnit",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "hsCode",
+                  "type": "string"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "declaredValueUsdE6",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "incoterms",
+                  "type": "string"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "mletr",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "eucp",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "dcsa",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct EBLRegistry.EBLMetadata",
+              "name": "",
+              "type": "tuple"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "metadataHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "holder",
+              "type": "address"
+            }
+          ],
+          "name": "mintEBL",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "cargoHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "metadataHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "holder",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "vessel",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "voyage",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "portOfLoading",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "portOfDischarge",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "cargo",
+                  "type": "string"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "quantity",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "quantityUnit",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "hsCode",
+                  "type": "string"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "declaredValueUsdE6",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "incoterms",
+                  "type": "string"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "mletr",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "eucp",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "dcsa",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct EBLRegistry.EBLMetadata",
+              "name": "metadata",
+              "type": "tuple"
+            }
+          ],
+          "name": "mintEBLV2",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "nextEblId",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "pool",
+              "type": "address"
+            }
+          ],
+          "name": "pledge",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "pledgedTo",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            }
+          ],
+          "name": "releasePledge",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            }
+          ],
+          "name": "transfer",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      "RWAToken": [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "investor",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "RWAMinted",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "bool",
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "name": "TransferPermissionSet",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "investor",
+              "type": "address"
+            }
+          ],
+          "name": "balanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "isTransferAllowed",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "investor",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "mint",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "pool",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "pool_",
+              "type": "address"
+            }
+          ],
+          "name": "setPool",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "name": "setTransferPermission",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "totalSupply",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ],
+      "RWAOfferingPool": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "eblRegistry_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "rwaToken_",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "issuePrice",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "targetRedemptionValue",
+              "type": "uint256"
+            }
+          ],
+          "name": "OfferingCreated",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "OfferingPaused",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "oldIssuePrice",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "newIssuePrice",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "OfferingRepriced",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "repaymentAmount",
+              "type": "uint256"
+            }
+          ],
+          "name": "OfferingSettled",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "enum RWAOfferingPool.OfferingState",
+              "name": "oldState",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "enum RWAOfferingPool.OfferingState",
+              "name": "newState",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "action",
+              "type": "uint8"
+            }
+          ],
+          "name": "OfferingStateChanged",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "investor",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "paidAmount",
+              "type": "uint256"
+            }
+          ],
+          "name": "Subscribed",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "FREEZE_POOL",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "OPEN_OFFERING",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "OPEN_WITH_WARNING",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "PAUSE_OFFERING",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "REPRICE_DOWN",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "TRIGGER_LIQUIDATION",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "newIssuePrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "action",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "applyPricingAction",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "issuePrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "targetRedemptionValue",
+              "type": "uint256"
+            }
+          ],
+          "name": "createOffering",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "eblRegistry",
+          "outputs": [
+            {
+              "internalType": "contract IEBLRegistry",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "issuePriceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "nextPoolId",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "offerings",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "eblId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "issuePrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "targetRedemptionValue",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "subscribed",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum RWAOfferingPool.OfferingState",
+              "name": "state",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "exists",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "oracle",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "pauseOffering",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "permissionedInvestor",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "rwaToken",
+          "outputs": [
+            {
+              "internalType": "contract IRWATokenMintable",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "oracle_",
+              "type": "address"
+            }
+          ],
+          "name": "setOracle",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "investor",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "name": "setPermissionedInvestor",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "repaymentAmount",
+              "type": "uint256"
+            }
+          ],
+          "name": "settle",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "stateOf",
+          "outputs": [
+            {
+              "internalType": "enum RWAOfferingPool.OfferingState",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "subscribe",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      "RiskPricingOracle": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "pool_",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "issuePrice",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "riskLevel",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "action",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "updater",
+              "type": "address"
+            }
+          ],
+          "name": "PricingUpdated",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "updater",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "bool",
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "name": "UpdaterSet",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "updater",
+              "type": "address"
+            }
+          ],
+          "name": "isUpdater",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "latestEvidenceHash",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            }
+          ],
+          "name": "latestQuoteHash",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "pool",
+          "outputs": [
+            {
+              "internalType": "contract IRWAOfferingPoolActions",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "updater",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "name": "setUpdater",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "poolId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "issuePrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "riskLevel",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "action",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "evidenceHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "quoteHash",
+              "type": "bytes32"
+            }
+          ],
+          "name": "updatePricing",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
+    "wiring": [
+      {
+        "label": "RWAToken.setPool",
+        "txHash": "0xf334521907aca04d15e0260541af5439fd9083f04ba2a95b22b1a1a2203d5fb0",
+        "blockNumber": 131919384,
+        "explorer": "https://testnet.blockscout.injective.network/tx/0xf334521907aca04d15e0260541af5439fd9083f04ba2a95b22b1a1a2203d5fb0"
+      },
+      {
+        "label": "RWAOfferingPool.setOracle",
+        "txHash": "0x9955e2ae1abe175f39bdc5c149ed22b78237a9564b28c1fc6671830df2776a0b",
+        "blockNumber": 131919387,
+        "explorer": "https://testnet.blockscout.injective.network/tx/0x9955e2ae1abe175f39bdc5c149ed22b78237a9564b28c1fc6671830df2776a0b"
+      },
+      {
+        "label": "RWAOfferingPool.setPermissionedInvestor",
+        "txHash": "0x5fa98ca5ebb3ca6461cd2cff67e6bb1b85a4d2cbe3602f470b378cf7ab376629",
+        "blockNumber": 131919391,
+        "explorer": "https://testnet.blockscout.injective.network/tx/0x5fa98ca5ebb3ca6461cd2cff67e6bb1b85a4d2cbe3602f470b378cf7ab376629"
+      }
+    ],
+    "smoke": {
+      "verifiedAt": "2026-06-29T09:08:01.232Z",
+      "eblId": 1,
+      "poolId": 1,
+      "transactions": [
+        {
+          "label": "create:mintEBLV2",
+          "txHash": "0xa888c007e94e06f9b4fb3cfd48e210ea2d4bd3d80cde564ec0e102f5997ded92",
+          "blockNumber": 131919395,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0xa888c007e94e06f9b4fb3cfd48e210ea2d4bd3d80cde564ec0e102f5997ded92"
+        },
+        {
+          "label": "create:pledge",
+          "txHash": "0x09215a590dcb6f98245e6a4e335f902e9172327436ca4c43e95df4fefd105ffc",
+          "blockNumber": 131919400,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0x09215a590dcb6f98245e6a4e335f902e9172327436ca4c43e95df4fefd105ffc"
+        },
+        {
+          "label": "create:createOffering",
+          "txHash": "0xccfad4866210c2699a26e89978a56aa8fd6a5bb240908528c82d0161ab0d7466",
+          "blockNumber": 131919404,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0xccfad4866210c2699a26e89978a56aa8fd6a5bb240908528c82d0161ab0d7466"
+        },
+        {
+          "label": "subscribe",
+          "txHash": "0x8cf27bc2f9afd6bbbda690fb63dec5531ad13b3f1cb4d66d3939f7e9f52d5c17",
+          "blockNumber": 131919408,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0x8cf27bc2f9afd6bbbda690fb63dec5531ad13b3f1cb4d66d3939f7e9f52d5c17"
+        },
+        {
+          "label": "reprice",
+          "txHash": "0x1e45d9e6102d1cfe039ebfc65b33f6823c7c85174f2e928f6e81dc2fda31cbf6",
+          "blockNumber": 131919412,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0x1e45d9e6102d1cfe039ebfc65b33f6823c7c85174f2e928f6e81dc2fda31cbf6"
+        },
+        {
+          "label": "pause",
+          "txHash": "0x8ebd3b30be0d8fb77bb2bfc451ba8befa9401d28330d047dc29371db561da56f",
+          "blockNumber": 131919416,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0x8ebd3b30be0d8fb77bb2bfc451ba8befa9401d28330d047dc29371db561da56f"
+        },
+        {
+          "label": "resume",
+          "txHash": "0xcaab3ab3d49d3775d0b4d98a8cb4ebc50c5cf7e1ea9cf052c32359e5ca78f9f7",
+          "blockNumber": 131919419,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0xcaab3ab3d49d3775d0b4d98a8cb4ebc50c5cf7e1ea9cf052c32359e5ca78f9f7"
+        },
+        {
+          "label": "settle",
+          "txHash": "0xc87f4f3deaeb2cf6d2f0eae8fb430e7691b4bc0ccdebb9783038e2c6c61a64c5",
+          "blockNumber": 131919423,
+          "explorer": "https://testnet.blockscout.injective.network/tx/0xc87f4f3deaeb2cf6d2f0eae8fb430e7691b4bc0ccdebb9783038e2c6c61a64c5"
+        }
+      ],
+      "finalState": "Repaid",
+      "finalStateCode": 9,
+      "finalIssuePriceE6": "850000",
+      "subscriberBalance": "10000"
+    }
   }
 }

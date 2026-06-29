@@ -529,8 +529,11 @@
           <span style="color: var(--accent); font-weight: 600;">AgentBL Activity Logs</span>
           <button id="toggle-activity-console" class="btn ghost" style="padding: 2px 8px; font-size: 12px;">Toggle</button>
         </div>
-        <div id="agent-logs-container" style="flex: 1; overflow-y: auto; font-size: 12px; color: var(--text-2);">
-          <div class="log-entry">System ready. Awaiting autonomous agent execution...</div>
+        <div style="display: flex; gap: 12px; flex: 1; overflow: hidden;">
+          <div id="agent-logs-container" style="flex: 1; overflow-y: auto; font-size: 12px; color: var(--text-2); border-right: 1px solid var(--border); padding-right: 12px;">
+            <div class="log-entry">System ready. Awaiting autonomous agent execution...</div>
+          </div>
+          <div id="agent-timeline" style="flex: 1; overflow-y: auto; font-size: 12px;"></div>
         </div>
       </section>
       
