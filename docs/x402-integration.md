@@ -24,7 +24,7 @@ AgentBL's AI pricing engine needs the best possible risk intelligence to set acc
 
 The x402 integration gives AgentBL:
 - **A new differentiator vs projects that only have free intel** — "our AI pays for better data"
-- **On-chain payment evidence** — every premium intel purchase is recorded in PaymentOracle
+- **On-chain payment evidence** — every verified Live purchase is bound to its report in PaymentOracle; Demo receipts never claim an on-chain event
 - **Pricing impact tracking** — show how paid intel changed the AI's risk assessment
 - **EIP-3009 gasless payments** — the White Agent wallet signs, the facilitator relays
 
@@ -63,8 +63,8 @@ The x402 integration gives AgentBL:
                           │         Injective Testnet              │
                           │                                        │
                           │  PaymentOracle.sol                     │
-                          │  · PaymentEvidenceLogged               │
-                          │  · requestCount · serviceSpend         │
+                          │  · PaymentAttested                     │
+                          │  · attestor ACL · replay protection    │
                           └────────────────────────────────────────┘
 ```
 
@@ -104,7 +104,9 @@ curl -s -i http://localhost:3000/api/x402/intel/premium-risk
 # X-Network: eip155:1439
 ```
 
-**With payment** (via `X402-Payment` header): Returns premium risk intel.
+**With payment:** the Demo compatibility client retries with `X402-Signature` /
+`X402-Signer`; the production Express middleware uses the standard V2
+`PAYMENT-SIGNATURE` header. Both return a validated report envelope.
 
 ```json
 {
@@ -115,9 +117,39 @@ curl -s -i http://localhost:3000/api/x402/intel/premium-risk
   "before_quote": { "final_issue_price_usd": 0.80, ... },
   "after_quote": { "final_issue_price_usd": 0.76, ... },
   "delta": { "issue_price_delta_usd": -0.04 },
+  "report_envelope": {
+    "report_id": "rpt_...",
+    "kind": "risk-intelligence",
+    "payment_tx": "demo://receipt/...",
+    "report_hash": "0x...",
+    "expires_at": "2026-06-29T08:05:00.000Z"
+  },
   "payment": { "status": "settled", "txHash": "0x...", ... }
 }
 ```
+
+### PaidReportEnvelope
+
+Every unlocked report contains the 15-field `PaidReportEnvelope` defined in
+`src/x402/paidReport.js`: `report_id`, `kind`, `case_id`, `payer`, `payee`,
+`network`, `asset`, atomic `amount`, `payment_tx`, `settled_at`, sanitized
+`data_snapshot`, `model_provider`, `evidence_hash`, `report_hash`, and
+`expires_at`.
+
+`report_hash` is SHA-256 over canonical JSON excluding only the hash field, so
+any party can recompute it. The schema rejects tampering, expired/invalid time
+ranges, malformed payment identities, raw chain-of-thought, private keys,
+binary/base64 documents, and oversized snapshots. Demo receipts always use a
+`demo://receipt/...` identifier and cannot be confused with an on-chain tx.
+
+### PricingQuote evidence injection
+
+`src/x402/reportEvidence.js` validates the canonical report hash, expiry and
+`case_id` before adding a `paid_report_provenance` node. The node changes only
+the evidence graph/evidence hash. It never changes `risk_score_bps`, discounts,
+issue price, action, yield, token supply, or `quote_hash`. Tampered, expired and
+cross-case envelopes fail closed; `tests/x402PricingEvidence.test.js` locks
+these invariants.
 
 ### GET /api/x402/valuation/premium
 
@@ -160,29 +192,41 @@ missing; private keys never leave the local CLI process.
 
 Deployed on Injective Testnet alongside `AgentBLRWA` and `RiskPricingOracle`.
 
-**Events:**
+**Injective Testnet deployment:**
 
-- `PaymentEvidenceLogged(uint256 indexed requestId, address indexed payer, string serviceId, uint256 amountMicrousd, string paymentRef, bytes32 responseHash, bytes32 quoteHash, bytes32 evidenceHash, string pricingAction)`
-- `BatchPaymentEvidenceLogged(uint256 indexed fromRequestId, uint256 count, uint256 totalMicrousd)`
+- Contract: [`0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571`](https://testnet.blockscout.injective.network/address/0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571)
+- Deployment tx: [`0xffce87b2…c119fd`](https://testnet.blockscout.injective.network/tx/0xffce87b2095af1e3f58cbb5462bfe26ec4fe5867f863e915271bd91df0c119fd)
 
-**Functions:**
+**Event:**
 
-- `logPaymentEvidence(...)` — Record a single payment
-- `logBatchPaymentEvidence(...)` — Batch-record multiple payments
-- `getServiceSpend(serviceId)` — Total spend per service
-- `getPayment(requestId)` — Lookup a payment record
+- `PaymentAttested(bytes32 indexed receiptId, bytes32 indexed reportHash, bytes32 indexed caseIdHash, bytes32 paymentTxHash, address payer, address asset, uint256 amount, address attestor, uint256 timestamp)`
+
+**Functions and safety:**
+
+- `attestPayment(...)` — only an allowlisted attestor can bind a settlement to a report
+- `getAttestation(receiptId)` / `hasAttestation(receiptId)` — browser/backend readback
+- `setAttestor(address, allowed)` — owner-managed attestor ACL
+- Both `receiptId` and the original `paymentTxHash` are replay protected; zero
+  hashes, zero addresses and zero amounts revert.
 
 ## Environment Variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `X402_NETWORK` | No | `eip155:1439` | CAIP-2 network identifier |
-| `X402_FACILITATOR_URL` | No | `https://x402-facilitator.molandak.org` | Settlement relay URL |
-| `X402_USDC_ADDRESS` | No | Monad DemoUSDC | USDC token for settlement |
+| `X402_FACILITATOR_URL` | Live only | — | Settlement relay URL |
+| `X402_ASSET` | No | canonical Injective Testnet USDC | USDC token for settlement |
+| `X402_REPORT_TTL_SECONDS` | No | `300` | Paid report envelope/cache TTL |
 | `WHITE_AGENT_PRIVATE_KEY` | No | — | Wallet that signs EIP-3009 payments |
-| `X402_PAY_TO_ADDRESS` | No | — | Address receiving payments |
+| `X402_PAY_TO` | Live only | demo payee | Address receiving payments |
+| `X402_LIVE_CONFIRM` | Live smoke only | — | Must equal `injective-testnet`; prevents accidental spend |
+| `X402_LIVE_AMOUNT_ATOMIC` | No | `1000` | Live smoke price in atomic USDC (0.001 USDC) |
+| `X402_ALLOW_SELF_PAYMENT` | No | `false` | Explicit test-only self-transfer opt-in |
+| `X402_RECOVER_PAYMENT_TX` | No | — | Resume from an already-confirmed payment tx without paying again |
 
-**Without x402 keys,** the endpoints still work — they return data directly (demo mode) without requiring payment. All x402 smoke tests pass using deterministic mock signatures.
+**Without x402 keys,** the endpoints still return HTTP 402; Demo Mode completes
+the signed retry with an ephemeral local signer and an explicitly non-chain
+receipt. It never returns premium data directly and never invents an explorer URL.
 
 ## Verification
 
@@ -190,11 +234,27 @@ Deployed on Injective Testnet alongside `AgentBLRWA` and `RiskPricingOracle`.
 # Full x402 end-to-end verification
 npm run check && npm run test && npm run smoke:x402
 
+# Real testnet proof (never falls back to Demo)
+npm run smoke:x402:live
+
 # Individual checks
 npm run smoke:x402       # 402 challenge → payment → intel
 npm run x402:intel       # CLI paid intel query
 npm run dev              # → open http://localhost:3000 → "x402 Intel Market" tab
 ```
+
+`smoke:x402:live` revalidates facilitator `/supported`, RPC chain id, INJ/USDC
+balances and hardened Oracle bytecode; purchases one report through the official
+V2 client/middleware; verifies the USDC `Transfer`; writes `PaymentAttested`; and
+saves explorer evidence to `docs/evidence/x402-live-smoke.json`.
+
+X402-15 passed on 2026-06-29 on `eip155:1439` using an explicit test-only
+self-transfer. The official V2 flow settled
+[0.001 USDC](https://testnet.blockscout.injective.network/tx/0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49),
+unlocked report `rpt_3e5f…3334` (`report_hash=0x994078…168ce`), and emitted
+[`PaymentAttested`](https://testnet.blockscout.injective.network/tx/0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e).
+The full machine-readable proof is committed at
+`docs/evidence/x402-live-smoke.json`.
 
 ## Comparison: AgentBL vs RugRumble x402
 
@@ -203,8 +263,8 @@ npm run dev              # → open http://localhost:3000 → "x402 Intel Market
 | x402 protocol | ✅ HTTP 402 + EIP-3009 | ✅ HTTP 402 + EIP-3009 |
 | Protected endpoints | 3 (risk + valuation + smoke) | 3 (reputation + approve + copy) |
 | On-chain evidence | PaymentOracle (Injective) | RugRumbleArena (Monad) |
-| Payment evidence fields | 8 fields incl. quoteHash, evidenceHash | 5 fields |
-| Batch payment logging | ✅ | ❌ |
-| Paid intel pricing impact | Before/after quote comparison | Risk delta only |
+| Payment evidence fields | report/case/payment tx/payer/asset/amount + attestor/time | 5 fields |
+| Duplicate protection | receipt id + original payment tx | ❌ |
+| Paid intel pricing impact | Provenance-only evidence node; score unchanged | Risk delta only |
 | Offline demo mode | ✅ Deterministic mock signatures | ❌ Requires config |
-| npm script | `smoke:x402` + `x402:intel` | `smoke:x402` |
+| npm script | `smoke:x402` + `smoke:x402:live` + `x402:intel` | `smoke:x402` |

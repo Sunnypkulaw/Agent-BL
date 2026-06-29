@@ -94,10 +94,11 @@ if (!service) {
         }
       });
       if (!result.paid) throw new Error(result.error?.error ?? 'Paid report was not unlocked');
-      const hash = reportHash(result.paid);
-      const transaction = result.payment?.live
+      const envelope = result.paid.report_envelope;
+      const hash = envelope?.report_hash ?? reportHash(result.paid);
+      const transaction = envelope?.payment_tx ?? (result.payment?.live
         ? result.paymentTxHash
-        : `(demo receipt ${result.paymentTxHash ?? 'none'}; not an on-chain settlement tx)`;
+        : `(demo receipt ${result.paymentTxHash ?? 'none'}; not an on-chain settlement tx)`);
       const oracleTransaction = result.payment?.live ? result.paymentTxHash : '(demo: PaymentOracle not written)';
       console.log(`  settlement: ${transaction}`);
       console.log(`  report hash:${hash}`);
@@ -113,6 +114,8 @@ if (!service) {
           settlement_tx: result.paymentTxHash,
           oracle_tx: result.payment?.live ? result.paymentTxHash : null,
           report_hash: hash,
+          report_id: envelope?.report_id ?? null,
+          expires_at: envelope?.expires_at ?? null,
           report: result.paid
         }, null, 2));
       }

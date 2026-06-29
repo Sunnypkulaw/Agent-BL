@@ -29,6 +29,7 @@ import { computeCargoValuation } from '../agent/tools/copperValuationTools.js';
 import { suggestHaircut } from '../agent/valuationAgent.js';
 import { checkDocumentConsistency } from '../agent/documentConsistency.js';
 import { retrieveRiskIntel } from '../agent/riskIntel.js';
+import { injectPaidReportEvidence } from '../x402/reportEvidence.js';
 import { PAYOUT_SPEEDS } from './pricingSchema.js';
 
 export { PAYOUT_SPEEDS };
@@ -473,7 +474,7 @@ export function quoteFromCase(caseData, options = {}) {
   const intel = retrieveRiskIntel(caseData, { k: 3 });
   const financing = caseData.financing ?? {};
 
-  return priceRwaOffering({
+  const quote = priceRwaOffering({
     case_id: caseData.case_id,
     bl_id: caseData.bill_of_lading?.bl_id,
     payout_speed: options.payout_speed ?? financing.payout_speed ?? 'BALANCED',
@@ -488,6 +489,11 @@ export function quoteFromCase(caseData, options = {}) {
     risk_level: risk.risk_level,
     risk_factors: risk.risk_factors,
     evidence: { documents: risk.document_checks, intel }
+  });
+  const paidReports = options.paid_report_envelopes ?? options.paid_report_envelope;
+  return injectPaidReportEvidence(quote, paidReports, {
+    caseId: caseData.case_id,
+    now: options.paid_report_now
   });
 }
 

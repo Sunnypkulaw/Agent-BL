@@ -5,7 +5,7 @@
   "explorerBase": "https://testnet.blockscout.injective.network",
   "contracts": {
     "AgentBLRWA": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",
-    "PaymentOracle": "0x96E58247E1bcfA70A4ce5340E0A486969bEAf3Cd"
+    "PaymentOracle": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571"
   },
   "deployedAt": "2026-06-21T14:22:21.850Z",
   "deployTx": "0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128",
@@ -453,33 +453,102 @@
     }
   ],
   "paymentOracle": {
-    "address": "0x96E58247E1bcfA70A4ce5340E0A486969bEAf3Cd",
-    "deployTx": "0x0fabc6dc51619546430df249cbf273f668e47da2ebc832e0242a4c7312b6d538",
-    "deployedAt": "2026-06-28T16:04:11.735Z",
+    "address": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
+    "deployTx": "0xffce87b2095af1e3f58cbb5462bfe26ec4fe5867f863e915271bd91df0c119fd",
+    "deployedAt": "2026-06-29T00:28:06.448Z",
     "abi": [
+      {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "paymentTxHash",
+            "type": "bytes32"
+          }
+        ],
+        "name": "DuplicatePaymentTransaction",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "receiptId",
+            "type": "bytes32"
+          }
+        ],
+        "name": "DuplicateReceipt",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "caller",
+            "type": "address"
+          }
+        ],
+        "name": "NotOwner",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "caller",
+            "type": "address"
+          }
+        ],
+        "name": "UnauthorizedAttestor",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "receiptId",
+            "type": "bytes32"
+          }
+        ],
+        "name": "UnknownReceipt",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "ZeroAddress",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "ZeroAmount",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "ZeroHash",
+        "type": "error"
+      },
       {
         "anonymous": false,
         "inputs": [
           {
             "indexed": true,
-            "internalType": "uint256",
-            "name": "fromRequestId",
-            "type": "uint256"
+            "internalType": "address",
+            "name": "attestor",
+            "type": "address"
           },
           {
             "indexed": false,
-            "internalType": "uint256",
-            "name": "count",
-            "type": "uint256"
-          },
-          {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "totalMicrousd",
-            "type": "uint256"
+            "internalType": "bool",
+            "name": "allowed",
+            "type": "bool"
           }
         ],
-        "name": "BatchPaymentEvidenceLogged",
+        "name": "AttestorUpdated",
         "type": "event"
       },
       {
@@ -487,113 +556,189 @@
         "inputs": [
           {
             "indexed": true,
-            "internalType": "uint256",
-            "name": "requestId",
-            "type": "uint256"
+            "internalType": "address",
+            "name": "previousOwner",
+            "type": "address"
           },
           {
             "indexed": true,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "receiptId",
+            "type": "bytes32"
+          },
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "reportHash",
+            "type": "bytes32"
+          },
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "caseIdHash",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "paymentTxHash",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
             "internalType": "address",
             "name": "payer",
             "type": "address"
           },
           {
             "indexed": false,
-            "internalType": "string",
-            "name": "serviceId",
-            "type": "string"
+            "internalType": "address",
+            "name": "asset",
+            "type": "address"
           },
           {
             "indexed": false,
             "internalType": "uint256",
-            "name": "amountMicrousd",
+            "name": "amount",
             "type": "uint256"
           },
           {
             "indexed": false,
-            "internalType": "string",
-            "name": "paymentRef",
-            "type": "string"
+            "internalType": "address",
+            "name": "attestor",
+            "type": "address"
           },
           {
             "indexed": false,
-            "internalType": "bytes32",
-            "name": "responseHash",
-            "type": "bytes32"
-          },
-          {
-            "indexed": false,
-            "internalType": "bytes32",
-            "name": "quoteHash",
-            "type": "bytes32"
-          },
-          {
-            "indexed": false,
-            "internalType": "bytes32",
-            "name": "evidenceHash",
-            "type": "bytes32"
-          },
-          {
-            "indexed": false,
-            "internalType": "string",
-            "name": "pricingAction",
-            "type": "string"
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
           }
         ],
-        "name": "PaymentEvidenceLogged",
+        "name": "PaymentAttested",
         "type": "event"
       },
       {
         "inputs": [
           {
+            "internalType": "bytes32",
+            "name": "receiptId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reportHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "caseIdHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "paymentTxHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "payer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "asset",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
-            "name": "requestId",
+            "name": "amount",
             "type": "uint256"
           }
         ],
-        "name": "getPayment",
+        "name": "attestPayment",
+        "outputs": [
+          {
+            "internalType": "bytes32",
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "attestationCount",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "receiptId",
+            "type": "bytes32"
+          }
+        ],
+        "name": "getAttestation",
         "outputs": [
           {
             "components": [
+              {
+                "internalType": "bytes32",
+                "name": "reportHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "caseIdHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "paymentTxHash",
+                "type": "bytes32"
+              },
               {
                 "internalType": "address",
                 "name": "payer",
                 "type": "address"
               },
               {
-                "internalType": "string",
-                "name": "serviceId",
-                "type": "string"
+                "internalType": "address",
+                "name": "asset",
+                "type": "address"
               },
               {
                 "internalType": "uint256",
-                "name": "amountMicrousd",
+                "name": "amount",
                 "type": "uint256"
               },
               {
-                "internalType": "string",
-                "name": "paymentRef",
-                "type": "string"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "responseHash",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "quoteHash",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "evidenceHash",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "string",
-                "name": "pricingAction",
-                "type": "string"
+                "internalType": "address",
+                "name": "attestor",
+                "type": "address"
               },
               {
                 "internalType": "uint256",
@@ -601,7 +746,7 @@
                 "type": "uint256"
               }
             ],
-            "internalType": "struct PaymentOracle.PaymentRecord",
+            "internalType": "struct PaymentOracle.PaymentAttestation",
             "name": "",
             "type": "tuple"
           }
@@ -612,17 +757,17 @@
       {
         "inputs": [
           {
-            "internalType": "string",
-            "name": "serviceId",
-            "type": "string"
+            "internalType": "bytes32",
+            "name": "receiptId",
+            "type": "bytes32"
           }
         ],
-        "name": "getServiceSpend",
+        "name": "hasAttestation",
         "outputs": [
           {
-            "internalType": "uint256",
+            "internalType": "bool",
             "name": "",
-            "type": "uint256"
+            "type": "bool"
           }
         ],
         "stateMutability": "view",
@@ -632,164 +777,16 @@
         "inputs": [
           {
             "internalType": "address",
-            "name": "payer",
-            "type": "address"
-          },
-          {
-            "internalType": "string[]",
-            "name": "serviceIds",
-            "type": "string[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "amountsMicrousd",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "string[]",
-            "name": "paymentRefs",
-            "type": "string[]"
-          },
-          {
-            "internalType": "bytes32[]",
-            "name": "responseHashes",
-            "type": "bytes32[]"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "quoteHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "evidenceHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "string",
-            "name": "pricingAction",
-            "type": "string"
-          }
-        ],
-        "name": "logBatchPaymentEvidence",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "fromRequestId",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "payer",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "serviceId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountMicrousd",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "paymentRef",
-            "type": "string"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "responseHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "quoteHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "evidenceHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "string",
-            "name": "pricingAction",
-            "type": "string"
-          }
-        ],
-        "name": "logPaymentEvidence",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "requestId",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
             "name": "",
-            "type": "uint256"
+            "type": "address"
           }
         ],
-        "name": "payments",
+        "name": "isAttestor",
         "outputs": [
           {
-            "internalType": "address",
-            "name": "payer",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "serviceId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amountMicrousd",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "paymentRef",
-            "type": "string"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "responseHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "quoteHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "evidenceHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "string",
-            "name": "pricingAction",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
           }
         ],
         "stateMutability": "view",
@@ -797,12 +794,12 @@
       },
       {
         "inputs": [],
-        "name": "requestCount",
+        "name": "owner",
         "outputs": [
           {
-            "internalType": "uint256",
+            "internalType": "address",
             "name": "",
-            "type": "uint256"
+            "type": "address"
           }
         ],
         "stateMutability": "view",
@@ -811,20 +808,51 @@
       {
         "inputs": [
           {
-            "internalType": "string",
+            "internalType": "bytes32",
             "name": "",
-            "type": "string"
+            "type": "bytes32"
           }
         ],
-        "name": "serviceSpend",
+        "name": "paymentTransactionAttested",
         "outputs": [
           {
-            "internalType": "uint256",
+            "internalType": "bool",
             "name": "",
-            "type": "uint256"
+            "type": "bool"
           }
         ],
         "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "attestor",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "allowed",
+            "type": "bool"
+          }
+        ],
+        "name": "setAttestor",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
       }
     ]

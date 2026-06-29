@@ -92,7 +92,8 @@ function isRecord(value) {
 // A POST body is treated as a bare trade case when it carries a bill_of_lading
 // (legacy seed) or a case_id + financing block (new-model case). Otherwise it is
 // treated as a request wrapper:
-//   { case?, payout_speed?, requested_cash_usd?, subscription_usd?, events?, compare? }
+//   { case?, payout_speed?, requested_cash_usd?, subscription_usd?, events?, compare?,
+//     paid_report_envelope? | paid_report_envelopes? }
 function looksLikeCase(value) {
   return isRecord(value)
     && (value.bill_of_lading !== undefined || (value.case_id !== undefined && value.financing !== undefined));
@@ -137,6 +138,14 @@ async function resolvePricingRequest(body, url) {
   if (wrapper.events !== undefined && !Array.isArray(wrapper.events)) {
     errors.push('events must be an array');
   }
+  if (wrapper.paid_report_envelope !== undefined && !isRecord(wrapper.paid_report_envelope)) {
+    errors.push('paid_report_envelope must be an object');
+  }
+  if (wrapper.paid_report_envelopes !== undefined
+      && (!Array.isArray(wrapper.paid_report_envelopes)
+        || wrapper.paid_report_envelopes.some((entry) => !isRecord(entry)))) {
+    errors.push('paid_report_envelopes must be an array of objects');
+  }
   if (errors.length > 0) throw new ValidationError('Invalid pricing request', errors);
 
   const compareRaw = q.get('compare') ?? wrapper.compare;
@@ -145,6 +154,8 @@ async function resolvePricingRequest(body, url) {
     requested_cash_usd: requestedCash,
     subscription_usd: subscription,
     events: Array.isArray(wrapper.events) ? wrapper.events : undefined,
+    paid_report_envelopes: wrapper.paid_report_envelopes
+      ?? (wrapper.paid_report_envelope ? [wrapper.paid_report_envelope] : undefined),
     compare: compareRaw === true || compareRaw === 'true',
     pool_id: q.get('pool_id') ?? wrapper.pool_id ?? undefined
   };
@@ -156,6 +167,7 @@ function quoteOptions(options) {
   const out = {};
   if (options.payout_speed !== undefined) out.payout_speed = options.payout_speed;
   if (options.requested_cash_usd !== undefined) out.requested_cash_usd = options.requested_cash_usd;
+  if (options.paid_report_envelopes !== undefined) out.paid_report_envelopes = options.paid_report_envelopes;
   return out;
 }
 
@@ -170,7 +182,9 @@ function sendText(response, statusCode, text, contentType = 'text/plain; charset
 }
 
 function sendError(response, error) {
-  const isValidationError = error instanceof ValidationError || error instanceof SyntaxError;
+  const isValidationError = error instanceof ValidationError
+    || error instanceof SyntaxError
+    || error?.code === 'paid_report_invalid';
   sendJson(response, isValidationError ? 400 : 500, {
     ok: false,
     error: error.message,

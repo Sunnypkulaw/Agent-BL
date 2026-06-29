@@ -6,8 +6,10 @@ import {
   validateFacilitatorSupport,
   x402FacilitatorUrl,
   x402Network,
-  x402PayTo
+  x402PayTo,
+  x402Usdc
 } from './config.js';
+import { createPaidReportEnvelope, hashReportSnapshot } from './paidReport.js';
 import {
   JsonReceiptStore,
   PaymentSettlementError,
@@ -359,8 +361,14 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
       let payment;
       const clientTransaction = request.headers['x402-txhash'];
       if (clientTransaction) {
+        if (!/^0x[0-9a-fA-F]{64}$/u.test(clientTransaction)) {
+          throw new Error('X402-TxHash must be a 32-byte transaction hash');
+        }
         payment = { txHash: clientTransaction, live: true, payer };
       } else {
+        if (process.env.DEMO_MODE === 'false') {
+          throw new Error('Live paid-report delivery requires the original facilitator settlement transaction');
+        }
         const { recordPaymentEvidence } = await import('./settlement.js');
         const result = await recordPaymentEvidence({
           serviceId,
@@ -372,22 +380,64 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
       }
 
       const report = await handler(request);
+      const settledAt = payment.receipt?.timestamp ?? new Date().toISOString();
+      const paymentTransaction = payment.live === true
+        ? payment.txHash
+        : `demo://receipt/${String(payment.txHash).replace(/^0x/u, '')}`;
+      const reportEnvelope = createPaidReportEnvelope({
+        kind: report.kind,
+        case_id: report.case_id,
+        payer,
+        payee: payTo,
+        network,
+        asset: x402Usdc(),
+        amount: String(Math.floor(priceUSDC * 1_000_000)),
+        payment_tx: paymentTransaction,
+        settled_at: settledAt,
+        data_snapshot: report,
+        model_provider: report.provider ?? 'deterministic-agentbl',
+        evidence_hash: report.evidence_hash
+          ?? report.pricing_result?.evidence_hash
+          ?? payment.evidence?.responseHash
+          ?? hashReportSnapshot(report)
+      }, {
+        ttlSeconds: Number(process.env.X402_REPORT_TTL_SECONDS ?? 300)
+      });
+      if (payment.live === true) {
+        const { recordPaymentEvidence } = await import('./settlement.js');
+        const attestation = await recordPaymentEvidence({
+          serviceId,
+          amountUSDC: priceUSDC,
+          payer,
+          reportEnvelope,
+          paymentTxHash: payment.txHash,
+          asset: x402Usdc(),
+          responseData: report
+        });
+        payment = { ...payment, ...attestation.payment };
+      }
       response.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'PAYMENT-RESPONSE': JSON.stringify({
           network,
           txHash: payment.txHash,
           amount: Math.floor(priceUSDC * 1_000_000),
-          payer
+          payer,
+          reportId: reportEnvelope.report_id,
+          reportHash: reportEnvelope.report_hash,
+          attestationTxHash: payment.attestationTxHash ?? null
         })
       });
       response.end(JSON.stringify({
         ...report,
+        report_envelope: reportEnvelope,
         payment: {
           status: 'settled',
           payer,
           txHash: payment.txHash,
           explorerUrl: payment.explorerUrl || null,
+          attestationTxHash: payment.attestationTxHash ?? null,
+          attestationExplorerUrl: payment.attestationExplorerUrl ?? null,
           live: payment.live === true,
           serviceId,
           amountUSDC: priceUSDC

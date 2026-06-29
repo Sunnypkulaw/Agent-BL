@@ -4,6 +4,7 @@ import { after, before, test } from 'node:test';
 import { createServer } from '../src/app/server.js';
 import { createPaidFetch, fetchPaidIntel } from '../src/x402/client.js';
 import { X402_SERVICES } from '../src/x402/config.js';
+import { assertPaidReportEnvelope } from '../src/x402/paidReport.js';
 import {
   buildPremiumFraudReview,
   buildPremiumRiskIntel,
@@ -101,6 +102,9 @@ for (const service of X402_SERVICES) {
     assert.equal(result.paid?.service, service.serviceId);
     assert.equal(result.paid?.case_id, demoCase.case_id);
     assert.equal(result.paid?.payment?.live, false);
+    assertPaidReportEnvelope(result.paid?.report_envelope);
+    assert.equal(result.paid.report_envelope.kind, result.paid.kind);
+    assert.match(result.paid.report_envelope.payment_tx, /^demo:\/\/receipt\//u);
   });
 }
 

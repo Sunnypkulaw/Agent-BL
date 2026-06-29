@@ -11,7 +11,7 @@
 [![ETH Beijing](https://img.shields.io/badge/ETH_Beijing-2026-635BFF)](https://ethbeijing.xyz)
 [![Track](https://img.shields.io/badge/Track-AI_Agent_x_Blockchain-5A45FF)](#)
 [![Award](https://img.shields.io/badge/Award-Security_%2F_Risk_Agent-D6336C)](#)
-[![tests](https://img.shields.io/badge/tests-241_passing-2EA043)](#)
+[![tests](https://img.shields.io/badge/tests-257_passing-2EA043)](#)
 [![contracts](https://img.shields.io/badge/contracts-11_passing-2EA043)](#)
 [![Injective](https://img.shields.io/badge/Injective-Testnet-0B60FF)](https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94)
 [![MCP](https://img.shields.io/badge/MCP-Server-1F6FEB)](#)
@@ -59,7 +59,7 @@ puts an AI agent in charge of the dangerous part: **pricing real-world risk befo
 | 🔗 | **Grounded, tool-using, retrieval-backed** | Tool calls for live LME price, regional premium and UN Comtrade historical comparables; a RAG retriever cites macro-risk intel with sources → an auditable **evidence graph**. |
 | 🌐 | **Live real-world risk via xAPI** | Pulls X/Twitter, Google News and prediction-market (Polymarket-style) signals through [xAPI](https://xapi.to), maps them to structured risk events, and folds them into the price — *the AI prices live world events on this cargo*. No key? Offline fixtures keep the demo running. |
 | 💰 | **x402 Paid Intel Market — users buy premium AI analysis** | Investors use **x402** (HTTP 402 + EIP-3009 in Live mode) to unlock risk, valuation, or anti-fraud reports. Live payments are attested in `PaymentOracle`; Demo receipts are visibly labelled and never presented as chain transactions. |
-| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **241 + 11 tests** guard the invariants. |
+| ⛓️ | **Live on Injective Testnet, with safety rails** | Every decision is anchored on-chain with `quote_hash` / `evidence_hash`. The LLM **never** sets the final price alone — a deterministic engine + schema guardrail validate it; **257 + 19 tests** guard the invariants. |
 
 ### 🧠 The core innovation — discount built on verifiable trade profit
 
@@ -268,7 +268,8 @@ Two paths: **A. local zero-config demo** (recommended first; simulated minting, 
 
 ### ⌨️ CLI tools
 
-All commands run **offline** (deterministic fallback when no API key is set).
+Commands run **offline by default** (deterministic fallback when no API key is
+set). Commands explicitly containing `:live` perform testnet network writes.
 
 | Command | What it does |
 |---|---|
@@ -281,11 +282,20 @@ All commands run **offline** (deterministic fallback when no API key is set).
 | `npm run mcp` | Demo the MCP tool chain (get_trade_case → search → price → simulate → push oracle) |
 | `npm run agent:value` | Run the AI cargo-valuation tools (live price / historical comparables / valuation; offline fallback) |
 | `npm run intel` | **Live world-risk via xAPI**: X/Twitter + news + prediction-market signals → risk events → re-priced quote (offline fixtures with no key) |
-| `npm run smoke:x402` | **x402 end-to-end**: HTTP 402 challenge → EIP-3009 payment → settlement → premium intel unlocked |
+| `npm run smoke:x402` | **Demo-safe x402 end-to-end**: HTTP 402 challenge → signed retry → simulated settlement → premium intel unlocked |
+| `npm run smoke:x402:live` | **Testnet-only Live proof**: official V2/EIP-3009 → real USDC tx → paid report → `PaymentAttested` (requires funded test wallet) |
 | `npm run x402:intel` | CLI paid intel query — pay for and display premium risk/valuation data |
 | `npm run check` | Low-cost self-check: files, scripts, seed data, engine integrity |
-| `npm run test` | Full unit / integration suite (`node --test`, **241 passing**) |
+| `npm run test` | Full unit / integration suite (`node --test`, **257 passing**) |
 | `npm run smoke` | Spin up a temp server and smoke-test the key APIs |
+
+The hardened PaymentOracle is deployed on Injective Testnet at
+[`0x36d9…4571`](https://testnet.blockscout.injective.network/address/0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571).
+X402-15 passed on 2026-06-29 using an explicit test-only self-transfer: the official V2 flow settled
+[0.001 testnet USDC](https://testnet.blockscout.injective.network/tx/0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49),
+unlocked report `rpt_3e5f…3334`, and emitted
+[`PaymentAttested`](https://testnet.blockscout.injective.network/tx/0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e).
+The reproducible evidence is saved in `docs/evidence/x402-live-smoke.json`.
 
 > One-shot pre-demo verification:
 > ```bash
@@ -391,7 +401,7 @@ AgentBL-AI/
 │   ├── mcp/  ·  rag/  ·  skill/
 ├── hardhat/               # Solidity contracts + tests
 ├── scripts/               # check / demo / smoke / scenarios / price / qa / mcp / agent-valuation
-├── tests/                 # node --test (241 passing)
+├── tests/                 # node --test (257 passing)
 └── docs/                  # PRD · background · contracts · tasks · acceptance · award-roadmap
 ```
 
@@ -400,7 +410,7 @@ AgentBL-AI/
 | Command | Verifies | Status |
 |---|---|---|
 | `npm run check` | files / scripts / seed / engine integrity | ✅ |
-| `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 241 passing |
+| `npm run test` | unit + integration (pricing invariants, autonomous Agent, schema, MCP, contract mock…) | ✅ 257 passing |
 | `npm run smoke` | key APIs end-to-end | ✅ |
 | `npm run smoke:x402` | x402 paid-intel flow (HTTP 402 → payment → settlement → intel) | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause regression | ✅ |
@@ -457,7 +467,7 @@ AgentBL 把两端接起来——并把最危险的那一步交给一个 AI Agent
 | 🔗 | **有据可查：工具调用 + RAG 检索** | 调用实时 LME 铜价、区域升水、UN Comtrade 历史同类成交价；RAG 检索器带来源引用宏观风险情报 → 一张可审计的**证据图**。 |
 | 🌐 | **xAPI 实时世界风险** | 通过 [xAPI](https://xapi.to) 拉取 X/Twitter、Google 新闻、预测市场（Polymarket 类）信号，映射成结构化风险事件并入定价——*AI 为这批货实时给真实世界事件定价*。无密钥时走离线兜底，demo 永远能跑。 |
 | 💰 | **x402 付费情报市场 — 用户为 AI 分析付费** | 投资者用 **x402**（Live 模式为 HTTP 402 + EIP-3009）解锁风险、估值或反欺诈报告。Live 支付写入 `PaymentOracle`；Demo receipt 会明确标注，绝不冒充链上交易。 |
-| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**241 + 11 个测试**守护不变量。 |
+| ⛓️ | **已上链 Injective Testnet，且有安全护栏** | 每个决策带 `quote_hash` / `evidence_hash` 锚定上链。LLM **绝不**单独定最终价——确定性引擎 + schema 护栏校验；**257 + 19 个测试**守护不变量。 |
 
 ### 🧠 创新点 —— 把「折价」建立在可验证的贸易利润上
 
@@ -662,7 +672,7 @@ x402 支付层精确锁定 `@injectivelabs/x402@0.0.1` 与 `express@5.2.1`。由
 
 ### ⌨️ 命令行工具
 
-所有命令都**离线可跑**（无 API Key 时走确定性 fallback）。
+除显式带 `:live` 的命令外，所有命令都**默认离线可跑**（无 API Key 时走确定性 fallback）。
 
 | 命令 | 作用 |
 |---|---|
@@ -675,9 +685,20 @@ x402 支付层精确锁定 `@injectivelabs/x402@0.0.1` 与 `express@5.2.1`。由
 | `npm run mcp` | 演示 MCP 工具链（get_trade_case → search → price → simulate → push oracle） |
 | `npm run agent:value` | 跑 AI 货值估值工具（实时价 / 历史成交价 / 估值，离线有 fallback） |
 | `npm run intel` | **xAPI 实时世界风险**：X/Twitter + 新闻 + 预测市场信号 → 风险事件 → 重新定价（无密钥走离线兜底） |
+| `npm run smoke:x402` | Demo 安全的 402 → 签名 → 模拟结算 → 报告解锁闭环 |
+| `npm run smoke:x402:live` | 测试网真实 V2/EIP-3009 → USDC tx → 报告 → `PaymentAttested`（需测试钱包有 USDC） |
+| `npm run x402:intel` | 购买并展示风险/估值/反欺诈报告的 CLI |
 | `npm run check` | 最低成本自检：文件、脚本、seed 数据、引擎完好 |
-| `npm run test` | 全部单元 / 集成测试（`node --test`，**241 passing**） |
+| `npm run test` | 全部单元 / 集成测试（`node --test`，**257 passing**） |
 | `npm run smoke` | 启动临时 server，冒烟测试关键 API |
+
+硬化 PaymentOracle 已部署在 Injective Testnet：
+[`0x36d9…4571`](https://testnet.blockscout.injective.network/address/0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571)。
+X402-15 已于 2026-06-29 通过（显式测试用 self-transfer）：官方 V2 流程真实结算
+[0.001 测试网 USDC](https://testnet.blockscout.injective.network/tx/0x6d796d39de0de3becd57f2c8b0ff72e6baf33e570259530cb294ff819d1a0b49)，
+解锁报告 `rpt_3e5f…3334`，并产生
+[`PaymentAttested`](https://testnet.blockscout.injective.network/tx/0xa03ab9622dbc1af7bd448af2a52b5322963abf65853916dc13c75a139adfef6e)。
+可复验证据保存在 `docs/evidence/x402-live-smoke.json`。
 
 > 演示前一键全验证：
 > ```bash
@@ -780,7 +801,7 @@ AgentBL-AI/
 │   ├── mcp/  ·  rag/  ·  skill/
 ├── hardhat/               # Solidity 合约 + 测试
 ├── scripts/               # check / demo / smoke / scenarios / price / qa / mcp / agent-valuation
-├── tests/                 # node --test（241 passing）
+├── tests/                 # node --test（257 passing）
 └── docs/                  # PRD · background · contracts · tasks · acceptance · award-roadmap
 ```
 
@@ -789,7 +810,7 @@ AgentBL-AI/
 | 命令 | 验证什么 | 现状 |
 |---|---|---|
 | `npm run check` | 文件 / 脚本 / seed / 引擎完好 | ✅ |
-| `npm run test` | 单元 + 集成（定价不变量、自主 Agent、schema、MCP、合约 mock…） | ✅ 241 passing |
+| `npm run test` | 单元 + 集成（定价不变量、自主 Agent、schema、MCP、合约 mock…） | ✅ 257 passing |
 | `npm run smoke` | 关键 API 端到端 | ✅ |
 | `npm run scenarios` | fast / balanced / reprice / pause 场景回归 | ✅ |
 | `cd hardhat && npx hardhat test` | Solidity 合约测试 | ✅ 11 passing |

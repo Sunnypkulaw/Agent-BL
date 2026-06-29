@@ -1,9 +1,9 @@
 /**
  * Deploy PaymentOracle to Injective Testnet.
  *
- * PaymentOracle records every x402 payment as an on-chain event:
- *   PaymentEvidenceLogged(requestId, payer, serviceId, amountMicrousd,
- *     paymentRef, responseHash, quoteHash, evidenceHash, pricingAction)
+ * PaymentOracle binds every settled x402 payment to its paid AI report:
+ *   PaymentAttested(receiptId, reportHash, caseIdHash, paymentTxHash,
+ *     payer, asset, amount, attestor, timestamp)
  *
  * This gives the x402 "AI Risk Report Market" a real on-chain audit trail.
  *
@@ -45,37 +45,53 @@ async function main() {
 
   const meta = NETWORK_META[network.name];
   const [deployer] = await ethers.getSigners();
-  const balance = await ethers.provider.getBalance(deployer.address);
+  const recoveryAddress = process.env.PAYMENT_ORACLE_RECOVERY_ADDRESS?.trim();
+  const recoveryTx = process.env.PAYMENT_ORACLE_RECOVERY_TX?.trim();
+  const recovering = Boolean(recoveryAddress || recoveryTx);
+  const balance = recovering ? null : await ethers.provider.getBalance(deployer.address);
 
   console.log(`\n🌐 Network: ${meta.name}`);
   console.log(`⛽ Gas token: ${meta.gasToken}`);
   console.log(`👤 Deployer : ${deployer.address}`);
-  console.log(`💰 Balance  : ${ethers.formatEther(balance)} ${meta.gasToken}`);
+  if (balance !== null) console.log(`💰 Balance  : ${ethers.formatEther(balance)} ${meta.gasToken}`);
 
   if (balance === 0n) {
     console.log('💧 Get testnet INJ from: https://testnet.faucet.injective.network/');
     throw new Error(`Deployer balance is 0 ${meta.gasToken}. Fund the wallet first.`);
   }
 
-  // ── Deploy PaymentOracle ──
-  const Factory = await ethers.getContractFactory('PaymentOracle');
+  // Recover a deployment whose receipt was confirmed after the local RPC
+  // disconnected, so metadata can be rebuilt without deploying a duplicate.
+  let address;
+  let deployTx;
+  if (recovering) {
+    if (!ethers.isAddress(recoveryAddress) || !/^0x[0-9a-fA-F]{64}$/.test(recoveryTx || '')) {
+      throw new Error('Recovery requires valid PAYMENT_ORACLE_RECOVERY_ADDRESS and PAYMENT_ORACLE_RECOVERY_TX');
+    }
+    if (process.env.PAYMENT_ORACLE_RECOVERY_CONFIRMED !== 'true') {
+      throw new Error('Recovery requires PAYMENT_ORACLE_RECOVERY_CONFIRMED=true after explorer verification');
+    }
+    address = ethers.getAddress(recoveryAddress);
+    deployTx = recoveryTx;
+    console.log('Recovered explorer-confirmed PaymentOracle deployment:', address);
+  } else {
+    const Factory = await ethers.getContractFactory('PaymentOracle');
+    const feeData = await ethers.provider.getFeeData();
+    const overrides = {
+      gasLimit: 2_000_000n,
+      gasPrice: feeData.gasPrice ? feeData.gasPrice * 2n : 50000000000n
+    };
+    console.log(`⛏  Deploying with gasLimit=${overrides.gasLimit}, gasPrice=${overrides.gasPrice}wei…`);
+    const contract = await Factory.deploy(overrides);
+    console.log('⏳ Waiting for confirmation (Injective testnet may take 30-60s)…');
+    await contract.waitForDeployment();
+    address = await contract.getAddress();
+    deployTx = contract.deploymentTransaction()?.hash ?? null;
+  }
 
-  // Injective testnet sometimes needs explicit gas to avoid hanging
-  const feeData = await ethers.provider.getFeeData();
-  const overrides = {
-    gasLimit: 2_000_000n,
-    gasPrice: feeData.gasPrice ? feeData.gasPrice * 2n : 50000000000n // 50 gwei fallback
-  };
-
-  console.log(`⛏  Deploying with gasLimit=${overrides.gasLimit}, gasPrice=${overrides.gasPrice}wei…`);
-  const contract = await Factory.deploy(overrides);
-  console.log('⏳ Waiting for confirmation (Injective testnet may take 30-60s)…');
-  await contract.waitForDeployment();
-
-  const address = await contract.getAddress();
-  const deployTx = contract.deploymentTransaction()?.hash ?? null;
-  const chainId = (await ethers.provider.getNetwork()).chainId;
+  const chainId = recovering ? 1439n : (await ethers.provider.getNetwork()).chainId;
   const { abi } = await artifacts.readArtifact('PaymentOracle');
+  const deployedAt = new Date().toISOString();
 
   console.log('\n✅ PaymentOracle deployed');
   console.log('   Address:', address);
@@ -102,7 +118,7 @@ async function main() {
   chainConfig.paymentOracle = {
     address,
     deployTx,
-    deployedAt: new Date().toISOString(),
+    deployedAt,
     abi
   };
 
@@ -122,13 +138,13 @@ async function main() {
     address,
     deployTx,
     explorer: `${meta.explorerBase}${meta.explorerAddressPath}${address}`,
-    deployedAt: chainConfig.deployedAt
+    deployedAt
   }, null, 2));
   console.log('📄 Deployment record ->', recordPath);
 
   console.log(`\n🎯 PaymentOracle is live on ${meta.name}.`);
   console.log(`   Explorer: ${meta.explorerBase}${meta.explorerAddressPath}${address}`);
-  console.log(`   x402 payments now emit real PaymentEvidenceLogged events on-chain.\n`);
+  console.log(`   x402 paid reports now emit real PaymentAttested events on-chain.\n`);
 }
 
 main().catch((error) => {

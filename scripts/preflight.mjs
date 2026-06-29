@@ -7,6 +7,7 @@ import { createServer } from '../src/app/server.js';
 import { MCP_TOOL_HANDLERS, MCP_TOOLS_MANIFEST } from '../src/mcp/mcpServer.js';
 import { fetchPaidIntel } from '../src/x402/client.js';
 import { loadX402Config, X402_SERVICES, x402RpcUrl } from '../src/x402/config.js';
+import { assertPaidReportEnvelope, computeReportHash, createPaidReportEnvelope } from '../src/x402/paidReport.js';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -79,8 +80,30 @@ for (const [file, label] of [
   ['src/x402/endpoints.js', 'Three paid-report builders'],
   ['src/x402/client.js', 'Wallet/CLI x402 client'],
   ['src/x402/settlement.js', 'Settlement state machine'],
-  ['src/demo/mode.js', 'Unified Demo/Live controller'],
-  ['hardhat/contracts/PaymentOracle.sol', 'PaymentOracle contract'],
+  ['src/demo/mode.js', 'Unified Demo/Live controller']
+]) check('Files and schemas', label, await exists(file), file);
+try {
+  const sampleEnvelope = createPaidReportEnvelope({
+    kind: 'risk-intelligence',
+    case_id: 'PREFLIGHT-CASE',
+    payer: '0x1111111111111111111111111111111111111111',
+    payee: '0x2222222222222222222222222222222222222222',
+    network: 'eip155:1439',
+    asset: '0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d',
+    amount: '1000',
+    payment_tx: `demo://receipt/${'ab'.repeat(32)}`,
+    settled_at: '2026-06-29T08:00:00.000Z',
+    data_snapshot: { risk_level: 'WARNING' },
+    model_provider: 'preflight',
+    evidence_hash: `0x${'cd'.repeat(32)}`
+  }, { now: '2026-06-29T08:00:00.000Z' });
+  check('Files and schemas', 'PaidReportEnvelope schema + hash recompute',
+    assertPaidReportEnvelope(sampleEnvelope) === sampleEnvelope
+      && computeReportHash(sampleEnvelope) === sampleEnvelope.report_hash);
+} catch (error) {
+  fail('Files and schemas', 'PaidReportEnvelope schema + hash recompute', error.message);
+}
+for (const [file, label] of [
   ['public/chain-config.json', 'Chain deployment config'],
   ['public/index.html', 'Dashboard HTML'],
   ['public/styles.css', 'Dashboard CSS'],
@@ -95,7 +118,7 @@ if (nodeTests.ok && !/# fail 0/u.test(nodeTests.output)) {
   results.at(-1).status = 'FAIL';
   results.at(-1).detail = 'test runner did not report # fail 0';
 }
-await command('Executable suites', 'Solidity contract suite (11 tests)', npm, ['test'], path.join(root, 'hardhat'));
+await command('Executable suites', 'Solidity contract suite (19 tests)', npm, ['test'], path.join(root, 'hardhat'));
 await command('Executable suites', 'Main API smoke flow', npm, ['run', 'smoke']);
 await command('Executable suites', 'Risk/pricing scenario regression', npm, ['run', 'scenarios']);
 if (runtimeMode.demoMode) await command('Executable suites', 'One-minute offline demo', npm, ['run', 'demo:once']);
@@ -146,7 +169,11 @@ try {
         caseData: demoCase
       });
       paidReports.push(paid.paid);
-      check('HTTP and x402', `${service.serviceId} signed demo unlock`, paid.paid?.service === service.serviceId);
+      let validEnvelope = false;
+      try { validEnvelope = assertPaidReportEnvelope(paid.paid?.report_envelope) === paid.paid.report_envelope; }
+      catch { validEnvelope = false; }
+      check('HTTP and x402', `${service.serviceId} signed demo unlock`,
+        paid.paid?.service === service.serviceId && validEnvelope);
     } catch (error) {
       fail('HTTP and x402', `${service.serviceId} signed demo unlock`, error.message);
     }
@@ -190,8 +217,23 @@ else warn('Live readiness', 'Live wallet has readable INJ gas balance', 'explici
 
 const chainConfig = JSON.parse(await text('public/chain-config.json'));
 const addressPattern = /^0x[0-9a-fA-F]{40}$/u;
-check('Live readiness', 'Deployed RWA and PaymentOracle addresses are valid',
-  addressPattern.test(chainConfig.contracts?.AgentBLRWA) && addressPattern.test(chainConfig.contracts?.PaymentOracle));
+const transactionPattern = /^0x[0-9a-fA-F]{64}$/u;
+const paymentOracleAbi = chainConfig.paymentOracle?.abi ?? [];
+let liveEvidence = {};
+try { liveEvidence = JSON.parse(await text('docs/evidence/x402-live-smoke.json')); }
+catch { liveEvidence = {}; }
+check('Live readiness', 'Hardened PaymentOracle and x402 Live evidence are valid',
+  addressPattern.test(chainConfig.contracts?.AgentBLRWA)
+    && addressPattern.test(chainConfig.contracts?.PaymentOracle)
+    && paymentOracleAbi.some((entry) => entry.type === 'function' && entry.name === 'attestPayment')
+    && paymentOracleAbi.some((entry) => entry.type === 'event' && entry.name === 'PaymentAttested')
+    && liveEvidence.mode === 'live'
+    && liveEvidence.network === 'eip155:1439'
+    && liveEvidence.payment_oracle?.toLowerCase() === chainConfig.contracts.PaymentOracle.toLowerCase()
+    && transactionPattern.test(liveEvidence.payment_tx ?? '')
+    && transactionPattern.test(liveEvidence.attestation_tx ?? '')
+    && transactionPattern.test(liveEvidence.report_hash ?? '')
+    && liveEvidence.event === 'PaymentAttested');
 const readme = await text('README.md');
 check('Live readiness', 'README documents x402 CLI, smoke and mode boundary',
   readme.includes('smoke:x402') && readme.includes('x402:intel') && /demo/i.test(readme) && app.includes('/api/demo/mode'));

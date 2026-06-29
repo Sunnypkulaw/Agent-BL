@@ -399,3 +399,41 @@ export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, 
 
   return { txHash: tx.hash, explorerUrl: explorerTx(cfg, tx.hash), blockNumber: null };
 }
+
+/** Read a hardened PaymentOracle attestation by rpt_<sha256> or bytes32 id. */
+export async function readX402PaymentAttestation(reportOrReceiptId) {
+  const cfg = await loadChainConfig();
+  const address = cfg?.contracts?.PaymentOracle;
+  const abi = cfg?.paymentOracle?.abi;
+  if (!isAddress(address) || !abi) throw err('NO_CONTRACT', 'PaymentOracle is not deployed');
+
+  const receiptId = String(reportOrReceiptId).startsWith('rpt_')
+    ? `0x${String(reportOrReceiptId).slice(4)}`
+    : String(reportOrReceiptId);
+  if (!/^0x[0-9a-fA-F]{64}$/.test(receiptId)) {
+    throw err('INVALID_RECEIPT', 'Expected rpt_<sha256> or a bytes32 receipt id');
+  }
+
+  const ethers = await loadEthers();
+  const provider = new ethers.JsonRpcProvider(getPreset(cfg).rpcUrls[0]);
+  const oracle = new ethers.Contract(address, abi, provider);
+  if (typeof oracle.getAttestation !== 'function') {
+    throw err('OUTDATED_CONTRACT', 'Configured PaymentOracle predates PaymentAttested; redeploy it');
+  }
+  const stored = await oracle.getAttestation(receiptId);
+  const events = await oracle.queryFilter(oracle.filters.PaymentAttested(receiptId));
+  const event = events.at(-1);
+  return {
+    receiptId,
+    reportHash: stored.reportHash,
+    caseIdHash: stored.caseIdHash,
+    paymentTxHash: stored.paymentTxHash,
+    payer: stored.payer,
+    asset: stored.asset,
+    amount: stored.amount.toString(),
+    attestor: stored.attestor,
+    timestamp: Number(stored.timestamp),
+    attestationTxHash: event?.transactionHash ?? null,
+    explorerUrl: event?.transactionHash ? explorerTx(cfg, event.transactionHash) : null
+  };
+}

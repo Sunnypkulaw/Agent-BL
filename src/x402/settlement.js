@@ -523,11 +523,34 @@ export function buildPaymentEvidence({ requestId, payer, serviceId, amountUSDC, 
   };
 }
 
-export async function recordPaymentEvidence({ serviceId, amountUSDC, responseData, payer }) {
+export async function recordPaymentEvidence({
+  serviceId,
+  amountUSDC,
+  responseData,
+  payer,
+  reportEnvelope,
+  paymentTxHash,
+  asset
+}) {
   const evidence = buildPaymentEvidence({ serviceId, amountUSDC, responseData, payer });
   const demoMode = process.env.DEMO_MODE !== 'false';
   if (!demoMode) {
     try {
+      const { assertPaidReportEnvelope } = await import('./paidReport.js');
+      if (!reportEnvelope) {
+        throw new PaymentSettlementError(
+          'paid_report_required',
+          'Live PaymentOracle attestation requires a canonical PaidReportEnvelope'
+        );
+      }
+      assertPaidReportEnvelope(reportEnvelope);
+      const originalPaymentTx = paymentTxHash ?? reportEnvelope.payment_tx;
+      if (!TX_HASH_RE.test(originalPaymentTx)) {
+        throw new PaymentSettlementError(
+          'payment_tx_invalid',
+          'Live PaymentOracle attestation requires the original 32-byte settlement transaction hash'
+        );
+      }
       const oracle = await getPaymentOracleContract();
       if (!oracle) {
         throw new PaymentSettlementError(
@@ -536,15 +559,21 @@ export async function recordPaymentEvidence({ serviceId, amountUSDC, responseDat
         );
       }
       const resolvedPayer = payer || await compatibilityWallet.getAddress();
-      const transaction = await oracle.logPaymentEvidence(
+      if (resolvedPayer.toLowerCase() !== reportEnvelope.payer.toLowerCase()) {
+        throw new PaymentSettlementError('payment_payer_mismatch', 'Attested payer must match PaidReportEnvelope.payer');
+      }
+      const receiptId = `0x${reportEnvelope.report_id.slice(4)}`;
+      const caseIdHash = `0x${crypto.createHash('sha256').update(reportEnvelope.case_id).digest('hex')}`;
+      const amountAtomic = BigInt(reportEnvelope.amount);
+      const paymentAsset = asset ?? reportEnvelope.asset;
+      const transaction = await oracle.attestPayment(
+        receiptId,
+        reportEnvelope.report_hash,
+        caseIdHash,
+        originalPaymentTx,
         resolvedPayer,
-        serviceId,
-        evidence.amountMicrousd,
-        evidence.paymentRef,
-        evidence.responseHash,
-        evidence.responseHash,
-        evidence.responseHash,
-        'OPEN'
+        paymentAsset,
+        amountAtomic
       );
       const mined = await transaction.wait();
       const config = loadPaymentOracleConfig();
@@ -553,17 +582,22 @@ export async function recordPaymentEvidence({ serviceId, amountUSDC, responseDat
       return {
         ok: true,
         payment: {
-          txHash: mined.hash,
-          blockNumber: mined.blockNumber,
-          explorerUrl: `${explorerBase}/tx/${mined.hash}`,
+          txHash: originalPaymentTx,
+          paymentTxHash: originalPaymentTx,
+          attestationTxHash: mined.hash,
+          attestationBlockNumber: mined.blockNumber,
+          attestationExplorerUrl: `${explorerBase}/tx/${mined.hash}`,
           receipt: compatibilityReceipt({
             serviceId,
             amountUSDC,
-            paymentRef: evidence.paymentRef,
+            paymentRef: originalPaymentTx,
             timestamp
           }),
           evidence,
-          onChainEvent: 'PaymentEvidenceLogged',
+          receiptId,
+          reportHash: reportEnvelope.report_hash,
+          caseIdHash,
+          onChainEvent: 'PaymentAttested',
           live: true,
           onchain: true
         }
@@ -582,7 +616,7 @@ export async function recordPaymentEvidence({ serviceId, amountUSDC, responseDat
       txHash: generated.txHash,
       receipt: generated.receipt,
       evidence,
-      onChainEvent: 'PaymentEvidenceLogged',
+      onChainEvent: null,
       live: false,
       onchain: false,
       mode: 'demo'

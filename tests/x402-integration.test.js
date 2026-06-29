@@ -102,7 +102,7 @@ describe('x402 Settlement', () => {
     });
     assert.equal(result.ok, true);
     assert.ok(result.payment.txHash);
-    assert.equal(result.payment.onChainEvent, 'PaymentEvidenceLogged');
+    assert.equal(result.payment.onChainEvent, null);
   });
 });
 
