@@ -1408,7 +1408,7 @@ strong { color: var(--text); }
   display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center;
 }
 .x402-quote-pair > div:not(.x402-impact-arrow) {
-  padding: 12px; border: 1px solid var(--line-soft); border-radius: 12px; background: rgba(10, 17, 36, 0.72);
+  padding: 12px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--bg-inset);
 }
 .x402-quote-pair strong { display: block; font-size: 24px; margin: 4px 0; color: var(--text); }
 .x402-quote-pair small { color: var(--text-3); }
