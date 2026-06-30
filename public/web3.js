@@ -585,44 +585,183 @@ export async function mintOnChain(quote, financingUsd, onConfirmed) {
 
 async function pollForReceipt(txHash, contract, quote, financingUsd, a, cfg, onConfirmed) {
   const ethers = await loadEthers();
-  const pubProvider = new ethers.JsonRpcProvider(cfg.rpcUrls?.[0]);
-  const deadline = Date.now() + 120000;
+
+  // 使用多个 RPC 节点作为备份，优先使用最稳定的 sentry 节点
+  const rpcUrls = [
+    'https://testnet.sentry.chain.json-rpc.injective.network',
+    'https://k8s.testnet.json-rpc.injective.network',
+    ...(cfg.rpcUrls || [])
+  ];
+  const uniqueRpcUrls = [...new Set(rpcUrls)]; // 去重
+  console.log('[mint] 可用的 RPC 节点:', uniqueRpcUrls);
+
+  let pubProvider = new ethers.JsonRpcProvider(uniqueRpcUrls[0]);
+  let currentRpcIndex = 0;
+
+  const deadline = Date.now() + 180000; // 增加到 3 分钟
+  let pollCount = 0;
+  let lastPoolCounter = null;
+  let consecutiveFailures = 0;
+
+  // 预先获取当前的 poolCounter
+  try {
+    lastPoolCounter = await contract.poolCounter();
+    console.log('[mint] 当前 poolCounter:', lastPoolCounter?.toString());
+  } catch (e) {
+    console.warn('[mint] 无法读取初始 poolCounter:', e.message);
+  }
+
+  // RPC 切换函数
+  const switchToNextRpc = () => {
+    if (currentRpcIndex < uniqueRpcUrls.length - 1) {
+      currentRpcIndex++;
+      pubProvider = new ethers.JsonRpcProvider(uniqueRpcUrls[currentRpcIndex]);
+      console.log(`[mint] 🔄 切换到备用 RPC [${currentRpcIndex}]:`, uniqueRpcUrls[currentRpcIndex]);
+      consecutiveFailures = 0;
+      return true;
+    }
+    return false;
+  };
 
   const poll = async () => {
+    pollCount++;
+    console.log(`[mint] 轮询第 ${pollCount} 次，检查交易状态: ${txHash.slice(0, 10)}... (RPC: ${uniqueRpcUrls[currentRpcIndex]})`);
+
     try {
       const receipt = await pubProvider.getTransactionReceipt(txHash);
-      if (receipt && receipt.blockNumber) {
-        console.log('[mint] confirmed via poll — block:', receipt.blockNumber);
-        let poolId = null, mintedAmount = null;
-        for (const log of receipt.logs ?? []) {
-          try {
-            const parsed = contract.interface.parseLog(log);
-            if (parsed?.name === 'Tokenized') {
-              poolId = parsed.args.poolId;
-              mintedAmount = parsed.args.mintedAmount;
-            }
-          } catch { /* not our event */ }
+
+      if (receipt) {
+        console.log('[mint] 收到 receipt:', receipt);
+        consecutiveFailures = 0; // 重置失败计数
+
+        if (receipt.status === 0) {
+          console.error('[mint] ❌ 交易失败 (status=0)');
+          if (onConfirmed) {
+            onConfirmed({
+              mode: 'chain_failed',
+              txHash,
+              error: '交易已确认但执行失败',
+              explorerUrl: explorerTx(cfg, txHash),
+              blockNumber: receipt.blockNumber
+            });
+          }
+          return;
         }
-        const confirmed = {
-          mode: 'chain',
-          txHash,
-          poolId: poolId != null ? poolId.toString() : null,
-          mintedAmount: mintedAmount != null ? Number(mintedAmount) : mintedTokensFor(quote, financingUsd),
-          issuePriceE6: Number(a.issuePriceE6),
-          explorerUrl: explorerTx(cfg, txHash),
-          address: _session?.address ?? null,
-          blockNumber: receipt.blockNumber
-        };
-        if (onConfirmed) onConfirmed(confirmed);
-        return;
+
+        if (receipt.blockNumber) {
+          console.log('[mint] ✅ 交易已确认 — block:', receipt.blockNumber);
+          let poolId = null, mintedAmount = null;
+
+          for (const log of receipt.logs ?? []) {
+            try {
+              const parsed = contract.interface.parseLog(log);
+              console.log('[mint] 解析事件:', parsed?.name, parsed?.args);
+              if (parsed?.name === 'Tokenized') {
+                poolId = parsed.args.poolId;
+                mintedAmount = parsed.args.mintedAmount;
+                console.log('[mint] 🎉 找到 Tokenized 事件! poolId:', poolId?.toString(), 'mintedAmount:', mintedAmount?.toString());
+              }
+            } catch (parseErr) {
+              // not our event
+            }
+          }
+
+          const confirmed = {
+            mode: 'chain',
+            txHash,
+            poolId: poolId != null ? poolId.toString() : null,
+            mintedAmount: mintedAmount != null ? Number(mintedAmount) : mintedTokensFor(quote, financingUsd),
+            issuePriceE6: Number(a.issuePriceE6),
+            explorerUrl: explorerTx(cfg, txHash),
+            address: _session?.address ?? null,
+            blockNumber: receipt.blockNumber
+          };
+
+          console.log('[mint] 📤 调用 onConfirmed 回调，更新 UI...', confirmed);
+          if (onConfirmed) {
+            onConfirmed(confirmed);
+          }
+          return;
+        }
+      } else {
+        // 备用方案：如果 receipt 为 null，尝试用 getTransaction 检查
+        console.log('[mint] receipt 为 null，尝试备用方案 getTransaction...');
+        try {
+          const tx = await pubProvider.getTransaction(txHash);
+          if (tx && tx.blockNumber) {
+            console.log('[mint] ✅ getTransaction 返回了 blockNumber:', tx.blockNumber);
+            consecutiveFailures = 0; // 重置失败计数
+
+            // 尝试读取新的 poolCounter 来推断 poolId
+            let poolId = null;
+            try {
+              const currentPoolCounter = await contract.poolCounter();
+              console.log('[mint] 当前 poolCounter:', currentPoolCounter?.toString());
+              if (lastPoolCounter != null && currentPoolCounter > lastPoolCounter) {
+                poolId = currentPoolCounter.toString();
+                console.log('[mint] 🎯 推断 poolId:', poolId);
+              }
+            } catch (e) {
+              console.warn('[mint] 无法读取 poolCounter:', e.message);
+            }
+
+            console.log('[mint] 🔄 使用备用方案确认交易');
+
+            const confirmed = {
+              mode: 'chain',
+              txHash,
+              poolId: poolId,
+              mintedAmount: mintedTokensFor(quote, financingUsd),
+              issuePriceE6: Number(a.issuePriceE6),
+              explorerUrl: explorerTx(cfg, txHash),
+              address: _session?.address ?? null,
+              blockNumber: tx.blockNumber
+            };
+
+            console.log('[mint] 📤 调用 onConfirmed 回调（备用方案），更新 UI...', confirmed);
+            if (onConfirmed) {
+              onConfirmed(confirmed);
+            }
+            return;
+          } else {
+            console.log('[mint] getTransaction 也未返回 blockNumber');
+            consecutiveFailures++;
+          }
+        } catch (txErr) {
+          console.error('[mint] getTransaction 也失败:', txErr.message);
+          consecutiveFailures++;
+        }
       }
     } catch (e) {
-      // RPC hiccup, retry
+      console.error('[mint] ⚠️ 轮询遇到错误:', e.message);
+      consecutiveFailures++;
     }
+
+    // 如果连续失败 3 次，尝试切换到备用 RPC
+    if (consecutiveFailures >= 3) {
+      console.warn(`[mint] ⚠️ 当前 RPC 连续失败 ${consecutiveFailures} 次`);
+      if (switchToNextRpc()) {
+        console.log('[mint] 🔄 已切换到备用 RPC，继续轮询...');
+      } else {
+        console.error('[mint] ❌ 所有 RPC 节点都已尝试');
+      }
+    }
+
     if (Date.now() < deadline) {
       setTimeout(poll, 3000);
     } else {
-      console.warn('[mint] poll timed out — tx:', txHash);
+      console.error('[mint] ❌ 轮询超时 (3分钟) — tx:', txHash);
+      console.error('[mint] 请手动在区块链浏览器中检查交易状态');
+      // 超时也通知前端
+      if (onConfirmed) {
+        onConfirmed({
+          mode: 'chain_timeout',
+          txHash,
+          error: '轮询超时，但交易可能仍在确认中',
+          explorerUrl: explorerTx(cfg, txHash),
+          blockNumber: null
+        });
+      }
     }
   };
 
@@ -817,18 +956,60 @@ export async function logX402PaymentOnChain({ payer, serviceId, amountMicrousd, 
   }
   console.log('[x402] tx sent:', tx.hash);
 
-  // Background poll for confirmation
-  const pubProvider = new ethers.JsonRpcProvider(cfg.rpcUrls?.[0]);
-  const deadline = Date.now() + 120000;
+  // Background poll for confirmation with backup RPC support
+  const rpcUrls = [
+    'https://testnet.sentry.chain.json-rpc.injective.network',
+    'https://k8s.testnet.json-rpc.injective.network',
+    ...(cfg.rpcUrls || [])
+  ];
+  const uniqueRpcUrls = [...new Set(rpcUrls)];
+  let pubProvider = new ethers.JsonRpcProvider(uniqueRpcUrls[0]);
+  let currentRpcIndex = 0;
+  let consecutiveFailures = 0;
+
+  const switchToNextRpc = () => {
+    if (currentRpcIndex < uniqueRpcUrls.length - 1) {
+      currentRpcIndex++;
+      pubProvider = new ethers.JsonRpcProvider(uniqueRpcUrls[currentRpcIndex]);
+      console.log(`[x402] 🔄 切换到备用 RPC [${currentRpcIndex}]:`, uniqueRpcUrls[currentRpcIndex]);
+      consecutiveFailures = 0;
+      return true;
+    }
+    return false;
+  };
+
+  const deadline = Date.now() + 180000; // 3 分钟
   const poll = async () => {
     try {
       const receipt = await pubProvider.getTransactionReceipt(tx.hash);
       if (receipt && receipt.blockNumber) {
         console.log('[x402] confirmed via poll — block:', receipt.blockNumber);
+        consecutiveFailures = 0;
         if (onConfirmed) onConfirmed({ txHash: tx.hash, explorerUrl: explorerTx(cfg, tx.hash), blockNumber: receipt.blockNumber });
         return;
+      } else {
+        // 尝试 getTransaction 作为备用
+        const txData = await pubProvider.getTransaction(tx.hash);
+        if (txData && txData.blockNumber) {
+          console.log('[x402] confirmed via getTransaction — block:', txData.blockNumber);
+          consecutiveFailures = 0;
+          if (onConfirmed) onConfirmed({ txHash: tx.hash, explorerUrl: explorerTx(cfg, tx.hash), blockNumber: txData.blockNumber });
+          return;
+        }
+        consecutiveFailures++;
       }
-    } catch { /* retry */ }
+    } catch (e) {
+      console.warn('[x402] poll error:', e.message);
+      consecutiveFailures++;
+    }
+
+    // 连续失败 3 次则切换 RPC
+    if (consecutiveFailures >= 3) {
+      if (!switchToNextRpc()) {
+        console.error('[x402] 所有 RPC 节点都已尝试');
+      }
+    }
+
     if (Date.now() < deadline) setTimeout(poll, 3000);
   };
   setTimeout(poll, 2000);

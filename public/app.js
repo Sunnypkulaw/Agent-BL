@@ -1279,10 +1279,20 @@ async function onMint() {
         try {
           // Fire: tx sent → pending UI. Confirm: background poll → update UI.
           res = await web3.mintOnChain(quote, financing, (confirmed) => {
+            console.log('[mint] 🎯 收到确认回调，正在更新 UI...', confirmed);
             state.mint = confirmed;
             state.poolId = confirmed.poolId && confirmed.poolId !== 'sim' ? confirmed.poolId : state.poolId;
             renderMintResult(confirmed, quote);
-            console.log('[mint] UI updated — block:', confirmed.blockNumber);
+            console.log('[mint] ✅ UI 已更新 — block:', confirmed.blockNumber);
+
+            // 根据确认结果显示不同的提示
+            if (confirmed.mode === 'chain') {
+              toast(`🎉 铸造成功！交易已在区块 #${confirmed.blockNumber} 确认`, false);
+            } else if (confirmed.mode === 'chain_failed') {
+              toast(`❌ 交易失败: ${confirmed.error}`, true);
+            } else if (confirmed.mode === 'chain_timeout') {
+              toast('⏱️ 确认超时，请在区块链浏览器中手动检查', true);
+            }
           });
         } catch (e) {
           if (e.code === 'REJECTED') { toast(t('t_cancel_mint'), true); return; }
@@ -1317,19 +1327,30 @@ function renderMintResult(res, quote) {
   clear(box);
   const chain = res.mode === 'chain' || res.mode === 'chain_pending';
   const pending = res.mode === 'chain_pending';
+  const failed = res.mode === 'chain_failed';
+  const timeout = res.mode === 'chain_timeout';
+
   box.append(
     el('div', { class: 'mint-result-head' },
-      el('span', { class: `badge ${chain ? 'tone-ok' : 'tone-warn'}`, text: pending ? '⛓ 已提交 · 确认中' : chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim') }),
+      el('span', {
+        class: `badge ${failed ? 'tone-err' : timeout ? 'tone-warn' : chain ? 'tone-ok' : 'tone-warn'}`,
+        text: failed ? '❌ 交易失败' : timeout ? '⏱️ 确认超时' : pending ? '⛓ 已提交 · 确认中' : chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim')
+      }),
       el('span', { class: 'mint-minted' }, t('res_minted_pre') + ' ', el('strong', { text: f.int(res.mintedAmount) }), ' ' + t('res_unit_rwa'))
     ),
     el('div', { class: 'mint-result-rows' },
       mintRow(t('res_price'), `$${f.price(quote.final_issue_price_usd)} ${t('unit_per_token')}`),
-      mintRow('tx_hash', f.shortHash(res.txHash, 12, 10), chain && res.explorerUrl ? res.explorerUrl : null),
+      mintRow('tx_hash', f.shortHash(res.txHash, 12, 10), res.explorerUrl ? res.explorerUrl : null),
       res.poolId ? mintRow('poolId', String(res.poolId)) : null,
       res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : (pending ? mintRow('block', '⏳ 确认中…') : null)
     )
   );
-  if (chain && res.poolId) {
+
+  if (failed) {
+    box.append(el('p', { class: 'sub-foot', style: 'color:#e74c3c', text: `❌ ${res.error || '交易执行失败，请检查区块链浏览器获取详情'}` }));
+  } else if (timeout) {
+    box.append(el('p', { class: 'sub-foot', style: 'color:#f39c12', text: '⏱️ 轮询超时，但交易可能仍在确认中。请在区块链浏览器中手动检查交易状态。' }));
+  } else if (chain && res.poolId) {
     const balRow = mintRow(t('res_balance'), t('res_reading'));
     box.append(balRow);
     web3.readBalance(res.poolId, res.address)
