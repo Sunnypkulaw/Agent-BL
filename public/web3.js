@@ -640,7 +640,7 @@ async function pollForReceipt(txHash, contract, quote, financingUsd, a, cfg, onC
             onConfirmed({
               mode: 'chain_failed',
               txHash,
-              error: '交易已确认但执行失败',
+              errorCode: 'TX_EXECUTION_FAILED',
               explorerUrl: explorerTx(cfg, txHash),
               blockNumber: receipt.blockNumber
             });
@@ -757,7 +757,7 @@ async function pollForReceipt(txHash, contract, quote, financingUsd, a, cfg, onC
         onConfirmed({
           mode: 'chain_timeout',
           txHash,
-          error: '轮询超时，但交易可能仍在确认中',
+          errorCode: 'TX_CONFIRMATION_TIMEOUT',
           explorerUrl: explorerTx(cfg, txHash),
           blockNumber: null
         });

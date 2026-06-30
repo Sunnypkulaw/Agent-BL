@@ -25,7 +25,7 @@ export function setLang(next) {
   if (!SUPPORTED.includes(next) || next === lang) return;
   lang = next;
   try { localStorage.setItem(STORAGE_KEY, next); } catch { /* ignore */ }
-  document.documentElement.lang = next === 'zh' ? 'zh-CN' : 'en';
+  try { document.documentElement.lang = next === 'zh' ? 'zh-CN' : 'en'; } catch { /* non-browser tests */ }
   for (const fn of listeners) { try { fn(next); } catch { /* ignore */ } }
 }
 
@@ -75,9 +75,23 @@ const DATA_DICT = {
   'Shanghai, China': '中国, 上海'
 };
 
+const EN_DATA_DICT = {
+  'Non-GMO Soybeans (非转基因大豆), Bulk': 'Non-GMO Soybeans, Bulk',
+  '铝锭 AL99.70（P1020 级别，国产重熔用铝锭）': 'Aluminum Ingot AL99.70 (P1020 Grade, Domestic Remelting Ingot)',
+  'AL99.70 / P1020 级别': 'AL99.70 / P1020 Grade',
+  'ADC12 / A380 级别，铝合金锭': 'ADC12 / A380 Grade Aluminum Alloy Ingot',
+  'N/A（库内交货）': 'N/A (Warehouse Delivery)'
+};
+
 export function tData(str) {
-  if (lang !== 'zh' || !str) return str;
-  return DATA_DICT[str] || str;
+  if (!str) return str;
+  if (lang === 'zh') return DATA_DICT[str] || str;
+
+  const exact = EN_DATA_DICT[str];
+  if (exact) return exact;
+  return String(str)
+    .replace(/佛山南海指定仓库[（(]入库单号\s*([^）)]+)[）)]/gu, 'Designated Warehouse, Nanhai, Foshan (Inbound Receipt $1)')
+    .replace(/佛山南海指定仓库[（(]出库单号\s*([^）)]+)[）)]/gu, 'Designated Warehouse, Nanhai, Foshan (Outbound Receipt $1)');
 }
 
 /**
@@ -342,6 +356,13 @@ const DICT = {
     res_minted_pre: '已铸', res_unit_rwa: 'RWA',
     res_price: '发行价', res_balance: '链上 RWA 余额', res_reading: '读取中…',
     res_sim_foot: '运行 deploy 脚本并连接钱包后，此处将是真实链上交易。',
+    res_failed: '❌ 交易失败',
+    res_timeout: '⏱️ 确认超时',
+    res_pending: '⛓ 已提交 · 确认中',
+    res_confirming: '⏳ 确认中…',
+    res_execution_failed: '❌ 交易执行失败，请在区块链浏览器中查看详情。',
+    res_timeout_detail: '⏱️ 轮询超时，但交易可能仍在确认中。请在区块链浏览器中手动检查交易状态。',
+    res_pending_detail: '⏳ 交易已广播，正在后台轮询链上确认（每 3 秒）…',
 
     // toasts
     t_need_financing: '请输入大于 0 的融资金额',
@@ -351,6 +372,10 @@ const DICT = {
     t_minted_chain: '✅ 已在 {network} 铸造 {n} RWA',
     t_minted_sim: '已生成模拟铸造交易（{n} RWA）',
     t_mint_fail: '铸造失败: {msg}',
+    t_mint_confirmed: '🎉 铸造成功！交易已在区块 #{block} 确认',
+    t_tx_failed: '❌ 交易失败：{msg}',
+    t_confirm_timeout: '⏱️ 确认超时，请在区块链浏览器中手动检查',
+    t_tx_submitted: '⛓ 交易已提交，等待链上确认…',
     t_no_wallet_sim: '未检测到钱包 —— 铸造将走模拟交易',
     t_connect_cancel: '已取消连接',
     t_connect_fail: '连接失败: {msg}',
@@ -363,6 +388,10 @@ const DICT = {
     t_pricing_fail: '定价失败: {msg}',
     t_reprice_fail: '重定价失败: {msg}',
     t_reprice_anchored: '⛓ 重定价已锚定上链: {hash}',
+    err_no_contract: '合约尚未部署',
+    err_wallet_not_connected: '钱包尚未连接',
+    err_invalid_mint_params: '铸造参数无效，请检查定价数据',
+    err_rpc_network: 'RPC 网络不稳定，请稍后重试',
 
     // voyage
     vp1_h: '航运进度（虚拟时间）',
@@ -733,6 +762,13 @@ const DICT = {
     res_minted_pre: 'Minted', res_unit_rwa: 'RWA',
     res_price: 'Issue price', res_balance: 'On-chain RWA balance', res_reading: 'reading…',
     res_sim_foot: 'After running the deploy script and connecting a wallet, this becomes a real on-chain tx.',
+    res_failed: '❌ Transaction failed',
+    res_timeout: '⏱️ Confirmation timed out',
+    res_pending: '⛓ Submitted · confirming',
+    res_confirming: '⏳ Confirming…',
+    res_execution_failed: '❌ Transaction execution failed. Check the block explorer for details.',
+    res_timeout_detail: '⏱️ Confirmation polling timed out, but the transaction may still be pending. Check its status in the block explorer.',
+    res_pending_detail: '⏳ Transaction broadcast. Polling for on-chain confirmation every 3 seconds…',
 
     // toasts
     t_need_financing: 'Enter a financing amount greater than 0',
@@ -742,6 +778,10 @@ const DICT = {
     t_minted_chain: '✅ Minted {n} RWA on {network}',
     t_minted_sim: 'Generated a simulated mint tx ({n} RWA)',
     t_mint_fail: 'Mint failed: {msg}',
+    t_mint_confirmed: '🎉 Mint confirmed in block #{block}',
+    t_tx_failed: '❌ Transaction failed: {msg}',
+    t_confirm_timeout: '⏱️ Confirmation timed out. Check the block explorer.',
+    t_tx_submitted: '⛓ Transaction submitted; awaiting on-chain confirmation…',
     t_no_wallet_sim: 'No wallet detected — minting will use a simulated tx',
     t_connect_cancel: 'Connection cancelled',
     t_connect_fail: 'Connection failed: {msg}',
@@ -754,6 +794,10 @@ const DICT = {
     t_pricing_fail: 'Pricing failed: {msg}',
     t_reprice_fail: 'Reprice failed: {msg}',
     t_reprice_anchored: '⛓ Reprice anchored on-chain: {hash}',
+    err_no_contract: 'Contract is not deployed',
+    err_wallet_not_connected: 'Wallet is not connected',
+    err_invalid_mint_params: 'Invalid mint parameters; check the pricing data',
+    err_rpc_network: 'RPC network is unstable; try again shortly',
 
     // voyage
     vp1_h: 'Voyage progress (virtual time)',

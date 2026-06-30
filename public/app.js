@@ -560,7 +560,7 @@ function renderMarketCard(entry, comparison) {
     ),
     el('div', { class: 'market-card-facts' },
       fact(t('market_fact_ebl'), bl.bl_id || bl.bl_no || '—'),
-      fact(t('market_fact_vessel'), bl.vessel || '—'),
+      fact(t('market_fact_vessel'), tData(bl.vessel) || '—'),
       fact(t('market_fact_qty'), qty || '—'),
       fact(t('market_fact_target'), quote ? f.usdCompact(quote.expected_cash_to_exporter_usd ?? quote.requested_cash_usd) : '—')
     ),
@@ -754,7 +754,7 @@ function marketVoyageProgress(caseData) {
 
 function marketVoyageNote(bl, progress) {
   const pct = Math.round(progress * 100);
-  const disch = bl.port_of_discharge || 'destination';
+  const disch = tData(bl.port_of_discharge) || 'destination';
   const eta = f.fmtDate(bl.eta);
   return progress >= 1 ? t('market_arrived', { disch }) : t('market_voyage_note', { pct, disch, eta });
 }
@@ -1268,6 +1268,17 @@ function miniKv(k, v, tone) {
     el('span', { class: `mini-kv-v${tone ? ' ' + tone : ''}`, text: v }));
 }
 
+function userFacingError(error) {
+  const keyByCode = {
+    NO_CONTRACT: 'err_no_contract',
+    NO_SESSION: 'err_wallet_not_connected',
+    INVALID_PARAMS: 'err_invalid_mint_params',
+    NETWORK_ERROR: 'err_rpc_network'
+  };
+  const key = keyByCode[error?.code];
+  return key ? t(key) : (error?.message || String(error || ''));
+}
+
 async function onMint() {
   const quote = selectedQuote();
   if (!quote || PAUSED_ACTIONS.has(quote.pricing_action)) return;
@@ -1294,24 +1305,21 @@ async function onMint() {
         try {
           // Fire: tx sent → pending UI. Confirm: background poll → update UI.
           res = await web3.mintOnChain(quote, financing, (confirmed) => {
-            console.log('[mint] 🎯 收到确认回调，正在更新 UI...', confirmed);
             state.mint = confirmed;
             state.poolId = confirmed.poolId && confirmed.poolId !== 'sim' ? confirmed.poolId : state.poolId;
             renderMintResult(confirmed, quote);
-            console.log('[mint] ✅ UI 已更新 — block:', confirmed.blockNumber);
 
-            // 根据确认结果显示不同的提示
             if (confirmed.mode === 'chain') {
-              toast(`🎉 铸造成功！交易已在区块 #${confirmed.blockNumber} 确认`, false);
+              toast(t('t_mint_confirmed', { block: confirmed.blockNumber }), false);
             } else if (confirmed.mode === 'chain_failed') {
-              toast(`❌ 交易失败: ${confirmed.error}`, true);
+              toast(t('t_tx_failed', { msg: t('res_execution_failed') }), true);
             } else if (confirmed.mode === 'chain_timeout') {
-              toast('⏱️ 确认超时，请在区块链浏览器中手动检查', true);
+              toast(t('t_confirm_timeout'), true);
             }
           });
         } catch (e) {
           if (e.code === 'REJECTED') { toast(t('t_cancel_mint'), true); return; }
-          res = await fallbackSim(quote, financing, t('t_chain_call_failed', { msg: e.message || '' }));
+          res = await fallbackSim(quote, financing, t('t_chain_call_failed', { msg: userFacingError(e) }));
         }
       }
     } else {
@@ -1322,10 +1330,10 @@ async function onMint() {
     state.poolId = res.poolId && res.poolId !== 'sim' ? res.poolId : state.poolId;
     renderMintResult(res, quote);
     if (res.mode === 'chain') toast(t('t_minted_chain', { n: f.int(res.mintedAmount), network: await networkName() }));
-    else if (res.mode === 'chain_pending') toast('⛓ 交易已提交，等待链上确认…');
+    else if (res.mode === 'chain_pending') toast(t('t_tx_submitted'));
     else toast(t('t_minted_sim', { n: f.int(res.mintedAmount) }));
   } catch (e) {
-    toast(t('t_mint_fail', { msg: e.message || e }), true);
+    toast(t('t_mint_fail', { msg: userFacingError(e) }), true);
   } finally {
     btn.disabled = PAUSED_ACTIONS.has(quote.pricing_action);
     btn.textContent = t('mint_btn');
@@ -1349,7 +1357,7 @@ function renderMintResult(res, quote) {
     el('div', { class: 'mint-result-head' },
       el('span', {
         class: `badge ${failed ? 'tone-err' : timeout ? 'tone-warn' : chain ? 'tone-ok' : 'tone-warn'}`,
-        text: failed ? '❌ 交易失败' : timeout ? '⏱️ 确认超时' : pending ? '⛓ 已提交 · 确认中' : chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim')
+        text: failed ? t('res_failed') : timeout ? t('res_timeout') : pending ? t('res_pending') : chain ? t('res_chain', { network: _cachedNetworkName || 'Testnet' }) : t('res_sim')
       }),
       el('span', { class: 'mint-minted' }, t('res_minted_pre') + ' ', el('strong', { text: f.int(res.mintedAmount) }), ' ' + t('res_unit_rwa'))
     ),
@@ -1357,14 +1365,14 @@ function renderMintResult(res, quote) {
       mintRow(t('res_price'), `$${f.price(quote.final_issue_price_usd)} ${t('unit_per_token')}`),
       mintRow('tx_hash', f.shortHash(res.txHash, 12, 10), res.explorerUrl ? res.explorerUrl : null),
       res.poolId ? mintRow('poolId', String(res.poolId)) : null,
-      res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : (pending ? mintRow('block', '⏳ 确认中…') : null)
+      res.blockNumber ? mintRow('block', `#${f.int(res.blockNumber)}`) : (pending ? mintRow('block', t('res_confirming')) : null)
     )
   );
 
   if (failed) {
-    box.append(el('p', { class: 'sub-foot', style: 'color:#e74c3c', text: `❌ ${res.error || '交易执行失败，请检查区块链浏览器获取详情'}` }));
+    box.append(el('p', { class: 'sub-foot', style: 'color:#e74c3c', text: t('res_execution_failed') }));
   } else if (timeout) {
-    box.append(el('p', { class: 'sub-foot', style: 'color:#f39c12', text: '⏱️ 轮询超时，但交易可能仍在确认中。请在区块链浏览器中手动检查交易状态。' }));
+    box.append(el('p', { class: 'sub-foot', style: 'color:#f39c12', text: t('res_timeout_detail') }));
   } else if (chain && res.poolId) {
     const balRow = mintRow(t('res_balance'), t('res_reading'));
     box.append(balRow);
@@ -1372,7 +1380,7 @@ function renderMintResult(res, quote) {
       .then((bal) => { balRow.querySelector('.mint-row-v').textContent = f.int(bal); })
       .catch(() => { balRow.querySelector('.mint-row-v').textContent = '—'; });
   } else if (pending) {
-    box.append(el('p', { class: 'sub-foot', style: 'color:#D29922', text: '⏳ 交易已广播，正在后台轮询链上确认（每 3 秒）…' }));
+    box.append(el('p', { class: 'sub-foot', style: 'color:#D29922', text: t('res_pending_detail') }));
   } else {
     box.append(el('p', { class: 'sub-foot muted', text: t('res_sim_foot') }));
   }
