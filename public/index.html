@@ -6,6 +6,7 @@
     <title>AgentBL · eBL-backed RWA Investment Marketplace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="stylesheet" href="/styles.css?v=5" />
+    <link rel="stylesheet" href="/light-theme.css" />
   </head>
   <body>
     <!-- Ambient glowing backgrounds for glassmorphism -->
@@ -220,10 +221,15 @@
             <!-- FE-11: eBL Management & Upload -->
             <div class="card ebl-management" style="grid-column: span 2;">
               <h3 class="card-head-line" data-i18n="ebl_upload_h">eBL Document Management</h3>
-              <div class="ebl-upload-zone" id="ebl-upload-zone" style="border: 1px dashed var(--border); padding: 24px; text-align: center; border-radius: var(--radius); cursor: pointer; transition: background 0.2s;">
-                <p class="muted">Drag & Drop your eBL, Invoice, and Insurance policies here, or click to browse.</p>
+              <div class="ebl-upload-zone premium-upload-zone" id="ebl-upload-zone">
+                <div class="upload-icon-wrap">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <div class="upload-text">
+                  <p class="main-text">Drag & Drop your eBL, Invoice, and Insurance policies here</p>
+                  <p class="sub-text">or <button id="ebl-browse-btn" class="inline-upload-btn">click to browse files</button> from your device</p>
+                </div>
                 <input type="file" id="ebl-file-input" multiple style="display:none;" />
-                <button class="btn ghost" id="ebl-browse-btn">Select Files</button>
               </div>
               <div id="ebl-upload-status" class="muted" style="margin-top:12px; font-family: var(--mono); font-size: 13px;"></div>
             </div>
@@ -547,22 +553,30 @@
         <span class="muted" data-i18n="footer_right">Every number is produced live by the local AI pricing engine · valuation, risk scoring, and hashes are deterministic and offline-reproducible.</span>
       </footer>
       <!-- FE-13: Agent Activity View -->
-      <section class="agent-activity-console" id="agent-activity-console" style="position: fixed; bottom: 0; left: 0; right: 0; height: 160px; background: var(--bg-2); border-top: 1px solid var(--line); z-index: 100; font-family: var(--mono); padding: 12px; display: flex; flex-direction: column;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="color: var(--accent); font-weight: 600;">AgentBL Activity Logs</span>
-          <button id="toggle-activity-console" class="btn ghost" style="padding: 2px 8px; font-size: 12px;">Toggle</button>
-        </div>
-        <div style="display: flex; gap: 12px; flex: 1; overflow: hidden;">
-          <div id="agent-logs-container" style="flex: 1; overflow-y: auto; font-size: 12px; color: var(--text-2); border-right: 1px solid var(--border); padding-right: 12px;">
-            <div class="log-entry">System ready. Awaiting autonomous agent execution...</div>
+      <!-- FE-13: Agent Activity View -->
+      <section class="agent-activity-console" id="agent-activity-console">
+        <div class="aac-header">
+          <div class="aac-title">
+            <div class="live-dot"></div>
+            <span>[ SYSTEM ] Autonomous Agent Terminal</span>
           </div>
-          <div id="agent-timeline" style="flex: 1; overflow-y: auto; font-size: 12px;"></div>
+          <button id="toggle-activity-console" class="aac-toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </button>
+        </div>
+        <div class="aac-body">
+          <div class="aac-col" id="agent-logs-container">
+            <div class="log-entry system-msg">> System ready. Awaiting autonomous agent execution...</div>
+          </div>
+          <div class="aac-col timeline-col" id="agent-timeline"></div>
         </div>
       </section>
       
     </main>
 
     <div id="toast" class="toast" hidden></div>
+    <link rel="stylesheet" href="/custom-select.css">
+    <script src="/custom-select.js"></script>
     <script type="module" src="/app.js"></script>
   </body>
 </html>
