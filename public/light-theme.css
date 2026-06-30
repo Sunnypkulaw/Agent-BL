@@ -9,6 +9,13 @@
   --bg: #f8fafc; /* Slate 50 */
   --bg-2: #f1f5f9; /* Slate 100 */
   --bg-surface: #ffffff;
+  --bg-inset: #ffffff; /* Recessed inputs — white in light theme */
+  --bg-deep: rgba(255, 255, 255, 0.7); /* Deep recessed panels */
+  --bg-cat: #e2e8f0; /* Category pill backgrounds */
+  --bg-cite: rgba(255, 255, 255, 0.8); /* Citation/source tag backgrounds */
+  --border-cite: var(--line); /* Citation/source tag borders */
+  --bg-compliance: #fffbeb; /* Compliance panel */
+  --border-compliance: #fde68a; /* Compliance border */
   
   /* Translucent Glass panels */
   --panel: rgba(255, 255, 255, 0.75);
@@ -177,6 +184,12 @@ body {
 .market-funding-track { background: #e2e8f0 !important; border-color: #cbd5e1 !important; }
 .market-funding-fill { background: linear-gradient(90deg, var(--accent), var(--accent-2)) !important; }
 
+.market-subscribe-result {
+  background: color-mix(in srgb, var(--tone, var(--info)) 6%, rgba(255, 255, 255, 0.92)) !important;
+  border-color: color-mix(in srgb, var(--tone, var(--info)) 25%, var(--line)) !important;
+  color: var(--text) !important;
+}
+
 /* Subbar */
 .subbar { background: rgba(255, 255, 255, 0.7) !important; border-bottom: 1px solid rgba(255,255,255,0.8) !important; backdrop-filter: blur(12px) !important; }
 .search-box input { background: #fff !important; border-color: var(--line) !important; color: var(--text) !important; }
@@ -281,6 +294,11 @@ body {
 .skeleton-line, .skeleton-block { background: linear-gradient(90deg, #e2e8f0, #f1f5f9, #e2e8f0) !important; background-size: 200% 100% !important; }
 .price-badge { background: #f1f5f9 !important; border-color: var(--line) !important; color: var(--text) !important; }
 .wr-sig-count { background: #e2e8f0 !important; color: var(--text-3) !important; border-color: var(--line) !important; }
+
+.x402-hash {
+  background: #f1f5f9 !important;
+  color: var(--violet) !important;
+}
 
 /* ====================================================================
    Legibility Fixes for Pricing Text & Speed Cards
@@ -482,8 +500,8 @@ body {
 .agent-activity-console {
   position: fixed;
   bottom: 24px; left: 24px;
-  width: 420px; /* Even smaller width */
-  height: 130px; /* Reduced height */
+  width: clamp(320px, 25vw, 520px);
+  height: clamp(110px, 16vh, 200px);
   background: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--line) !important;
@@ -499,7 +517,7 @@ body {
 }
 .agent-activity-console.collapsed {
   height: 28px !important;
-  width: 280px; /* Even smaller when collapsed */
+  width: clamp(220px, 16vw, 320px);
   bottom: 20px; left: 20px;
 }
 .aac-header {
