@@ -1,0 +1,557 @@
+/* ====================================================================
+   AgentBL · Premium Light Glassmorphism Redesign (Hackathon Winner)
+   ==================================================================== */
+
+:root {
+  color-scheme: light;
+  
+  /* Core Colors */
+  --bg: #f8fafc; /* Slate 50 */
+  --bg-2: #f1f5f9; /* Slate 100 */
+  --bg-surface: #ffffff;
+  
+  /* Translucent Glass panels */
+  --panel: rgba(255, 255, 255, 0.75);
+  --panel-2: rgba(255, 255, 255, 0.9);
+  --card: rgba(255, 255, 255, 0.85);
+  
+  /* Borders and Lines */
+  --line: rgba(0, 0, 0, 0.08);
+  --line-soft: rgba(0, 0, 0, 0.04);
+  
+  /* Text */
+  --text: #0f172a; /* Slate 900 */
+  --text-2: #334155; /* Slate 700 */
+  --text-3: #64748b; /* Slate 500 */
+  
+  /* Accents */
+  --accent: #2563eb; /* Blue 600 */
+  --accent-2: #059669; /* Emerald 600 */
+  --violet: #7c3aed;
+  
+  /* Status */
+  --ok: #10b981;
+  --info: #0ea5e9;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --muted: #94a3b8;
+  
+  /* Depth & Shadows */
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-hover: 0 24px 60px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(224, 242, 254, 0.8) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(236, 253, 245, 0.8) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(243, 232, 255, 0.8) 0px, transparent 50%),
+    linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
+/* Ambient glow overrides for light theme */
+.ambient-glow { mix-blend-mode: multiply; opacity: 0.15; }
+.glow-1 { background: #38bdf8; }
+.glow-2 { background: #818cf8; }
+.glow-3 { background: #34d399; }
+
+/* Topbar override */
+.topbar {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-bottom: 1px solid rgba(255,255,255, 0.8) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.03) !important;
+}
+
+/* Glass Panels */
+.panel, .market-hero, .market-rail, .market-board, .market-detail, .card {
+  background: var(--panel) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.market-hero {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.85)) !important;
+}
+
+.market-stat {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
+}
+.market-stat strong { color: var(--text) !important; }
+
+/* Text gradients */
+.brand-mark {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
+  -webkit-background-clip: text !important; color: transparent !important; filter: none !important;
+}
+.hero h1, .market-hero h1 {
+  color: var(--text) !important;
+}
+
+/* Overriding hardcoded dark colors */
+.hero { 
+  background: rgba(255, 255, 255, 0.97) !important; 
+  backdrop-filter: blur(40px) saturate(200%) !important;
+}
+.hero-price { background: rgba(255,255,255,0.85) !important; border-color: rgba(255, 255, 255, 0.9) !important; box-shadow: none !important; }
+.hero-price-val #hero-price-num { background: linear-gradient(135deg, var(--accent), #0369a1) !important; -webkit-background-clip: text !important; color: transparent !important; }
+
+.seg-btn { background: rgba(255,255,255,0.6) !important; }
+.seg-btn.active {
+  background: #ffffff !important; color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15) !important;
+}
+.seg-btn:not(.active):hover { color: var(--text) !important; }
+.seg-btn.active .seg-hint { color: var(--text-2) !important; }
+
+.deal-pill { background: rgba(255,255,255,0.7) !important; }
+.market-sort { background: #fff !important; color: var(--text) !important; }
+.market-sort:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; }
+
+#sub-input, #mint-financing, .case-dropdown, #market-subscription, #rag-query, #pref-min-price, #pref-speed { 
+  background: #fff !important; 
+  color: var(--text) !important; 
+  border-color: var(--line) !important;
+}
+
+/* Force fix for dark backgrounds in Route Risk and Mint RWA panels */
+.risk-dim {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+.risk-dim.active {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-left-color: var(--accent) !important;
+}
+.cite, .source-tag {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--line) !important;
+  color: var(--violet) !important;
+}
+.collateral-card, .risk-card, .mint-form, .mint-onchain {
+  background: var(--panel) !important;
+}
+.mint-row-k { color: var(--text-2) !important; }
+.mint-row-v { color: var(--text) !important; }
+
+.mini-kv { background: rgba(255,255,255,0.8) !important; }
+.yield-badge { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+.yield-badge span { color: #059669 !important; }
+.yield-badge small { color: #10b981 !important; }
+
+.compliance { background: #fffbeb !important; border-color: #fde68a !important; color: #92400e !important; }
+
+/* Simple hover effect for cards */
+.market-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255,255,255,1) !important;
+  box-shadow: var(--shadow) !important;
+  transition: transform 0.15s ease-out, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+.market-card:hover {
+  box-shadow: var(--shadow-hover) !important;
+  border-color: var(--accent) !important;
+  transform: translateY(-2px);
+  z-index: 5;
+}
+.market-card-hero { background: rgba(241, 245, 249, 0.7) !important; border-bottom-color: var(--line) !important; }
+.market-card-hero::after { background: none !important; }
+.market-fact { background: rgba(255,255,255,0.7) !important; border-color: var(--line-soft) !important; }
+.market-yield { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+.market-yield strong { color: #059669 !important; }
+.market-yield span { color: #10b981 !important; }
+
+.market-price { color: var(--accent) !important; }
+.market-voyage-track::before { background: #e2e8f0 !important; border: none !important; }
+.market-voyage-fill { box-shadow: 0 0 12px rgba(37,99,235,0.3) !important; background: linear-gradient(90deg, var(--accent), var(--accent-2)) !important; }
+.market-funding-track { background: #e2e8f0 !important; border-color: #cbd5e1 !important; }
+.market-funding-fill { background: linear-gradient(90deg, var(--accent), var(--accent-2)) !important; }
+
+/* Subbar */
+.subbar { background: rgba(255, 255, 255, 0.7) !important; border-bottom: 1px solid rgba(255,255,255,0.8) !important; backdrop-filter: blur(12px) !important; }
+.search-box input { background: #fff !important; border-color: var(--line) !important; color: var(--text) !important; }
+.search-box input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; }
+
+/* Timeline / Waterfall / Buttons */
+.btn { background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important; color: #fff !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important; }
+.btn.ghost { background: rgba(255,255,255,0.8) !important; color: var(--text) !important; }
+.btn.ghost:hover { border-color: var(--accent) !important; }
+.wf-cols { background: repeating-linear-gradient(0deg, transparent, transparent calc(var(--wf-h)/5 - 1px), var(--line-soft) calc(var(--wf-h)/5)) !important; }
+
+/* Premium Deal Modal & Glassmorphism */
+.deal-modal { 
+  background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 60%),
+              rgba(255, 255, 255, 0.6) !important; 
+  backdrop-filter: blur(40px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+  border: 1px solid rgba(255,255,255,0.8) !important; 
+  box-shadow: 0 40px 100px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.5) inset !important; 
+  color: var(--text) !important; 
+  border-radius: 24px !important;
+  transform: translateY(20px) scale(0.98);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.deal-modal[open] {
+  transform: translateY(0) scale(1) !important;
+  opacity: 1 !important;
+}
+.deal-modal::backdrop {
+  background: rgba(248, 250, 252, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.4s ease;
+}
+.modal-header {
+  border-bottom: 1px solid var(--line-soft) !important;
+  padding-bottom: 16px !important;
+}
+#modal-title {
+  background: linear-gradient(135deg, var(--accent), #6366f1) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 800 !important;
+}
+
+/* Distinctive styling for internal panels so they pop out from the modal background */
+.deal-modal .panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(40px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+  border-radius: 20px !important;
+  transform: translateY(-2px);
+  margin-bottom: 24px;
+}
+
+/* Dynamic Red Outline for Active Risk Items (Options that actually have risk) */
+@keyframes pulse-risk-item {
+  0% { background: rgba(239, 68, 68, 0.05); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2); }
+  50% { background: rgba(239, 68, 68, 0.15); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.8), 0 0 12px rgba(239, 68, 68, 0.2); }
+  100% { background: rgba(239, 68, 68, 0.05); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2); }
+}
+
+.risk-dim.active:not(.tone-muted),
+.wr-ev.tone-crit,
+.wr-ev.tone-warn {
+  animation: pulse-risk-item 2.5s infinite ease-in-out !important;
+  border-radius: 8px !important;
+  color: #b91c1c !important; /* Make text darker red for contrast */
+}
+.risk-dim.active:not(.tone-muted) .risk-dim-icon,
+.wr-ev.tone-crit .wr-ev-type,
+.wr-ev.tone-warn .wr-ev-type {
+  color: #dc2626 !important; /* Emphasize the icon/type as well */
+}
+.deal-modal .card {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04) !important;
+  border-radius: 12px !important;
+}
+.modal-close-bar { background: transparent !important; }
+
+/* ====================================================================
+   Comprehensive Sweep of all Dark Theme remnants
+   ==================================================================== */
+.market-funding-track, .fin-progress { background: #e2e8f0 !important; }
+.wf-bar.wf-target { background: #e2e8f0 !important; border-color: #cbd5e1 !important; }
+.insight-body { background: #fffbeb !important; border-color: #fde68a !important; color: var(--text-2) !important; }
+.lc-node, .lc-callout { background: rgba(255,255,255,0.8) !important; color: var(--text) !important; }
+.lc-node.on { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+.hash { background: #ffffff !important; border-color: var(--line) !important; color: var(--accent) !important; }
+.code-block { background: #ffffff !important; color: var(--text) !important; border-color: var(--line-soft) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important; }
+.search-bar input { background: #ffffff !important; border-color: var(--line) !important; color: var(--text) !important; }
+.rag-entry, .qa, .feed-item { background: rgba(255, 255, 255, 0.7) !important; border-color: var(--line) !important; }
+.feed-item.injected { background: #fef2f2 !important; border-color: #fca5a5 !important; }
+.rag-cat, .feed-cat { background: #e2e8f0 !important; color: var(--text-3) !important; }
+.toast { background: rgba(255, 255, 255, 0.95) !important; border-color: var(--line) !important; color: var(--text) !important; box-shadow: var(--shadow) !important; }
+.skeleton-line, .skeleton-block { background: linear-gradient(90deg, #e2e8f0, #f1f5f9, #e2e8f0) !important; background-size: 200% 100% !important; }
+.price-badge { background: #f1f5f9 !important; border-color: var(--line) !important; color: var(--text) !important; }
+.wr-sig-count { background: #e2e8f0 !important; color: var(--text-3) !important; border-color: var(--line) !important; }
+
+/* ====================================================================
+   Legibility Fixes for Pricing Text & Speed Cards
+   ==================================================================== */
+.speed-card.active { background: #e0f2fe !important; border-color: var(--accent) !important; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1) !important; }
+.speed-card.active::before { background: var(--accent) !important; }
+.speed-card-price .big, .offer-price-val, .collateral-val {
+  background: linear-gradient(135deg, var(--accent), #0369a1) !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+}
+
+/* ====================================================================
+   x402 Report & Market specific overrides
+   ==================================================================== */
+.x402-impact-grid, .x402-impact-cell, .x402-service-item, .x402-report-detail, .x402-report-kpis > div, .x402-report-card {
+  background: rgba(255, 255, 255, 0.6) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+.x402-service-item.active {
+  background: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.1) !important;
+}
+.x402-report-detail {
+  background: #ffffff !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.04) !important;
+}
+.x402-report-kpis code, .x402-report-card code {
+  background: #f1f5f9 !important;
+  color: var(--accent) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+.wr-impact {
+  background: #ffffff !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important;
+  border-color: var(--line) !important;
+}
+.wr-ev {
+  background: rgba(255,255,255,0.7) !important;
+  border-color: var(--line) !important;
+}
+.wr-sig-group {
+  background: #ffffff !important;
+}
+
+/* ====================================================================
+   Web3 Mesh Gradient Background for Mint View
+   ==================================================================== */
+#view-mint {
+  position: relative;
+  background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.12) 0%, transparent 60%);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+/* Distinctive styling for all main panels so they don't blend into the background */
+#view-mint .panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(40px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+  border-radius: 20px !important;
+  transform: translateY(-2px);
+  margin-bottom: 24px;
+}
+
+#view-mint .card {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.03) !important;
+}
+
+/* ====================================================================
+   Premium Upload Zone
+   ==================================================================== */
+.premium-upload-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: rgba(248, 250, 252, 0.4);
+  border: 2px dashed rgba(148, 163, 184, 0.4) !important;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+.premium-upload-zone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at center, rgba(37,99,235,0.05) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.premium-upload-zone:hover {
+  border-color: var(--accent) !important;
+  background: rgba(239, 246, 255, 0.6);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.08);
+}
+.premium-upload-zone:hover::before {
+  opacity: 1;
+}
+.upload-icon-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  margin-bottom: 16px;
+  color: var(--accent);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+}
+.premium-upload-zone:hover .upload-icon-wrap {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 24px rgba(37,99,235,0.15);
+}
+.upload-text {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+.upload-text .main-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+.upload-text .sub-text {
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 0;
+}
+.inline-upload-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+.inline-upload-btn:hover {
+  color: #1d4ed8;
+}
+
+/* ====================================================================
+   Premium Select Dropdowns
+   ==================================================================== */
+.network-select, .case-dropdown, select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 16px !important;
+  padding: 10px 40px 10px 14px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  color: var(--text) !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+  transition: all 0.2s ease !important;
+}
+.network-select:hover, .case-dropdown:hover, select:hover {
+  background-color: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.08) !important;
+}
+.network-select:focus, .case-dropdown:focus, select:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15) !important;
+}
+
+/* ====================================================================
+   Bloomberg Terminal / AI Agent Console
+   ==================================================================== */
+.agent-activity-console {
+  position: fixed;
+  bottom: 24px; left: 24px;
+  width: 420px; /* Even smaller width */
+  height: 130px; /* Reduced height */
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--line) !important;
+  border-radius: 10px;
+  z-index: 9999;
+  font-family: var(--mono);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.agent-activity-console.collapsed {
+  height: 28px !important;
+  width: 280px; /* Even smaller when collapsed */
+  bottom: 20px; left: 20px;
+}
+.aac-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 12px;
+  height: 28px;
+  background: rgba(248, 250, 252, 0.6);
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.aac-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+.live-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--accent);
+  animation: pulse-blue 2s infinite;
+}
+@keyframes pulse-blue {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(37, 99, 235, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+.aac-toggle-btn {
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2px; transition: transform 0.3s, color 0.2s;
+  transform: rotate(180deg); /* Expanded: points DOWN */
+}
+.aac-header:hover .aac-toggle-btn { color: var(--text); }
+.agent-activity-console.collapsed .aac-toggle-btn {
+  transform: rotate(0deg); /* Collapsed: points UP */
+}
+.aac-body {
+  display: flex; flex: 1; overflow: hidden;
+  padding: 8px; gap: 10px;
+}
+.aac-col {
+  flex: 1; overflow-y: auto; font-size: 9px;
+  padding-right: 6px;
+}
+.aac-col::-webkit-scrollbar { width: 4px; }
+.aac-col::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+#agent-logs-container {
+  border-right: 1px solid var(--line-soft);
+  color: var(--text-2);
+}
+#agent-timeline {
+  color: var(--text-2);
+}
+.log-entry.system-msg { color: var(--text-3); font-style: italic; }
+.log-entry { margin-bottom: 5px; line-height: 1.45; font-family: var(--mono) !important; text-shadow: none; }
