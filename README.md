@@ -6,6 +6,10 @@
 
 **When a $1M cargo ships, capital locks for 45 days. An AI Agent evaluates the risk, prices the discount, and the market pays to unlock that intelligence—all settled on-chain.**
 
+### **AI 为风险定价。投资者为情报付费。区块链强制执行结算。**
+
+**当一批价值 100 万美元的货物发运后，资本往往会被锁定 45 天。AI Agent 负责评估风险、计算折扣定价，市场则为解锁这份风险情报付费——整个流程最终在链上完成结算。**
+
 ---
 
 [![Injective Nova 2026](https://img.shields.io/badge/Injective_Nova-2026-0B60FF?style=for-the-badge)](https://injectivenova.com)
@@ -44,7 +48,7 @@ Exporter uploads eBL → AI underwrites in 5 min → Investors pay $0.50 for ris
 
 ---
 
-### 🎯 Why This Wins Championships
+### 🎯 Why This Project Is Promising
 
 | Criteria | Our Evidence | Where to Verify |
 |----------|--------------|-----------------|
@@ -81,7 +85,7 @@ The adoption of **UNCITRAL MLETR** (Model Law on Electronic Transferable Records
 
 ---
 
-### 🏆 Championship Features
+### 🏆 Core Features
 
 #### 🤖 **Feature 1: AI Autonomous Underwriter** — Not a Chatbot, a Financial Decision Engine
 
@@ -138,7 +142,7 @@ Unlock: Premium risk intelligence + audit trail hash
 - ✅ **Report Hash Binding**: Every paid report is cryptographically bound to its payment via `PaymentOracle.bindReportToPayment()`
 - ✅ **TTL & Replay Protection**: Reports expire; duplicate authorizations are rejected
 
-**Why x402 Deserves a Championship**:
+**Why x402 Has Strong Potential**:
 1. **Innovation**: Elevates AI risk analysis from "page feature" to "machine-callable paid service"
 2. **Technical Depth**: One demo flow covers HTTP 402 + USDC settlement + AI structured output + Injective on-chain evidence
 3. **Real-World Value**: Banks, insurers, logistics platforms, and other Agents can buy reports without human accounts
@@ -246,7 +250,7 @@ Emergency: Rule-based deterministic pricing → 100% uptime guarantee
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          AGENTBL PROTOCOL ARCHITECTURE                       │
+│                          AGENTBL PROTOCOL ARCHITECTURE                      │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐
@@ -256,12 +260,12 @@ Emergency: Rule-based deterministic pricing → 100% uptime guarantee
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     🤖 AI AUTONOMOUS UNDERWRITER                             │
+│                     🤖 AI AUTONOMOUS UNDERWRITER                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  OCR & Parser  →  Cross-Doc Consistency  →  Risk Intelligence (RAG)         │
-│       ↓                    ↓                        ↓                        │
+│       ↓                    ↓                        ↓                       │
 │  Cargo Valuation  →  Multi-Factor Risk Score  →  Dynamic Pricing Engine     │
-│       ↓                                                                      │
+│       ↓                                                                     │
 │  PricingQuote Schema (base/urgency/risk/collateral discounts + evidence)    │
 │  • 341 tests passing  • OpenAI/DeepSeek/Qwen fallback  • Deterministic      │
 └──────────┬──────────────────────────────────────────────────────────────────┘
@@ -269,7 +273,7 @@ Emergency: Rule-based deterministic pricing → 100% uptime guarantee
            ├─────────────────────────┬──────────────────────────────────────┐
            ▼                         ▼                                      ▼
 ┌──────────────────────┐  ┌─────────────────────────┐  ┌──────────────────────────┐
-│  💰 x402 PAID INTEL  │  │ ⛓️ INJECTIVE PROTOCOL   │  │  🔌 MCP INTEGRATION     │
+│  💰 x402 PAID INTEL  │  │ ⛓️ INJECTIVE PROTOCOL   │  │  🔌 MCP INTEGRATION      │
 ├──────────────────────┤  ├─────────────────────────┤  ├──────────────────────────┤
 │ HTTP 402 Challenge   │  │ EBLRegistry V2          │  │ 7 Core Tools             │
 │        ↓             │  │ RWAOfferingPool         │  │ 3 Resources              │
@@ -286,16 +290,16 @@ Emergency: Rule-based deterministic pricing → 100% uptime guarantee
            │                         │
            ▼                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│               INJECTIVE TESTNET (Chain ID 1439)                              │
-│  • All contracts deployed & verified                                         │
-│  • Real USDC settlements                                                     │
-│  • Explorer-viewable transactions                                            │
+│               INJECTIVE TESTNET (Chain ID 1439)                             │
+│  • All contracts deployed & verified                                        │
+│  • Real USDC settlements                                                    │
+│  • Explorer-viewable transactions                                           │
 │  • PaymentAttested / PricingUpdated / OfferingCreated events                │
 └─────────────────────────────────────────────────────────────────────────────┘
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         INVESTOR DASHBOARD                                   │
+│                         INVESTOR DASHBOARD                                  │
 │  View Offerings → Pay x402 for Report → Review Risk → Subscribe → Track ROI │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -463,7 +467,7 @@ npm install && npm run dev
 
 ---
 
-### ❓ FAQ - Preempting Judge Questions
+### ❓ FAQ
 
 #### Q1: Is the AI pricing reliable?
 
@@ -674,7 +678,7 @@ Build the **Bloomberg Terminal for AI-priced trade finance**:
 
 ---
 
-### 🎯 为什么 AgentBL 具备夺冠潜力
+### 🎯 为什么 AgentBL 具备潜力
 
 | 评审标准          | 我们的证据                                                                                                                                                                                     | 如何验证                                                                                   |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -774,7 +778,7 @@ AgentBL 实现了 **x402 协议**（HTTP 402 Payment Required + EIP-3009），�
 * ✅ **报告哈希绑定**：每份付费报告都会通过 `PaymentOracle.bindReportToPayment()` 与支付记录进行密码学绑定
 * ✅ **TTL 与重放保护**：报告会过期，重复授权会被拒绝
 
-**为什么 x402 值得夺冠**：
+**为什么 x402 很有潜力**：
 
 1. **创新性**：将 AI 风险分析从“页面功能”升级为“机器可调用的付费服务”
 2. **技术深度**：一个 demo 流程同时覆盖 HTTP 402、USDC 结算、AI 结构化输出和 Injective 链上证据
@@ -890,7 +894,7 @@ Emergency：基于规则的确定性定价 → 保证 100% 可用性
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          AGENTBL PROTOCOL ARCHITECTURE                       │
+│                          AGENTBL PROTOCOL ARCHITECTURE                      │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────┐
@@ -900,12 +904,12 @@ Emergency：基于规则的确定性定价 → 保证 100% 可用性
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     🤖 AI AUTONOMOUS UNDERWRITER                             │
+│                     🤖 AI AUTONOMOUS UNDERWRITER                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  OCR & Parser  →  Cross-Doc Consistency  →  Risk Intelligence (RAG)         │
-│       ↓                    ↓                        ↓                        │
+│       ↓                    ↓                        ↓                       │
 │  Cargo Valuation  →  Multi-Factor Risk Score  →  Dynamic Pricing Engine     │
-│       ↓                                                                      │
+│       ↓                                                                     │
 │  PricingQuote Schema (base/urgency/risk/collateral discounts + evidence)    │
 │  • 341 tests passing  • OpenAI/DeepSeek/Qwen fallback  • Deterministic      │
 └──────────┬──────────────────────────────────────────────────────────────────┘
@@ -913,7 +917,7 @@ Emergency：基于规则的确定性定价 → 保证 100% 可用性
            ├─────────────────────────┬──────────────────────────────────────┐
            ▼                         ▼                                      ▼
 ┌──────────────────────┐  ┌─────────────────────────┐  ┌──────────────────────────┐
-│  💰 x402 PAID INTEL  │  │ ⛓️ INJECTIVE PROTOCOL   │  │  🔌 MCP INTEGRATION     │
+│  💰 x402 PAID INTEL  │  │ ⛓️ INJECTIVE PROTOCOL   │  │  🔌 MCP INTEGRATION      │
 ├──────────────────────┤  ├─────────────────────────┤  ├──────────────────────────┤
 │ HTTP 402 Challenge   │  │ EBLRegistry V2          │  │ 7 Core Tools             │
 │        ↓             │  │ RWAOfferingPool         │  │ 3 Resources              │
@@ -930,16 +934,16 @@ Emergency：基于规则的确定性定价 → 保证 100% 可用性
            │                         │
            ▼                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│               INJECTIVE TESTNET (Chain ID 1439)                              │
-│  • All contracts deployed & verified                                         │
-│  • Real USDC settlements                                                     │
-│  • Explorer-viewable transactions                                            │
+│               INJECTIVE TESTNET (Chain ID 1439)                             │
+│  • All contracts deployed & verified                                        │
+│  • Real USDC settlements                                                    │
+│  • Explorer-viewable transactions                                           │
 │  • PaymentAttested / PricingUpdated / OfferingCreated events                │
 └─────────────────────────────────────────────────────────────────────────────┘
            │
            ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         INVESTOR DASHBOARD                                   │
+│                         INVESTOR DASHBOARD                                  │
 │  View Offerings → Pay x402 for Report → Review Risk → Subscribe → Track ROI │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1115,7 +1119,7 @@ npm install && npm run dev
 
 ---
 
-### ❓ FAQ - 预判评委问题
+### ❓ FAQ 
 
 #### Q1：AI 定价可靠吗？
 
