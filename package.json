@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Hackathon harness for an AI dynamic pricing eBL-backed RWA trade finance protocol.",
   "scripts": {
-    "install": "node scripts/install.mjs",
+    "postinstall": "node scripts/install.mjs || echo 'Skipping postinstall'",
     "dev": "node src/app/server.js",
     "start": "node src/app/server.js",
     "test": "node --test tests/*.test.js",
