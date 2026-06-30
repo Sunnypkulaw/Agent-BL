@@ -96,8 +96,11 @@ body {
 }
 
 /* Overriding hardcoded dark colors */
-.hero { background: var(--panel) !important; }
-.hero-price { background: rgba(255,255,255,0.8) !important; border-color: var(--line) !important; box-shadow: none !important; }
+.hero { 
+  background: rgba(255, 255, 255, 0.97) !important; 
+  backdrop-filter: blur(40px) saturate(200%) !important;
+}
+.hero-price { background: rgba(255,255,255,0.85) !important; border-color: rgba(255, 255, 255, 0.9) !important; box-shadow: none !important; }
 .hero-price-val #hero-price-num { background: linear-gradient(135deg, var(--accent), #0369a1) !important; -webkit-background-clip: text !important; color: transparent !important; }
 
 .seg-btn { background: rgba(255,255,255,0.6) !important; }
@@ -223,7 +226,7 @@ body {
 
 /* Distinctive styling for internal panels so they pop out from the modal background */
 .deal-modal .panel {
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(40px) saturate(200%) !important;
   border: 1px solid rgba(255, 255, 255, 1) !important;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
@@ -231,10 +234,30 @@ body {
   transform: translateY(-2px);
   margin-bottom: 24px;
 }
+
+/* Dynamic Red Outline for Active Risk Items (Options that actually have risk) */
+@keyframes pulse-risk-item {
+  0% { background: rgba(239, 68, 68, 0.05); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2); }
+  50% { background: rgba(239, 68, 68, 0.15); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.8), 0 0 12px rgba(239, 68, 68, 0.2); }
+  100% { background: rgba(239, 68, 68, 0.05); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2); }
+}
+
+.risk-dim.active:not(.tone-muted),
+.wr-ev.tone-crit,
+.wr-ev.tone-warn {
+  animation: pulse-risk-item 2.5s infinite ease-in-out !important;
+  border-radius: 8px !important;
+  color: #b91c1c !important; /* Make text darker red for contrast */
+}
+.risk-dim.active:not(.tone-muted) .risk-dim-icon,
+.wr-ev.tone-crit .wr-ev-type,
+.wr-ev.tone-warn .wr-ev-type {
+  color: #dc2626 !important; /* Emphasize the icon/type as well */
+}
 .deal-modal .card {
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
   backdrop-filter: blur(24px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04) !important;
   border-radius: 12px !important;
 }
@@ -320,7 +343,7 @@ body {
 
 /* Distinctive styling for all main panels so they don't blend into the background */
 #view-mint .panel {
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(40px) saturate(200%) !important;
   border: 1px solid rgba(255, 255, 255, 1) !important;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
@@ -330,9 +353,10 @@ body {
 }
 
 #view-mint .card {
-  background: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
   backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.03) !important;
 }
 
 /* ====================================================================
