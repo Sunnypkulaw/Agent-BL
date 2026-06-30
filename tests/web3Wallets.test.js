@@ -6,10 +6,32 @@ import {
   connectedAddress,
   connectedWalletType,
   disconnect,
+  queryFilterInChunks,
   resolveBrowserChainConfig,
   restoreWalletSession,
   walletAvailability
 } from '../public/web3.js';
+
+test('WEB3-20: event reads stay within the Injective eth_getLogs block limit', async () => {
+  const calls = [];
+  const available = [
+    { blockNumber: 110_000 },
+    { blockNumber: 114_000 },
+    { blockNumber: 124_999 }
+  ];
+  const contract = {
+    async queryFilter(_filter, fromBlock, toBlock) {
+      calls.push([fromBlock, toBlock]);
+      assert.ok(toBlock - fromBlock <= 9_999);
+      return available.filter((event) => event.blockNumber >= fromBlock && event.blockNumber <= toBlock);
+    }
+  };
+
+  const events = await queryFilterInChunks(contract, {}, 100_000, 125_000, { limit: 3 });
+
+  assert.deepEqual(calls, [[115_001, 125_000], [105_001, 115_000]]);
+  assert.deepEqual(events.map((event) => event.blockNumber), [110_000, 114_000, 124_999]);
+});
 
 const registry = {
   schema: 'agentbl-chain-config-v2',

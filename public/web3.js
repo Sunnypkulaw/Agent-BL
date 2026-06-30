@@ -564,6 +564,31 @@ export async function protocolDeploymentInfo() {
   };
 }
 
+// Injective's public EVM RPC rejects eth_getLogs ranges larger than 10,000
+// blocks. Keep each request at 10,000 blocks (9,999 block distance) and scan
+// newest-first so callers that only need recent events can stop early.
+const GET_LOGS_BLOCKS_PER_REQUEST = 10_000;
+
+export async function queryFilterInChunks(contract, filter, fromBlock, toBlock, { limit = Infinity } = {}) {
+  const start = Math.max(0, Math.trunc(Number(fromBlock)));
+  const end = Math.max(0, Math.trunc(Number(toBlock)));
+  const parsedLimit = Number(limit);
+  const eventLimit = Number.isFinite(parsedLimit) ? Math.max(0, Math.trunc(parsedLimit)) : Infinity;
+  if (end < start || eventLimit === 0) return [];
+
+  const events = [];
+  let chunkTo = end;
+  while (chunkTo >= start) {
+    const chunkFrom = Math.max(start, chunkTo - GET_LOGS_BLOCKS_PER_REQUEST + 1);
+    const chunkEvents = await contract.queryFilter(filter, chunkFrom, chunkTo);
+    events.unshift(...chunkEvents);
+    if (events.length >= eventLimit || chunkFrom === start) break;
+    chunkTo = chunkFrom - 1;
+  }
+
+  return Number.isFinite(eventLimit) ? events.slice(-eventLimit) : events;
+}
+
 /** Read the latest real PricingUpdated events through the configured public RPC. */
 export async function readPricingUpdatedEvents(limit = 5) {
   const cfg = await loadChainConfig();
@@ -576,8 +601,15 @@ export async function readPricingUpdatedEvents(limit = 5) {
   const latest = await provider.getBlockNumber();
   const deployedBlock = Number(cfg.deployments?.RiskPricingOracle?.blockNumber ?? 0);
   const fromBlock = Math.max(deployedBlock || 0, latest - 25_000);
-  const events = await contract.queryFilter(contract.filters.PricingUpdated(), fromBlock, latest);
-  return events.slice(-Math.max(1, Math.min(20, Number(limit) || 5))).reverse().map((event) => ({
+  const eventLimit = Math.max(1, Math.min(20, Number(limit) || 5));
+  const events = await queryFilterInChunks(
+    contract,
+    contract.filters.PricingUpdated(),
+    fromBlock,
+    latest,
+    { limit: eventLimit }
+  );
+  return events.reverse().map((event) => ({
     poolId: event.args.poolId.toString(),
     issuePriceE6: event.args.issuePrice.toString(),
     issuePriceUsd: Number(event.args.issuePrice) / 1_000_000,
