@@ -1,0 +1,204 @@
+{
+  "schema": "agentbl-injective-exchange-precompile-v1",
+  "verified_at": "2026-06-29T20:04:04.935Z",
+  "network": "eip155:1439",
+  "chain_id": 1439,
+  "official_precompile": "0x0000000000000000000000000000000000000065",
+  "official_mcp_server": "https://github.com/InjectiveLabs/mcp-server",
+  "official_mcp_server_path": "C:\\Users\\lubw1\\AppData\\Local\\Temp\\agentbl-injective-mcp-server\\dist\\mcp\\server.js",
+  "account": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
+  "subaccount_id": "0xff86f010d005d15bd43e1f254c12acabefae218d000000000000000000000001",
+  "subaccount_index": 1,
+  "live_market_count": 14,
+  "market_audit": [
+    {
+      "eligible": false,
+      "commodity": "copper",
+      "reason": "No direct copper market is approved; correlated crypto proxies are forbidden."
+    },
+    {
+      "eligible": false,
+      "commodity": "aluminum",
+      "reason": "No direct aluminum market is approved; correlated crypto proxies are forbidden."
+    },
+    {
+      "eligible": false,
+      "commodity": "soybean",
+      "reason": "No direct soybean market is approved; correlated crypto proxies are forbidden."
+    },
+    {
+      "eligible": false,
+      "commodity": "oil",
+      "reason": "No direct oil market is approved; correlated crypto proxies are forbidden."
+    },
+    {
+      "eligible": true,
+      "commodity": "gold",
+      "market": {
+        "commodity": "gold",
+        "symbol": "GOLD",
+        "marketId": "0x8f002b45cb287a4c3ecb89174ee42a7e933178d89c7eea94dbed8dc5dfd35d23",
+        "ticker": "GOLD/USDT PERP",
+        "quoteDenom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+        "minQuantity": "0.0001",
+        "priceTick": "0.1",
+        "initialMarginRatio": 0.195,
+        "economicBasis": "A short GOLD perpetual offsets a fall in recoverable gold-cargo collateral value during the financing window."
+      },
+      "live_market": {
+        "symbol": "GOLD",
+        "marketId": "0x8f002b45cb287a4c3ecb89174ee42a7e933178d89c7eea94dbed8dc5dfd35d23",
+        "ticker": "GOLD/USDT PERP",
+        "tickSize": "100000",
+        "minQuantityTick": "0.0001",
+        "minNotional": "0",
+        "quoteDenom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+        "initialMarginRatio": "0.195",
+        "maintenanceMarginRatio": "0.05",
+        "takerFeeRate": "0.001",
+        "quoteDecimals": 6,
+        "oracleBase": "GOLD",
+        "oracleQuote": "USDT",
+        "oracleType": "pricefeed"
+      }
+    }
+  ],
+  "gold_oracle": {
+    "symbol": "GOLD",
+    "ticker": "GOLD/USDT PERP",
+    "marketId": "0x8f002b45cb287a4c3ecb89174ee42a7e933178d89c7eea94dbed8dc5dfd35d23",
+    "price": "1860.940000"
+  },
+  "precompile_query": {
+    "usdc": {
+      "subaccount_id": "0xff86f010d005d15bd43e1f254c12acabefae218d000000000000000000000001",
+      "denom": "erc20:0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+      "available_balance": "988990",
+      "total_balance": "988990"
+    },
+    "usdt": {
+      "subaccount_id": "0xff86f010d005d15bd43e1f254c12acabefae218d000000000000000000000001",
+      "denom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+      "available_balance": "900000",
+      "total_balance": "1000000"
+    }
+  },
+  "policy": {
+    "direct_market_only": true,
+    "proxy_hedges_forbidden": true,
+    "main_demo_copper_hedge": "blocked-no-direct-market",
+    "gold_trade_finance_hedge": "eligible"
+  },
+  "mode": "live-order-query-cancel",
+  "funding": {
+    "source": "canonical MTS USDC",
+    "conversion_market": {
+      "marketId": "0x67462ddc4a045e175da8d8310f59a6c33c9994ef98ced0a31ffd977af9da9703",
+      "ticker": "USDT/USDC",
+      "baseDenom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+      "quoteDenom": "erc20:0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d"
+    },
+    "usdt_after_conversion": {
+      "subaccount_id": "0xff86f010d005d15bd43e1f254c12acabefae218d000000000000000000000001",
+      "denom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+      "available_balance": "1900000",
+      "total_balance": "2000000"
+    }
+  },
+  "hedge": {
+    "commodity": "gold",
+    "economics": {
+      "direction": "short",
+      "oracle_price_usd": 1860.94,
+      "limit_price_usd": 1954,
+      "quantity": 0.0001,
+      "notional_usd": 0.19540000000000002,
+      "margin_usd": 0.1,
+      "quote_denom": "peggy0x87aB3B4C8661e07D6372361211B96ed4Dc36B1B5",
+      "basis": "A short GOLD perpetual offsets a fall in recoverable gold-cargo collateral value during the financing window."
+    },
+    "cid": "abl-gold-1782763195948",
+    "order_hash": "0xfe530d77368d3dba2324d6d3ade111e9f1c2f84438e634651d2e9242a5bd2b58",
+    "indexer_query": {
+      "orderHash": "0xfe530d77368d3dba2324d6d3ade111e9f1c2f84438e634651d2e9242a5bd2b58",
+      "marketId": "0x8f002b45cb287a4c3ecb89174ee42a7e933178d89c7eea94dbed8dc5dfd35d23",
+      "subaccountId": "0xff86f010d005d15bd43e1f254c12acabefae218d000000000000000000000001",
+      "side": "sell",
+      "price": "1954.000000",
+      "quantity": "0.0001",
+      "fillable": "0.0001"
+    },
+    "precompile_query": {
+      "price": "1954000000000000000000",
+      "quantity": "100000000000000",
+      "margin": "100000000000000000",
+      "fillable": "100000000000000",
+      "is_buy": false,
+      "order_hash": "0xfe530d77368d3dba2324d6d3ade111e9f1c2f84438e634651d2e9242a5bd2b58",
+      "cid": "abl-gold-1782763195948"
+    },
+    "cancelled": true,
+    "recovered_interrupted_run": true
+  },
+  "transactions": [
+    {
+      "label": "exchange.deposit-usdc",
+      "tx_hash": "0xaba80202c1fc234708819a3535b08bb835cb19932853f1d879304dcd16282076",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0xaba80202c1fc234708819a3535b08bb835cb19932853f1d879304dcd16282076",
+      "status": "ok",
+      "to": "0x0000000000000000000000000000000000000065",
+      "selector": "0xe441dec9"
+    },
+    {
+      "label": "exchange.buy-usdt-with-usdc",
+      "tx_hash": "0x2298b35769d11bf34cc3dfd45f9176b43bb314d01af2b18eeb34fd75b7aa7511",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x2298b35769d11bf34cc3dfd45f9176b43bb314d01af2b18eeb34fd75b7aa7511",
+      "status": "ok",
+      "to": "0x0000000000000000000000000000000000000065",
+      "selector": "0x29d3d0e4"
+    },
+    {
+      "label": "exchange.create-gold-hedge-order",
+      "tx_hash": "0x38c9c529a6781e9b9448301fe9509ac705999f345db4b710d45d4afba55afc5b",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x38c9c529a6781e9b9448301fe9509ac705999f345db4b710d45d4afba55afc5b",
+      "status": "ok",
+      "to": "0x0000000000000000000000000000000000000065",
+      "selector": "0x20c69837",
+      "recovered_from_interrupted_run": true
+    },
+    {
+      "label": "exchange.cancel-gold-hedge-order",
+      "tx_hash": "0x7917685635fd4451a3a9b6adb9104646732d048c8f31450c1f1ef2099d5a1f83",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x7917685635fd4451a3a9b6adb9104646732d048c8f31450c1f1ef2099d5a1f83",
+      "status": "ok",
+      "to": "0x0000000000000000000000000000000000000065",
+      "selector": "0x44b9bf3a"
+    },
+    {
+      "label": "exchange.withdraw-unused-usdc",
+      "tx_hash": "0xa19719666b34bb4baab51e02318dbee089a4961f892a94db27885ad3c37bda4b",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0xa19719666b34bb4baab51e02318dbee089a4961f892a94db27885ad3c37bda4b",
+      "status": "ok",
+      "to": "0x0000000000000000000000000000000000000065",
+      "selector": "0xeb28c205"
+    },
+    {
+      "label": "exchange.withdraw-test-usdt",
+      "tx_hash": "0x836f6d9f44dce5580428a5eb6adcf963e973cd2e6c83a9a7d6aac9602ff02302",
+      "explorer": "https://testnet.blockscout.injective.network/tx/0x836f6d9f44dce5580428a5eb6adcf963e973cd2e6c83a9a7d6aac9602ff02302",
+      "status": "ok",
+      "to": "0x0000000000000000000000000000000000000065",
+      "selector": "0xeb28c205"
+    }
+  ],
+  "cleanup": {
+    "preserves_preexisting_subaccount_funds": true,
+    "withdrawn_usdc_atomic": "988990",
+    "withdrawn_usdt_atomic": "2000000",
+    "post_cleanup": {
+      "usdc_available_atomic": "0",
+      "usdt_available_atomic": "0"
+    }
+  },
+  "secrets_logged": false
+}

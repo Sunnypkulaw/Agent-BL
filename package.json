@@ -29,7 +29,11 @@
     "deploy:protocol": "npm --prefix hardhat run deploy:protocol",
     "verify:wave-b": "node scripts/wave-b-gate.mjs",
     "smoke:mcp:injective": "node scripts/injective-mcp-smoke.mjs",
-    "migrate:chain-config": "node scripts/migrate-chain-config.mjs"
+    "migrate:chain-config": "node scripts/migrate-chain-config.mjs",
+    "spike:bank": "node scripts/injective-bank-precompile.mjs",
+    "spike:bank:live": "node scripts/injective-bank-precompile.mjs --live",
+    "spike:exchange": "node scripts/injective-exchange-precompile.mjs",
+    "spike:exchange:live": "node scripts/injective-exchange-precompile.mjs --live"
   },
   "engines": {
     "node": ">=20"

@@ -378,9 +378,15 @@ set). Commands explicitly containing `:live` perform testnet network writes.
 | `npm run x402:intel` | CLI paid intel query — pay for and display premium risk/valuation data |
 | `npm run verify:wave-b` | Re-verify payment → report → attestation → pricing → quote on Injective Testnet |
 | `npm run smoke:mcp:injective` | Official Injective MCP query + controlled allowlisted raw-EVM smoke (funded test wallet required) |
+| `npm run spike:bank` | SP-5 read-only Bank precompile / MTS USDC parity check |
+| `npm run spike:exchange` | SP-6 read-only Exchange precompile market and subaccount gate |
+| `npm run spike:bank:live` | SP-5 real testnet `0x64` read/write proof (explicit confirmation required) |
+| `npm run spike:exchange:live` | SP-6 real testnet order/query/cancel proof (explicit confirmation required) |
 | `npm run check` | Low-cost self-check: files, scripts, seed data, engine integrity |
 | `npm run test` | Full unit / integration suite (`node --test`, **300 passing**) |
 | `npm run smoke` | Spin up a temp server and smoke-test the key APIs |
+
+SP-4–6 sponsor-native evidence: [engineering runbook](docs/injective-runbook.md), [precompile decision and economic gate](docs/injective-precompile-integration.md), [Bank/MTS write tx](https://testnet.blockscout.injective.network/tx/0xc0cf441ebba0125ca89afac17f23e036200e7c6e71110b128520f5664181ff7f), and [Exchange hedge-order tx](https://testnet.blockscout.injective.network/tx/0x38c9c529a6781e9b9448301fe9509ac705999f345db4b710d45d4afba55afc5b).
 
 The hardened PaymentOracle is deployed on Injective Testnet at
 [`0x36d9…4571`](https://testnet.blockscout.injective.network/address/0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571).
@@ -893,9 +899,15 @@ x402 支付层精确锁定 `@injectivelabs/x402@0.0.1` 与 `express@5.2.1`。由
 | `npm run x402:intel` | 购买并展示风险/估值/反欺诈报告的 CLI |
 | `npm run verify:wave-b` | 复验 payment → report → attestation → pricing → quote 测试网闭环 |
 | `npm run smoke:mcp:injective` | 官方 Injective MCP 查询 + allowlist 受控 raw-EVM smoke（需测试钱包） |
+| `npm run spike:bank` | SP-5 只读 Bank precompile / MTS USDC 同余额校验 |
+| `npm run spike:exchange` | SP-6 只读 Exchange precompile 市场与子账户闸门 |
+| `npm run spike:bank:live` | SP-5 测试网真实 `0x64` 读写证明（需显式确认） |
+| `npm run spike:exchange:live` | SP-6 测试网真实下单/查询/撤单证明（需显式确认） |
 | `npm run check` | 最低成本自检：文件、脚本、seed 数据、引擎完好 |
 | `npm run test` | 全部单元 / 集成测试（`node --test`，**300 passing**） |
 | `npm run smoke` | 启动临时 server，冒烟测试关键 API |
+
+SP-4～6 赞助方原生证据：[工程 runbook](docs/injective-runbook.md)、[precompile 决策与经济闸门](docs/injective-precompile-integration.md)、[Bank/MTS 真实写入](https://testnet.blockscout.injective.network/tx/0xc0cf441ebba0125ca89afac17f23e036200e7c6e71110b128520f5664181ff7f)、[Exchange 真实对冲挂单](https://testnet.blockscout.injective.network/tx/0x38c9c529a6781e9b9448301fe9509ac705999f345db4b710d45d4afba55afc5b)。
 
 硬化 PaymentOracle 已部署在 Injective Testnet：
 [`0x36d9…4571`](https://testnet.blockscout.injective.network/address/0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571)。

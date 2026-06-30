@@ -541,9 +541,9 @@ Gate D：连续 3 次 preflight 全绿；Live/Demo/CLI/视频四套路径都演�
 | SP-1 | Injective EVM | P0 | 五合约协议、PaymentOracle、USDC x402 | 完整部署、验证源码、记录地址/tx、前端回读事件 | Done |
 | SP-2 | Injective x402 | P0 | AI 情报按次付费 | 完成 X402-1~16；路演展示真实 402 和支付 tx | Done |
 | SP-3 | Injective MCP Server | P1 | Agent 查链、执行受控 raw EVM tx | 完成 MCP-9/10；不要把自建 MCP 冒充官方 MCP | Done |
-| SP-4 | Injective EVM / CLI agent skills | P1 | 开发、部署与故障排查工作流 | 在 `docs/injective-runbook.md` 记录安装、使用场景和可复现命令；它是工程能力，不伪装成产品 runtime | Todo |
-| SP-5 | Injective ERC20/Bank precompile | P1 | 统一 USDC 余额/denom/转账与 RWA token 的 EVM/native 映射 | 做最小 read/write spike；成功后再决定是否进入 P0，避免自建重复桥接层 | Todo |
-| SP-6 | Injective Exchange precompile | P2 | 可选的 RWA 二级市场/风险对冲 | 只有存在真实测试市场与清楚经济模型时才接；验收为真实 order/query，不以 mock 截图算完成 | Todo |
+| SP-4 | Injective EVM / CLI agent skills | P1 | 开发、部署与故障排查工作流 | 在 `docs/injective-runbook.md` 记录安装、使用场景和可复现命令；它是工程能力，不伪装成产品 runtime | Done — 官方 skills 安装、chain pinning、部署/precompile 命令、故障与回滚手册已固化 |
+| SP-5 | Injective ERC20/Bank precompile | P1 | 统一 USDC 余额/denom/转账与 RWA token 的 EVM/native 映射 | 做最小 read/write spike；成功后再决定是否进入 P0，避免自建重复桥接层 | Done — `0x64` + MTS USDC 读写实测；ERC20/x-bank 余额一致；tx `0xc0cf…ff7f`；当前多池 RWAToken 映射诚实延后至 per-pool V2 |
+| SP-6 | Injective Exchange precompile | P2 | 可选的 RWA 二级市场/风险对冲 | 只有存在真实测试市场与清楚经济模型时才接；验收为真实 order/query，不以 mock 截图算完成 | Done — 仅 GOLD 直连对冲获准；真实 `0x65` deposit/spot/order/query/cancel/withdraw，order `0xfe53…2b58`、order tx `0x38c9…fc5b`；铜/铝/大豆/原油无直接市场时 fail closed |
 | SP-7 | Injective Indexer + Explorer | P0 | 支付、定价、暂停、恢复、兑付事件回读 | UI 中每个关键状态都能跳到真实 tx/event；Indexer 不可用时 RPC fallback | Done |
 | SP-8 | Azure OpenAI / Microsoft Foundry Models | P1 | `openaiCompatClient` 新增 Azure provider；解析、解释、报告生成 | `AZURE_OPENAI_ENDPOINT/DEPLOYMENT/API_KEY` 配置；工具调用与 structured output 通过；确定性 fallback 保留 | Done |
 | SP-9 | Microsoft Foundry Evaluation | P1 | Agent AI 质量证明 | 建立 ≥20 条 eval dataset；Task Completion ≥85%、Tool Call Success ≥95%、Groundedness ≥0.8；保存可分享结果截图/JSON | Done |

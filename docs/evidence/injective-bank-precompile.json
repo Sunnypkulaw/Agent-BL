@@ -1,0 +1,68 @@
+{
+  "schema": "agentbl-injective-bank-precompile-v1",
+  "verified_at": "2026-06-29T19:55:12.762Z",
+  "network": "eip155:1439",
+  "chain_id": 1439,
+  "official_precompile": "0x0000000000000000000000000000000000000064",
+  "asset": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+  "denom": "erc20:0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+  "account": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
+  "read": {
+    "before": {
+      "token": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+      "denom": "erc20:0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+      "account": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
+      "metadata": {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "erc20": {
+        "symbol": "USDC",
+        "decimals": 6,
+        "balance": "40000000"
+      },
+      "bank": {
+        "balance": "40000000",
+        "totalSupply": "2635893944109438"
+      },
+      "parity": true
+    },
+    "after": {
+      "token": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+      "denom": "erc20:0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+      "account": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
+      "metadata": {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "erc20": {
+        "symbol": "USDC",
+        "decimals": 6,
+        "balance": "40000000"
+      },
+      "bank": {
+        "balance": "40000000",
+        "totalSupply": "2635893944109438"
+      },
+      "parity": true
+    }
+  },
+  "write": {
+    "kind": "test-only-mts-self-transfer",
+    "entrypoint": "0x0C382e685bbeeFE5d3d9C29e29E341fEE8E84C5d",
+    "native_state_transition": "0x0000000000000000000000000000000000000064.transfer(from,to,amount)",
+    "amount_atomic": "1",
+    "balance_preserved": true,
+    "tx_hash": "0xc0cf441ebba0125ca89afac17f23e036200e7c6e71110b128520f5664181ff7f",
+    "explorer": "https://testnet.blockscout.injective.network/tx/0xc0cf441ebba0125ca89afac17f23e036200e7c6e71110b128520f5664181ff7f",
+    "status": "ok"
+  },
+  "decision": {
+    "usdc_bank_precompile": "promote-to-p0",
+    "current_rwa_token": "defer-mapping",
+    "rationale": "Use native MTS USDC now. The current RWAToken is a multi-pool receipt, not ERC-20; V2 needs one MTS-compatible fungible contract per pool before native mapping."
+  },
+  "secrets_logged": false
+}
