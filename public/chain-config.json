@@ -9,7 +9,6 @@
       "chainIdDecimal": 1439,
       "cosmosChainId": "injective-888",
       "rpcUrls": [
-        "https://k8s.testnet.json-rpc.injective.network",
         "https://testnet.sentry.chain.json-rpc.injective.network"
       ],
       "wsUrls": [
@@ -27,7 +26,7 @@
       },
       "accessModel": "permissionless",
       "contracts": {
-        "AgentBLRWA": "0x3C6774d2D1ac6Bf35d08e5C9c84A233F5bc7f5Ce",
+        "AgentBLRWA": "0xb568629a226e34842C5aB42588ab7d6F72B235D1",
         "PaymentOracle": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
         "EBLRegistry": "0x85bfdcd00E0bBb9dDce3dcD2A58A62380703AdA6",
         "RWAToken": "0x7eb44f73368d14DBE4c2E30F8490a60513Fe17B0",
@@ -2956,9 +2955,9 @@
       },
       "deployments": {
         "AgentBLRWA": {
-          "address": "0x3C6774d2D1ac6Bf35d08e5C9c84A233F5bc7f5Ce",
-          "deployTx": "0xcdc4c7160cbe8cada32dad26ff64e4400d0e857777fb8c22554b3f49601bf0e1",
-          "deployedAt": "2026-06-30T06:53:20.219Z"
+          "address": "0xb568629a226e34842C5aB42588ab7d6F72B235D1",
+          "deployTx": "0x6e63267229d526d2076c30491aa4bd3abad25c304306564ade2a73c65e2ba110",
+          "deployedAt": "2026-06-30T11:42:00.396Z"
         },
         "PaymentOracle": {
           "address": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
