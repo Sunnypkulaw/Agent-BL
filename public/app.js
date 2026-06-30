@@ -2606,9 +2606,9 @@ function renderAgentTimeline() {
   // Only show last 10 activities in timeline
   const recentActivities = state.agentActivities.slice(0, 10);
 
-  let timelineHtml = '<div style="font-family: var(--mono); font-size: 13px; line-height: 1.8;">';
-  timelineHtml += '<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🤖 Agent Decision Timeline</div>';
-  timelineHtml += '<div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>';
+  let timelineHtml = '<div style="font-family: var(--mono); line-height: 1.5;">';
+  timelineHtml += '<div style="color: var(--accent); margin-bottom: 4px; font-weight: 600; font-size: 10px;">🤖 Agent Decision Timeline</div>';
+  timelineHtml += '<div style="border-top: 1px solid var(--line-soft); margin: 4px 0;"></div>';
 
   recentActivities.forEach(activity => {
     const time = new Date(activity.timestamp).toLocaleTimeString('en-US', { hour12: false });
@@ -2623,9 +2623,9 @@ function renderAgentTimeline() {
       else if (activity.details.newPrice) detailStr = `→ $${activity.details.newPrice}`;
     }
 
-    timelineHtml += `<div style="color: var(--text-2); margin: 4px 0;">
-      <span style="color: var(--muted);">${time}</span>
-      ${emoji} <span style="color: var(--text-main);">${actionLabel}</span>
+    timelineHtml += `<div style="color: var(--text-2); margin: 3px 0; display: flex; gap: 4px; align-items: baseline;">
+      <span style="color: var(--text-3); min-width: 50px;">${time}</span>
+      <span>${emoji}</span> <span style="color: var(--text);">${actionLabel}</span>
       <span style="color: var(--accent);">${detailStr}</span>
     </div>`;
   });
@@ -2935,9 +2935,9 @@ function wireStaticHandlers() {
     // Only show last 10 activities in timeline
     const recentActivities = state.agentActivities.slice(0, 10);
 
-    let timelineHtml = '<div style="font-family: var(--mono); font-size: 13px; line-height: 1.8;">';
-    timelineHtml += '<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🤖 Agent Decision Timeline</div>';
-    timelineHtml += '<div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>';
+    let timelineHtml = '<div style="font-family: var(--mono); line-height: 1.5;">';
+    timelineHtml += '<div style="color: var(--accent); margin-bottom: 4px; font-weight: 600; font-size: 10px;">🤖 Agent Decision Timeline</div>';
+    timelineHtml += '<div style="border-top: 1px solid var(--line-soft); margin: 4px 0;"></div>';
 
     recentActivities.forEach(activity => {
       const time = new Date(activity.timestamp).toLocaleTimeString('en-US', { hour12: false });
@@ -2952,9 +2952,9 @@ function wireStaticHandlers() {
         else if (activity.details.newPrice) detailStr = `→ $${activity.details.newPrice}`;
       }
 
-      timelineHtml += `<div style="color: var(--text-2); margin: 4px 0;">
-        <span style="color: var(--muted);">${time}</span>
-        ${emoji} <span style="color: var(--text-main);">${actionLabel}</span>
+      timelineHtml += `<div style="color: var(--text-2); margin: 3px 0; display: flex; gap: 4px; align-items: baseline;">
+        <span style="color: var(--text-3); min-width: 50px;">${time}</span>
+        <span>${emoji}</span> <span style="color: var(--text);">${actionLabel}</span>
         <span style="color: var(--accent);">${detailStr}</span>
       </div>`;
     });
@@ -2969,13 +2969,13 @@ function wireStaticHandlers() {
   }
 
   // FE-13: Agent Console Toggle
-  $('#toggle-activity-console')?.addEventListener('click', () => {
-    const c = $('#agent-activity-console');
-    if (c.style.height === '40px') {
-      c.style.height = '160px';
-    } else {
-      c.style.height = '40px';
-    }
+  // FE-13: Agent Console Toggle
+  $('#toggle-activity-console')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    $('#agent-activity-console').classList.toggle('collapsed');
+  });
+  $('.aac-header')?.addEventListener('click', () => {
+    $('#agent-activity-console').classList.toggle('collapsed');
   });
 
   // Category filter buttons
