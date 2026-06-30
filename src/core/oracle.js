@@ -9,7 +9,7 @@
 // Pure / deterministic. See PRD §9.3 (RiskPricingOracle.updatePricing,
 // RWAOfferingPool.createOffering) and src/core/pricingSchema.js.
 
-import { STATE_BY_PRICING_ACTION } from './pricingSchema.js';
+import { normalizeHash32, STATE_BY_PRICING_ACTION } from './pricingSchema.js';
 
 /**
  * Build the RiskPricingOracle / RWAOfferingPool update payload from a quote.
@@ -28,8 +28,8 @@ export function toOracleUpdate(quote, opts = {}) {
     risk_score_bps: quote.risk_score_bps,
     pricing_action: quote.pricing_action,
     offering_state: STATE_BY_PRICING_ACTION[quote.pricing_action] ?? null,
-    evidence_hash: quote.evidence_hash,
-    quote_hash: quote.quote_hash,
+    evidence_hash: normalizeHash32(quote.evidence_hash, 'evidence_hash'),
+    quote_hash: normalizeHash32(quote.quote_hash, 'quote_hash'),
     // RWAOfferingPool.createOffering(eblId, tokenSupply, issuePrice, targetRedemptionValue)
     recommended_token_supply: quote.recommended_token_supply,
     target_redemption_value_usd: quote.target_redemption_value_usd,

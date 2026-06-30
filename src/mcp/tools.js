@@ -7,6 +7,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { calculateRisk } from '../core/riskEngine.js';
+import { normalizeHash32 } from '../core/pricingSchema.js';
 import { simulateWorkflow } from '../core/workflow.js';
 import { assertTradeCase } from '../core/schema.js';
 import { listHarnessCaseFiles } from '../core/scenarioRunner.js';
@@ -279,8 +280,8 @@ export async function handlePushPricingToOracle({
     issue_price_e6: Math.round(Number(pricing_quote.final_issue_price_usd) * 1_000_000),
     risk_level: riskLevels[pricing_quote.risk_level] ?? 1,
     pricing_action: actions[pricing_quote.pricing_action] ?? 1,
-    evidence_hash: pricing_quote.evidence_hash,
-    quote_hash: pricing_quote.quote_hash
+    evidence_hash: normalizeHash32(pricing_quote.evidence_hash, 'pricing_quote.evidence_hash'),
+    quote_hash: normalizeHash32(pricing_quote.quote_hash, 'pricing_quote.quote_hash')
   };
 
   if (policy.dry_run) {

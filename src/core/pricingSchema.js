@@ -59,6 +59,33 @@ export { RISK_LEVELS };
 
 const HASH_RE = /^0x[0-9a-f]{64}$/u; // identical to schema.js evidence_hash format
 
+/**
+ * Normalize a JSON/API hash without changing its cryptographic value.
+ * Whitespace and hex casing are superficial; adding, padding, or truncating
+ * digits is not safe because that would anchor different evidence on-chain.
+ */
+export function normalizeHash32(value, field = 'hash') {
+  if (typeof value !== 'string') {
+    throw new TypeError(`${field} must be exactly 32 bytes (0x + 64 hex characters)`);
+  }
+  const normalized = value.trim().toLowerCase();
+  if (!HASH_RE.test(normalized)) {
+    throw new TypeError(
+      `${field} must be exactly 32 bytes (0x + 64 hex characters); received ${value.length} characters`
+    );
+  }
+  return normalized;
+}
+
+/** Return an API-safe quote whose two on-chain commitments are valid bytes32. */
+export function normalizePricingQuoteHashes(quote) {
+  return {
+    ...quote,
+    evidence_hash: normalizeHash32(quote?.evidence_hash, 'evidence_hash'),
+    quote_hash: normalizeHash32(quote?.quote_hash, 'quote_hash')
+  };
+}
+
 // --- local validation primitives (mirror schema.js; kept local so the legacy
 // --- validator file is not modified) ---------------------------------------
 function isRecord(value) {

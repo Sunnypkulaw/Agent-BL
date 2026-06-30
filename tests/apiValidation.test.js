@@ -86,3 +86,22 @@ test('BE-7: a well-formed override still succeeds (validation is not over-eager)
     assert.ok(body.final_issue_price_usd > 0 && body.final_issue_price_usd <= 1);
   });
 });
+
+test('BE-8: API rejects a 67-character evidence hash before any chain call', async () => {
+  await withServer(async (baseUrl) => {
+    const quoteResponse = await postJson(baseUrl, '/api/pricing/quote', { payout_speed: 'FAST' });
+    const quote = await quoteResponse.json();
+    const malformed = { ...quote, evidence_hash: `${quote.evidence_hash}7` };
+
+    const res = await postJson(baseUrl, '/api/mcp/call', {
+      tool: 'push_pricing_to_oracle',
+      params: { case_id: quote.case_id, pricing_quote: malformed }
+    });
+    const body = await res.json();
+
+    assert.equal(res.status, 400);
+    assert.equal(body.ok, false);
+    assert.match(body.error, /evidence_hash must be exactly 32 bytes/u);
+    assert.match(body.error, /received 67 characters/u);
+  });
+});

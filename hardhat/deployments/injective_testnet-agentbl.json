@@ -3,8 +3,8 @@
   "chainId": 1439,
   "deployer": "0x7598b2f89798DF9c7aA399bC71b899b0D35F8430",
   "contract": "AgentBLRWA",
-  "address": "0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",
-  "deployTx": "0xf1cb0a86074d9a9aa0868216a6c6c3d64295ef2d52289a59cf62ffc67a3ef128",
-  "explorer": "https://testnet.blockscout.injective.network/address/0x4a03B5707eEBFc88f56f6E6a99b5D98466B31c94",
-  "deployedAt": "2026-06-21T14:22:21.850Z"
+  "address": "0x3C6774d2D1ac6Bf35d08e5C9c84A233F5bc7f5Ce",
+  "deployTx": "0xcdc4c7160cbe8cada32dad26ff64e4400d0e857777fb8c22554b3f49601bf0e1",
+  "explorer": "https://testnet.blockscout.injective.network/address/0x3C6774d2D1ac6Bf35d08e5C9c84A233F5bc7f5Ce",
+  "deployedAt": "2026-06-30T06:53:20.219Z"
 }

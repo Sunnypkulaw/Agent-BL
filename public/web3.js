@@ -419,6 +419,22 @@ function explorerTx(cfg, hash) {
  * Build the on-chain tokenize() arguments from a PricingQuote + financing.
  */
 export function mintArgsFromQuote(quote, financingUsd) {
+  // 确保哈希是有效的 bytes32 格式（0x + 64 个十六进制字符）
+  const fixHash = (hash) => {
+    if (!hash) return '0x' + '0'.repeat(64);
+    // 移除 0x 前缀
+    let cleanHash = hash.replace(/^0x/i, '');
+    // 严格截取到 64 个字符（如果超长）或补齐到 64 个字符（如果太短）
+    if (cleanHash.length > 64) {
+      cleanHash = cleanHash.substring(0, 64);
+    } else if (cleanHash.length < 64) {
+      cleanHash = cleanHash.padEnd(64, '0');
+    }
+    // 确保只包含有效的十六进制字符
+    cleanHash = cleanHash.replace(/[^0-9a-fA-F]/g, '0');
+    return '0x' + cleanHash;
+  };
+
   return {
     blId: quote.bl_id ?? quote.case_id ?? 'EBL-DEMO',
     issuePriceE6: BigInt(priceToE6(quote.final_issue_price_usd)),
@@ -427,8 +443,8 @@ export function mintArgsFromQuote(quote, financingUsd) {
     collateralValueUsd: BigInt(Math.max(0, Math.round(quote.ai_verified_collateral_value_usd || 0))),
     riskScoreBps: Math.max(0, Math.round(quote.risk_score_bps || 0)),
     riskLevel: riskLevelToUint8(quote.risk_level),
-    quoteHash: quote.quote_hash,
-    evidenceHash: quote.evidence_hash
+    quoteHash: fixHash(quote.quote_hash),
+    evidenceHash: fixHash(quote.evidence_hash)
   };
 }
 
@@ -452,15 +468,100 @@ export async function mintOnChain(quote, financingUsd, onConfirmed) {
   const cfg = await loadChainConfig();
   const contract = await getContract(true);
   const a = mintArgsFromQuote(quote, financingUsd);
+
+  // 🔍 添加详细的参数日志
+  console.log('═'.repeat(60));
+  console.log('🔍 [MINT DEBUG] 铸造参数详情:');
+  console.log('═'.repeat(60));
+  console.log('📊 Quote 原始数据:');
+  console.log('  - final_issue_price_usd:', quote.final_issue_price_usd);
+  console.log('  - recommended_token_supply:', quote.recommended_token_supply);
+  console.log('  - bl_id:', quote.bl_id);
+  console.log('  - case_id:', quote.case_id);
+  console.log('  - ai_verified_collateral_value_usd:', quote.ai_verified_collateral_value_usd);
+  console.log('  - risk_score_bps:', quote.risk_score_bps);
+  console.log('  - risk_level:', quote.risk_level);
+  console.log('\n🔧 转换后的链上参数:');
+  console.log('  - blId:', a.blId);
+  console.log('  - issuePriceE6:', a.issuePriceE6.toString(), a.issuePriceE6 === 0n ? '❌ 错误!' : '✅');
+  console.log('  - tokenSupply:', a.tokenSupply.toString(), a.tokenSupply === 0n ? '❌ 错误!' : '✅');
+  console.log('  - financingUsd:', a.financingUsd.toString());
+  console.log('  - collateralValueUsd:', a.collateralValueUsd.toString());
+  console.log('  - riskScoreBps:', a.riskScoreBps);
+  console.log('  - riskLevel:', a.riskLevel);
+  console.log('  - quoteHash:', a.quoteHash);
+  console.log('  - evidenceHash:', a.evidenceHash);
+  console.log('═'.repeat(60));
+
+  // 参数验证
+  if (a.issuePriceE6 === 0n) {
+    console.error('❌ 致命错误: issuePriceE6 = 0, 合约会拒绝交易!');
+    console.error('   原因: quote.final_issue_price_usd =', quote.final_issue_price_usd);
+    throw err('INVALID_PARAMS', '发行价格为 0，无法铸造。请检查定价数据是否正常。');
+  }
+
+  if (a.tokenSupply === 0n) {
+    console.error('❌ 致命错误: tokenSupply = 0, 合约会拒绝交易!');
+    console.error('   原因: quote.recommended_token_supply =', quote.recommended_token_supply);
+    throw err('INVALID_PARAMS', '代币供应量为 0，无法铸造。请检查定价数据是否正常。');
+  }
+
   let tx;
   try {
+    // 手动设置更高的 gas limit 和其他交易参数
+    const gasLimit = 500000n;
+
+    // 获取当前 gas price
+    const feeData = await _session.browserProvider.getFeeData();
+    const gasPrice = feeData.gasPrice || feeData.maxFeePerGas;
+
+    console.log('⛽ 交易参数:');
+    console.log('  Gas Limit:', gasLimit.toString());
+    console.log('  Gas Price:', gasPrice ? gasPrice.toString() : 'auto');
+
+    const txOptions = { gasLimit };
+
+    // 如果 gas price 可用，添加到选项中（某些网络需要明确指定）
+    if (gasPrice) {
+      txOptions.gasPrice = gasPrice;
+    }
+
+    console.log('📤 发送交易到合约...');
     tx = await contract.tokenize(
       a.blId, a.issuePriceE6, a.tokenSupply, a.financingUsd,
-      a.collateralValueUsd, a.riskScoreBps, a.riskLevel, a.quoteHash, a.evidenceHash
+      a.collateralValueUsd, a.riskScoreBps, a.riskLevel, a.quoteHash, a.evidenceHash,
+      txOptions
     );
+
+    console.log('✅ 交易已发送到网络，等待打包...');
+    console.log('📝 交易哈希:', tx.hash);
+    console.log('🔗 查看交易:', explorerTx(cfg, tx.hash));
   } catch (e) {
-    console.error('[mint] tokenize FAILED:', e);
-    if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) throw err('REJECTED', '用户在钱包中拒绝了交易');
+    console.error('═'.repeat(60));
+    console.error('❌ [MINT ERROR] 交易失败详情:');
+    console.error('═'.repeat(60));
+    console.error('[mint] Error code:', e.code);
+    console.error('[mint] Error message:', e.message);
+    if (e.data) {
+      console.error('[mint] Error data:', e.data);
+    }
+    if (e.transaction) {
+      console.error('[mint] Transaction:', e.transaction);
+    }
+    if (e.receipt) {
+      console.error('[mint] Receipt:', e.receipt);
+    }
+    console.error('═'.repeat(60));
+
+    if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) {
+      throw err('REJECTED', '用户在钱包中拒绝了交易');
+    }
+
+    // 给出更友好的错误提示
+    if (e.message?.includes('network') || e.message?.includes('timeout')) {
+      throw err('NETWORK_ERROR', 'RPC 网络连接不稳定，请稍后重试或更换 RPC 节点');
+    }
+
     throw e;
   }
   console.log('[mint] tx sent:', tx.hash);

@@ -5,11 +5,12 @@
     "injective-testnet": {
       "network": "injective_testnet",
       "displayName": "Injective EVM Testnet",
-      "chainId": "0x59F",
+      "chainId": "0x59f",
       "chainIdDecimal": 1439,
       "cosmosChainId": "injective-888",
       "rpcUrls": [
-        "https://k8s.testnet.json-rpc.injective.network"
+        "https://k8s.testnet.json-rpc.injective.network",
+        "https://testnet.sentry.chain.json-rpc.injective.network"
       ],
       "wsUrls": [
         "wss://k8s.testnet.ws.injective.network/"
@@ -26,7 +27,7 @@
       },
       "accessModel": "permissionless",
       "contracts": {
-        "AgentBLRWA": "0xC636aAA726dBb9298882CddA9BCedfa11CDe453b",
+        "AgentBLRWA": "0x3C6774d2D1ac6Bf35d08e5C9c84A233F5bc7f5Ce",
         "PaymentOracle": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
         "EBLRegistry": "0x85bfdcd00E0bBb9dDce3dcD2A58A62380703AdA6",
         "RWAToken": "0x7eb44f73368d14DBE4c2E30F8490a60513Fe17B0",
@@ -2955,10 +2956,9 @@
       },
       "deployments": {
         "AgentBLRWA": {
-          "address": "0xC636aAA726dBb9298882CddA9BCedfa11CDe453b",
-          "deployTx": "0xa9b1a6172e72f19dfb4f21c88676b701f65ad0bde410b92de83d4304ca851735",
-          "blockNumber": 131941939,
-          "deployedAt": "2026-06-29T14:19:15.565Z"
+          "address": "0x3C6774d2D1ac6Bf35d08e5C9c84A233F5bc7f5Ce",
+          "deployTx": "0xcdc4c7160cbe8cada32dad26ff64e4400d0e857777fb8c22554b3f49601bf0e1",
+          "deployedAt": "2026-06-30T06:53:20.219Z"
         },
         "PaymentOracle": {
           "address": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",

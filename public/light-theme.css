@@ -500,8 +500,10 @@ body {
 .agent-activity-console {
   position: fixed;
   bottom: 24px; left: 24px;
-  width: clamp(320px, 25vw, 520px);
-  height: clamp(110px, 16vh, 200px);
+  /* 响应式宽度：原始的 3/4 */
+  width: clamp(300px, 26vw, 675px);
+  /* 响应式高度：原始的 3/4 */
+  height: clamp(120px, 19vh, 338px);
   background: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--line) !important;
@@ -514,6 +516,40 @@ body {
   color: var(--text);
   box-shadow: 0 12px 36px rgba(0,0,0,0.06);
   overflow: hidden;
+}
+
+/* 超大屏幕优化（4K显示器等，2560px+） */
+@media (min-width: 2560px) {
+  .agent-activity-console {
+    width: clamp(450px, 22vw, 900px);
+    height: clamp(150px, 16vh, 450px);
+    bottom: 32px; left: 32px;
+  }
+}
+
+/* 大屏幕优化（1920px-2559px） */
+@media (min-width: 1920px) and (max-width: 2559px) {
+  .agent-activity-console {
+    width: clamp(375px, 24vw, 750px);
+    height: clamp(135px, 18vh, 375px);
+  }
+}
+
+/* 中等屏幕（1280px-1919px） */
+@media (min-width: 1280px) and (max-width: 1919px) {
+  .agent-activity-console {
+    width: clamp(300px, 26vw, 600px);
+    height: clamp(120px, 19vh, 300px);
+  }
+}
+
+/* 小屏幕适配（1279px以下） */
+@media (max-width: 1279px) {
+  .agent-activity-console {
+    width: clamp(280px, 30vw, 450px);
+    height: clamp(110px, 21vh, 225px);
+    bottom: 16px; left: 16px;
+  }
 }
 .agent-activity-console.collapsed {
   height: 28px !important;
@@ -530,8 +566,22 @@ body {
 }
 .aac-title {
   display: flex; align-items: center; gap: 6px;
-  font-size: 10px; font-weight: 600; color: var(--text-2);
+  font-size: 11px; font-weight: 600; color: var(--text-2);
   letter-spacing: 0.02em;
+}
+
+/* 超大屏幕标题字体 */
+@media (min-width: 2560px) {
+  .aac-title {
+    font-size: 13px;
+  }
+}
+
+/* 大屏幕标题字体 */
+@media (min-width: 1920px) and (max-width: 2559px) {
+  .aac-title {
+    font-size: 12px;
+  }
 }
 .live-dot {
   width: 5px; height: 5px; border-radius: 50%;
@@ -559,8 +609,29 @@ body {
   padding: 8px; gap: 10px;
 }
 .aac-col {
-  flex: 1; overflow-y: auto; font-size: 9px;
+  flex: 1; overflow-y: auto; font-size: 10px;
   padding-right: 6px;
+}
+
+/* 超大屏幕日志字体 */
+@media (min-width: 2560px) {
+  .aac-col {
+    font-size: 12px;
+  }
+}
+
+/* 大屏幕日志字体 */
+@media (min-width: 1920px) and (max-width: 2559px) {
+  .aac-col {
+    font-size: 11px;
+  }
+}
+
+/* 小屏幕日志字体 */
+@media (max-width: 1279px) {
+  .aac-col {
+    font-size: 9px;
+  }
 }
 .aac-col::-webkit-scrollbar { width: 4px; }
 .aac-col::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }

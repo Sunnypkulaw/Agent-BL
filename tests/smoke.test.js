@@ -72,12 +72,19 @@ test('BE-3/BE-4: pricing quote and offering simulate endpoints work end to end',
     assert.ok(quote.final_issue_price_usd > 0 && quote.final_issue_price_usd <= 1);
     assert.ok(PRICING_ACTIONS.includes(quote.pricing_action));
     assert.match(quote.quote_hash, /^0x[0-9a-f]{64}$/);
+    assert.match(quote.evidence_hash, /^0x[0-9a-f]{64}$/);
+    assert.equal(quote.quote_hash.length, 66);
+    assert.equal(quote.evidence_hash.length, 66);
     assert.ok(quote.target_redemption_exposure_usd <= quote.max_safe_redemption_exposure_usd + 1);
 
     // compare=true returns all three payout speeds + a recommendation.
     const comparison = await fetch(`${baseUrl}/api/pricing/quote?compare=true`, { method: 'POST' }).then((r) => r.json());
     assert.equal(comparison.quotes.length, 3);
     assert.ok(comparison.recommended_payout_speed);
+    for (const candidate of comparison.quotes) {
+      assert.equal(candidate.quote_hash.length, 66);
+      assert.equal(candidate.evidence_hash.length, 66);
+    }
 
     // A war-crisis case posted as the body is priced directly and pauses.
     const paused = await fetch(`${baseUrl}/api/pricing/quote`, {

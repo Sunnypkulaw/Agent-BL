@@ -10,7 +10,11 @@ import { compareSpeeds, quoteFromCase } from '../core/pricingEngine.js';
 import { simulateOffering } from '../core/offeringSimulator.js';
 import { simulatePricingWorkflow } from '../core/pricingWorkflow.js';
 import { toOracleUpdate } from '../core/oracle.js';
-import { assertPricingQuote, PAYOUT_SPEEDS } from '../core/pricingSchema.js';
+import {
+  assertPricingQuote,
+  normalizePricingQuoteHashes,
+  PAYOUT_SPEEDS
+} from '../core/pricingSchema.js';
 import { X402_SERVICES } from '../x402/config.js';
 import { demoModeController, LiveModeUnavailableError } from '../demo/mode.js';
 import { storeState, createPool, subscribeToPool } from './store.js';
@@ -302,10 +306,17 @@ export async function handleRequest(request, response) {
         const { caseData, options } = await resolvePricingRequest(body, url);
         if (options.compare) {
           const comparison = compareSpeeds(caseData, quoteOptions(options));
-          for (const quote of comparison.quotes) assertPricingQuote(quote, caseData);
-          sendJson(response, 200, comparison);
+          const quotes = comparison.quotes.map(normalizePricingQuoteHashes);
+          for (const quote of quotes) assertPricingQuote(quote, caseData);
+          sendJson(response, 200, {
+            ...comparison,
+            quotes,
+            recommended_quote: quotes.find(
+              (quote) => quote.payout_speed === comparison.recommended_payout_speed
+            )
+          });
         } else {
-          const quote = quoteFromCase(caseData, quoteOptions(options));
+          const quote = normalizePricingQuoteHashes(quoteFromCase(caseData, quoteOptions(options)));
           assertPricingQuote(quote, caseData);
           sendJson(response, 200, quote);
         }
@@ -473,7 +484,7 @@ export async function handleRequest(request, response) {
       if (request.method === 'POST' && url.pathname === '/api/oracle/pricing-update') {
         const body = await readJsonBody(request);
         const { caseData, options } = await resolvePricingRequest(body, url);
-        const quote = quoteFromCase(caseData, quoteOptions(options));
+        const quote = normalizePricingQuoteHashes(quoteFromCase(caseData, quoteOptions(options)));
         assertPricingQuote(quote, caseData);
         sendJson(response, 200, toOracleUpdate(quote, { pool_id: options.pool_id }));
         return;
