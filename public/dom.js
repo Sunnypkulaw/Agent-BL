@@ -16,6 +16,11 @@ export function el(tag, attrs = {}, ...kids) {
     if (k === 'class') node.className = v;
     else if (k === 'html') node.innerHTML = v;
     else if (k === 'text') node.textContent = v;
+    else if (k === 'style') {
+      // 直接设置 style.cssText 而不是用 setAttribute，更可靠
+      node.style.cssText = v;
+      console.log('[dom.el] 🎨 Setting style via cssText:', v, 'on', tag);
+    }
     else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
     else node.setAttribute(k, v === true ? '' : v);
   }

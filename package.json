@@ -7,6 +7,7 @@
   "scripts": {
     "install": "node scripts/install.mjs",
     "dev": "node src/app/server.js",
+    "start": "node src/app/server.js",
     "test": "node --test tests/*.test.js",
     "check": "node scripts/check.mjs",
     "demo": "node scripts/demo.mjs",
@@ -26,6 +27,9 @@
     "mcp:serve": "node src/mcp/standalone-server.js",
     "demo:once": "node scripts/demo-once.mjs",
     "preflight": "node scripts/preflight.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:vercel": "vercel",
+    "deploy:vercel:prod": "vercel --prod",
     "deploy:protocol": "npm --prefix hardhat run deploy:protocol",
     "verify:wave-b": "node scripts/wave-b-gate.mjs",
     "smoke:mcp:injective": "node scripts/injective-mcp-smoke.mjs",

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .test-card {
+      width: 300px;
+      height: 200px;
+      border: 2px solid red;
+      margin: 20px;
+    }
+    .test-hero {
+      height: 100px;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid blue;
+    }
+  </style>
+</head>
+<body>
+  <h1>图片显示测试</h1>
+
+  <h2>方法1: setAttribute</h2>
+  <div class="test-card">
+    <div id="test1" class="test-hero"></div>
+  </div>
+
+  <h2>方法2: style.cssText</h2>
+  <div class="test-card">
+    <div id="test2" class="test-hero"></div>
+  </div>
+
+  <h2>方法3: style.backgroundImage</h2>
+  <div class="test-card">
+    <div id="test3" class="test-hero"></div>
+  </div>
+
+  <script>
+    const imgUrl = '/img/cargo/copper.jpg';
+
+    // 方法1: setAttribute
+    const test1 = document.getElementById('test1');
+    test1.setAttribute('style', `background-image: url('${imgUrl}');`);
+    console.log('Test1 style attr:', test1.getAttribute('style'));
+    console.log('Test1 computed style:', window.getComputedStyle(test1).backgroundImage);
+
+    // 方法2: style.cssText
+    const test2 = document.getElementById('test2');
+    test2.style.cssText = `background-image: url('${imgUrl}');`;
+    console.log('Test2 style.cssText:', test2.style.cssText);
+    console.log('Test2 computed style:', window.getComputedStyle(test2).backgroundImage);
+
+    // 方法3: style.backgroundImage
+    const test3 = document.getElementById('test3');
+    test3.style.backgroundImage = `url('${imgUrl}')`;
+    console.log('Test3 style.backgroundImage:', test3.style.backgroundImage);
+    console.log('Test3 computed style:', window.getComputedStyle(test3).backgroundImage);
+  </script>
+</body>
+</html>

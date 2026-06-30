@@ -516,6 +516,7 @@ function renderMarketCard(entry, comparison) {
   else if (match('alu') || match('铝')) cargoType = 'alu';
 
   const imgSrc = `/img/cargo/${cargoType}.jpg`;
+  console.log('[renderMarketCard] 🖼️ Image path:', imgSrc, 'for cargo:', cName, 'type:', cargoType);
 
   return el('article', {
     class: `market-card tone-${tone}${active ? ' active' : ''}${paused ? ' paused' : ''}`,
