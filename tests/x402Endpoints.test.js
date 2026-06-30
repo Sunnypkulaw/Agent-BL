@@ -95,7 +95,8 @@ for (const service of X402_SERVICES) {
     const result = await fetchPaidIntel(baseUrl, service.endpoint, {
       demoMode: true,
       budgetUSDC: 0.005,
-      caseData: demoCase
+      caseData: demoCase,
+      timeoutMs: 30000
     });
     assert.equal(result.x402_required, true);
     assert.equal(result.paid?.ok, true);
