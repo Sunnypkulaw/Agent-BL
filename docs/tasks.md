@@ -89,17 +89,6 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 | P2 | Injective 原生模块 | ERC20/Bank precompile 优先；Exchange precompile 仅在有真实可解释场景时接入 |
 | P2 | AI 与品牌增强 | 多 LLM 共识、出口商偏好参数、Injective 紫色主题与 ENI + Injective 联合品牌 |
 
-### 2.1 如果 2026-06-29 就是提交硬截止
-
-不要同时开 eBL V2、多钱包、全市场后端、多 LLM、Azure tracing、Exchange precompile 六条战线。当天只保以下顺序：
-
-```text
-1. X402-1/3/4/6/8/11/14：先让付费情报流水可演示、可测试
-2. X402-9/15：能真实上链就绑定 PaymentOracle；facilitator 不支持 1439 时明确展示 Demo 标签
-3. MCP-6/7/8：已把原 5-tool mock 升级成可验证的 7 tools + 3 resources stdio server
-4. DEMO-1/4/5/6/7：Demo Mode、preflight、路演和视频兜底
-5. 其余任务提交后按 Wave B/C/D 继续，不在最后数小时重构核心协议
-```
 
 ---
 
