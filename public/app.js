@@ -1929,7 +1929,6 @@ function renderX402ReportPreview(service) {
     '<div class="x402-report-section">',
     '<h4>Unlock contents</h4>',
     '<ul class="x402-report-list">' + x402ServiceBullets(service.serviceId).map((item) => '<li>' + html(item) + '</li>').join('') + '</ul>',
-    '<p class="muted">点击目录项后这里会固定展示该报告。点击 Run Demo 或 Buy 后，会在这里展开完整 AI 风控报告正文和链上存证。</p>',
     '</div>'
   ].join('');
 }
