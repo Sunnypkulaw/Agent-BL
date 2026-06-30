@@ -110,6 +110,21 @@ body {
 .hero-price { background: rgba(255,255,255,0.85) !important; border-color: rgba(255, 255, 255, 0.9) !important; box-shadow: none !important; }
 .hero-price-val #hero-price-num { background: linear-gradient(135deg, var(--accent), #0369a1) !important; -webkit-background-clip: text !important; color: transparent !important; }
 
+/* Voyage ship tooltip: match the active light glass UI and keep the text legible. */
+.ship-tooltip {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(37, 99, 235, 0.28) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  z-index: 20;
+}
+.ship-tooltip::after {
+  border-top-color: rgba(255, 255, 255, 0.98) !important;
+  filter: drop-shadow(0 1px 0 rgba(37, 99, 235, 0.28));
+}
+
 .seg-btn { background: rgba(255,255,255,0.6) !important; }
 .seg-btn.active {
   background: #ffffff !important; color: var(--accent) !important;

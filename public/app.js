@@ -23,6 +23,11 @@ const PAUSED_ACTIONS = new Set(['PAUSE_OFFERING', 'FREEZE_POOL', 'TRIGGER_LIQUID
 const MARKET_PLAY_MS = 90000;
 const marketClock = { timer: 0, startedAt: 0 };
 
+function potentialYieldText(quote, unavailable = '--') {
+  if (!quote || PAUSED_ACTIONS.has(quote.pricing_action)) return unavailable;
+  return f.bpsToPct(quote.implied_gross_yield_bps);
+}
+
 /** Resolve the human-readable network name from chain-config. */
 const NETWORK_LABELS = { injective_testnet: 'Injective Testnet', injective_mainnet: 'Injective Mainnet' };
 let _cachedNetworkName = null;
@@ -161,13 +166,13 @@ function refreshDemoModeUi() {
   const livePill = $('#live-pill');
   if (banner) banner.classList.toggle('live-mode', !state.demoMode);
   if (copy) copy.textContent = state.demoMode
-    ? 'DEMO MODE · No wallet required · Simulated receipts are not chain transactions'
-    : 'LIVE MODE · Real wallet, USDC and on-chain transactions';
+    ? t('demo_mode_copy')
+    : t('live_mode_copy');
   if (toggle) {
-    toggle.textContent = state.demoMode ? 'Switch to Live' : 'Switch to Demo';
+    toggle.textContent = state.demoMode ? t('switch_to_live') : t('switch_to_demo');
     toggle.title = state.liveAvailable || !state.demoMode
       ? ''
-      : 'Configure X402_MODE=live, X402_FACILITATOR_URL and X402_PAY_TO first';
+      : t('live_config_required');
   }
   if (reset) reset.disabled = !state.demoMode;
   if (livePill) {
@@ -214,7 +219,7 @@ async function onDemoReset() {
     renderX402FlowReset();
     await selectCase(state.cases[0]?.case_id);
     setView('market');
-    toast('Demo state reset');
+    toast(t('demo_reset_done'));
   } catch (error) {
     toast(error.message, true);
   }
@@ -224,7 +229,10 @@ async function onDemoReset() {
 function onLangChanged() {
   applyStaticI18n();
   refreshLangBtn();
+  refreshDemoModeUi();
   reflectChainStatus();
+  populateNetworkSelector();
+  renderProtocolEvidence();
   refreshWalletUi();
   highlightCategoryBtn();
   renderCaseSelector();
@@ -232,6 +240,7 @@ function onLangChanged() {
   highlightCase();
   highlightSpeed();
   renderMarket();
+  renderPortfolio();
   renderViewMint();
   if (state.view === 'voyage') renderVoyage();
   if (state.view === 'intel') renderIntelMarket();
@@ -412,7 +421,13 @@ function sortMarketCases(cases) {
   const list = [...cases];
   list.sort((a, b) => {
     if (state.marketSort === 'yield_desc') {
-      return (quoteOf(b)?.implied_gross_yield_bps ?? -1) - (quoteOf(a)?.implied_gross_yield_bps ?? -1);
+      const yieldOf = (entry) => {
+        const quote = quoteOf(entry);
+        return quote && !PAUSED_ACTIONS.has(quote.pricing_action)
+          ? quote.implied_gross_yield_bps ?? -1
+          : -1;
+      };
+      return yieldOf(b) - yieldOf(a);
     }
     if (state.marketSort === 'risk_asc') return riskOf(a) - riskOf(b) || etaOf(a) - etaOf(b);
     if (state.marketSort === 'funding_desc') return fundingOf(b) - fundingOf(a);
@@ -427,11 +442,12 @@ function renderMarketStats(cases) {
   if (!box) return;
   clear(box);
   const quotes = cases.map((c) => recommendedQuote(cachedComparison(c.case_id))).filter(Boolean);
+  const openQuotes = quotes.filter((q) => !PAUSED_ACTIONS.has(q.pricing_action));
   const target = quotes.reduce((sum, q) => sum + Number(q.expected_cash_to_exporter_usd ?? q.requested_cash_usd ?? 0), 0);
-  const avgYield = quotes.length
-    ? quotes.reduce((sum, q) => sum + Number(q.implied_gross_yield_bps ?? 0), 0) / quotes.length
+  const avgYield = openQuotes.length
+    ? openQuotes.reduce((sum, q) => sum + Number(q.implied_gross_yield_bps ?? 0), 0) / openQuotes.length
     : null;
-  const open = quotes.filter((q) => !PAUSED_ACTIONS.has(q.pricing_action)).length;
+  const open = openQuotes.length;
   box.append(
     marketStat(t('market_stat_deals'), String(cases.length)),
     marketStat(t('market_stat_target'), f.usdCompact(target)),
@@ -516,8 +532,6 @@ function renderMarketCard(entry, comparison) {
   else if (match('alu') || match('铝')) cargoType = 'alu';
 
   const imgSrc = `/img/cargo/${cargoType}.jpg`;
-  console.log('[renderMarketCard] 🖼️ Image path:', imgSrc, 'for cargo:', cName, 'type:', cargoType);
-
   return el('article', {
     class: `market-card tone-${tone}${active ? ' active' : ''}${paused ? ' paused' : ''}`,
     'data-case': entry.case_id,
@@ -540,7 +554,7 @@ function renderMarketCard(entry, comparison) {
         el('strong', { class: 'market-price', text: quote ? `$${f.price(quote.final_issue_price_usd)}` : '—' })
       ),
       el('div', { class: 'market-yield' },
-        el('strong', { text: quote ? f.bpsToPct(quote.implied_gross_yield_bps) : '—' }),
+        el('strong', { text: potentialYieldText(quote) }),
         el('span', { text: t('market_upside') })
       )
     ),
@@ -629,7 +643,7 @@ function renderMarketDetail() {
       el('span', { class: `badge tone-${act.tone}`, text: `${act.icon} ${act.label}` })
     ),
     el('div', { class: 'market-detail-kpis' },
-      miniKv(t('market_detail_upside'), f.bpsToPct(quote.implied_gross_yield_bps), 'gain'),
+      miniKv(t('market_detail_upside'), potentialYieldText(quote), paused ? undefined : 'gain'),
       miniKv(t('market_detail_risk'), `${f.riskLabel(quote.risk_level)} · ${f.int(quote.risk_score_bps)} bps`),
       miniKv(t('market_detail_collateral'), f.usdCompact(quote.ai_verified_collateral_value_usd)),
       miniKv(t('market_detail_eta'), f.fmtDate(bl.eta))
@@ -1029,7 +1043,7 @@ function renderHeroPrice(quote) {
     ),
     el('div', { class: 'hero-price-meta' },
       el('span', { class: `badge tone-${act.tone}`, text: `${act.icon} ${act.label}` }),
-      el('span', { class: 'hero-yield', html: `<strong>${f.bpsToPct(quote.implied_gross_yield_bps)}</strong> ${t('hp_upside')}` })
+      el('span', { class: 'hero-yield', html: `<strong>${potentialYieldText(quote)}</strong> ${t('hp_upside')}` })
     ),
     el('div', { class: 'hero-target', html: t('hp_redeem', { speed: f.SPEED_META[quote.payout_speed].label }) })
   );
@@ -1120,7 +1134,7 @@ function renderWaterfall(quote) {
   if (lifted) {
     cols.push({ kind: 'up', label: t('wf_floor'), value: final - indicative, top: final, bottom: indicative, note: t('wf_note_floor') });
   }
-  cols.push({ kind: 'final', label: t('wf_final'), value: final, top: final, bottom: lo, note: t('wf_final_note', { pct: f.bpsToPct(quote.implied_gross_yield_bps) }) });
+  cols.push({ kind: 'final', label: t('wf_final'), value: final, top: final, bottom: lo, note: t('wf_final_note', { pct: potentialYieldText(quote) }) });
 
   const chart = el('div', { class: 'wf-chart' });
   const colsRow = el('div', { class: 'wf-cols' });
@@ -1390,7 +1404,7 @@ async function populateNetworkSelector() {
   const networks = await web3.configuredNetworks();
   select.replaceChildren(...networks.map((network) => el('option', {
     value: network.key,
-    text: `${network.displayName}${network.deployed ? '' : ' · not deployed'}`
+    text: `${network.displayName}${network.deployed ? '' : ` · ${t('network_not_deployed')}`}`
   })));
   select.value = current?.key ?? current?.defaultNetwork ?? 'injective-testnet';
 }
@@ -1560,7 +1574,7 @@ async function onWalletVerify() {
   const status = $('#wallet-verify-status');
   if (!button || !status) return;
   button.disabled = true;
-  status.textContent = 'Waiting for wallet signature…';
+  status.textContent = t('wallet_waiting_signature');
   try {
     const result = await web3.verifyWalletOnChain();
     clear(status);
@@ -1568,11 +1582,13 @@ async function onWalletVerify() {
       href: result.explorerUrl,
       target: '_blank',
       rel: 'noopener',
-      text: `Verified ${result.walletType}: ${f.shortHash(result.txHash, 10, 8)} ↗`
+      text: t('wallet_verified', { wallet: result.walletType, hash: f.shortHash(result.txHash, 10, 8) })
     }));
     agentLog(`${result.walletType} wallet verification tx confirmed: ${result.txHash}`, 'var(--ok)');
   } catch (error) {
-    status.textContent = error.code === 'REJECTED' ? 'Signature rejected' : `Verification failed: ${error.message}`;
+    status.textContent = error.code === 'REJECTED'
+      ? t('wallet_signature_rejected')
+      : t('wallet_verification_failed', { msg: error.message });
     toast(status.textContent, true);
   } finally {
     button.disabled = false;
@@ -1587,8 +1603,8 @@ async function renderProtocolEvidence() {
   try {
     const deployment = await web3.protocolDeploymentInfo();
     accessRoot.textContent = deployment.accessModel === 'permissionless'
-      ? `${deployment.displayName} · permissionless testnet access · any wallet may subscribe`
-      : `${deployment.displayName} · production compliance gate required`;
+      ? t('protocol_permissionless', { network: deployment.displayName })
+      : t('protocol_compliance', { network: deployment.displayName });
     clear(contractsRoot);
     for (const [name, address] of Object.entries(deployment.contracts)) {
       contractsRoot.append(el('div', { class: 'protocol-contract' },
@@ -1599,11 +1615,11 @@ async function renderProtocolEvidence() {
           text: `${address.slice(0, 8)}…${address.slice(-6)} ↗`
         })));
     }
-    eventsRoot.innerHTML = '<p class="muted">Reading PricingUpdated from RPC…</p>';
+    eventsRoot.innerHTML = `<p class="muted">${t('protocol_loading_events')}</p>`;
     const events = await web3.readPricingUpdatedEvents(5);
     clear(eventsRoot);
     if (events.length === 0) {
-      eventsRoot.append(el('p', { class: 'muted', text: 'No PricingUpdated event found in the configured range.' }));
+      eventsRoot.append(el('p', { class: 'muted', text: t('protocol_no_events') }));
       return;
     }
     const riskNames = ['LOW', 'MEDIUM', 'WARNING', 'CRITICAL'];
@@ -1611,7 +1627,7 @@ async function renderProtocolEvidence() {
     for (const event of events) {
       eventsRoot.append(el('div', { class: 'pricing-event' },
         el('div', { class: 'pricing-event-head' },
-          el('strong', { text: `PricingUpdated · Pool #${event.poolId}` }),
+          el('strong', { text: t('protocol_event_pool', { pool: event.poolId }) }),
           el('a', { href: event.explorerUrl, target: '_blank', rel: 'noopener', text: `${f.shortHash(event.txHash, 8, 6)} ↗` })),
         el('div', { text: `$${event.issuePriceUsd.toFixed(4)} · ${riskNames[event.riskLevel] ?? event.riskLevel} · ${actionNames[event.action] ?? event.action}` }),
         el('code', { class: 'hash', title: event.evidenceHash, text: `evidence ${f.shortHash(event.evidenceHash, 9, 7)}` })));
@@ -2480,7 +2496,7 @@ async function renderPortfolio() {
     $('#portfolio-yield').textContent = (data.summary.avgYieldBps / 100).toFixed(2) + '%';
     
     if (data.investments.length === 0) {
-      list.innerHTML = '<p class="muted" style="text-align: center;">No investments yet.</p>';
+      list.innerHTML = `<p class="muted" style="text-align: center;">${t('portfolio_empty')}</p>`;
       return;
     }
 
@@ -2491,7 +2507,7 @@ async function renderPortfolio() {
           <span style="color:var(--ok)">+$${inv.amountUsd.toLocaleString()}</span>
         </div>
         <div style="display:flex; justify-content:space-between; color:var(--text-2); font-size:12px;">
-          <span>Yield: ${(inv.yieldBps/100).toFixed(2)}% | Risk: ${inv.riskLevel}</span>
+          <span>${t('portfolio_metrics', { yield: `${(inv.yieldBps/100).toFixed(2)}%`, risk: f.riskLabel(inv.riskLevel) })}</span>
           <span style="font-family:var(--mono)">${inv.txHash.slice(0,10)}...</span>
         </div>
       </div>
@@ -2516,22 +2532,8 @@ function agentLog(msg, color = 'var(--text-2)') {
   container.scrollTop = container.scrollHeight;
 }
 
-// Intercept window console for demo purposes to feed the agent log
-const originalLog = console.log;
-console.log = function(...args) {
-  originalLog.apply(console, args);
-  agentLog(args.join(' '));
-};
-const originalWarn = console.warn;
-console.warn = function(...args) {
-  originalWarn.apply(console, args);
-  agentLog(args.join(' '), 'var(--warn)');
-};
-const originalError = console.error;
-console.error = function(...args) {
-  originalError.apply(console, args);
-  agentLog(args.join(' '), 'var(--crit)');
-};
+// The judge-facing terminal is intentionally business-event only. Browser
+// console diagnostics stay in DevTools and must never flood this UI.
 
 // ===========================================================================
 // Agent Activity (BE-15) — module-level so selectCase / boot can call them
@@ -2697,12 +2699,12 @@ function wireStaticHandlers() {
       if (entry) {
         setBusy(true);
         try {
-          agentLog(`Exporter updated Min Price constraint to ${$('#pref-min-price').value}`);
+          agentLog(t('pref_price_updated', { value: $('#pref-min-price').value }));
           state.comparison = await getCaseComparison(entry, true);
           renderMarket();
           renderViewMint();
         } catch(e) {
-          toast('Failed to reprice: ' + e.message, true);
+          toast(t('t_reprice_fail', { msg: e.message }), true);
         } finally {
           setBusy(false);
         }
@@ -2711,7 +2713,7 @@ function wireStaticHandlers() {
   });
   $('#pref-speed')?.addEventListener('change', (e) => {
     const val = e.target.value;
-    agentLog(`Exporter updated payout speed preference to ${val || 'AI Recommended'}`);
+    agentLog(t('pref_speed_updated', { value: val ? f.SPEED_META[val]?.label ?? val : t('pref_ai_recommended') }));
     if (val) {
       selectSpeed(val);
     } else {
@@ -2759,7 +2761,7 @@ function wireStaticHandlers() {
   async function handleEblUpload(files) {
     if (!files || files.length === 0) return;
 
-    eblUploadStatus.innerHTML = `<span style="color: var(--text-accent);">⏳ Uploading ${files.length} file(s) to ENI...</span>`;
+    eblUploadStatus.innerHTML = `<span style="color: var(--text-accent);">${t('ebl_uploading', { n: files.length })}</span>`;
 
     const results = [];
     for (const file of files) {
@@ -2815,10 +2817,10 @@ function wireStaticHandlers() {
 
     let statusHtml = '';
     if (successCount > 0) {
-      statusHtml += `<div style="color: var(--text-success); margin-bottom: 8px;">✅ ${successCount} document(s) uploaded successfully</div>`;
+      statusHtml += `<div style="color: var(--text-success); margin-bottom: 8px;">${t('ebl_upload_success', { n: successCount })}</div>`;
     }
     if (failCount > 0) {
-      statusHtml += `<div style="color: var(--text-error); margin-bottom: 8px;">❌ ${failCount} upload(s) failed</div>`;
+      statusHtml += `<div style="color: var(--text-error); margin-bottom: 8px;">${t('ebl_upload_failed', { n: failCount })}</div>`;
     }
 
     statusHtml += '<div style="font-size: 12px; margin-top: 8px;">';
@@ -2837,33 +2839,8 @@ function wireStaticHandlers() {
     eblUploadStatus.innerHTML = statusHtml;
 
     if (successCount > 0) {
-      toast(`${successCount} document(s) uploaded to ENI`);
+      toast(t('ebl_upload_toast', { n: successCount }));
     }
-  }
-
-  if (eblBrowseBtn && eblFileInput) {
-    eblBrowseBtn.addEventListener('click', (e) => { e.preventDefault(); eblFileInput.click(); });
-    eblUploadZone.addEventListener('dragover', e => { e.preventDefault(); eblUploadZone.style.background = 'var(--panel)'; });
-    eblUploadZone.addEventListener('dragleave', () => eblUploadZone.style.background = 'transparent');
-    eblUploadZone.addEventListener('drop', e => {
-      e.preventDefault();
-      eblUploadZone.style.background = 'transparent';
-      handleMockUpload(e.dataTransfer.files);
-    });
-    eblFileInput.addEventListener('change', (e) => handleMockUpload(e.target.files));
-  }
-
-  function handleMockUpload(files) {
-    if (!files || files.length === 0) return;
-    eblUploadStatus.style.color = 'var(--accent)';
-    eblUploadStatus.innerHTML = `Scanning ${files.length} documents...`;
-    agentLog(`Agent received ${files.length} new documents for ENI verification.`);
-
-    setTimeout(() => {
-      eblUploadStatus.style.color = 'var(--ok)';
-      eblUploadStatus.innerHTML = '✔ Documents parsed. ENI signature verified.<br>✔ Trade case generated and sent to Risk Engine.';
-      agentLog(`Documents verified. Generating mock trade case...`, 'var(--ok)');
-    }, 1500);
   }
 
   // BE-15: Local agent activity logger (complements SSE stream)

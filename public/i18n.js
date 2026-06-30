@@ -44,6 +44,10 @@ export function t(key, vars) {
   return str;
 }
 
+export function hasTranslation(key, language = lang) {
+  return Object.prototype.hasOwnProperty.call(DICT[language] ?? {}, key);
+}
+
 const DATA_DICT = {
   'Primary Aluminum Ingots (P1020, LME Grade)': '原铝锭 (P1020, LME 级)',
   'Copper Cathodes (LME Grade A, Cu-CATH-1)': '阴极铜 (LME A级, Cu-CATH-1)',
@@ -115,6 +119,23 @@ const DICT = {
     wallet_copy: '复制地址',
     wallet_view_explorer: '在浏览器中查看',
     wallet_disconnect: '断开连接',
+    wallet_choose: '选择钱包',
+    wallet_evm: 'EVM 合约钱包',
+    wallet_native: 'Injective 原生钱包',
+    wallet_verify: '签署测试网验证交易',
+    wallet_waiting_signature: '等待钱包签名…',
+    wallet_verified: '{wallet} 验证成功：{hash} ↗',
+    wallet_signature_rejected: '用户拒绝了签名',
+    wallet_verification_failed: '验证失败：{msg}',
+
+    // runtime mode
+    demo_mode_copy: '演示模式 · 无需钱包 · 模拟回执不是链上交易',
+    live_mode_copy: '真实模式 · 使用真实钱包、USDC 与链上交易',
+    switch_to_live: '切换至真实模式',
+    switch_to_demo: '切换至演示模式',
+    demo_reset: '重置演示',
+    demo_reset_done: '演示状态已重置',
+    live_config_required: '请先配置 X402_MODE=live、X402_FACILITATOR_URL 与 X402_PAY_TO',
 
 	    // category filter
 	    cat_all: '全部',
@@ -122,6 +143,7 @@ const DICT = {
 	    cat_metal: '金属',
 	    cat_ore: '矿石',
 	    search_ph: '搜索提单或 AI 自然语言筛选…',
+	    ai_parse: 'AI 筛选',
 	    ai_search_title: 'AI 解析自然语言偏好，智能筛选提单',
 	    ai_searching: '🤖 AI 解析中…',
 
@@ -191,6 +213,13 @@ const DICT = {
     market_voyage_note: '到 {disch} 已完成 {pct}% · ETA {eta}',
     market_arrived: '已抵达 {disch}',
 
+    // investor portfolio
+    portfolio_h: '我的持仓',
+    portfolio_invested: '已投资：',
+    portfolio_avg_yield: '平均收益：',
+    portfolio_empty: '暂无持仓。',
+    portfolio_metrics: '收益：{yield} | 风险：{risk}',
+
     // dynamic labels
     action_OPEN_OFFERING: '开放',
     action_OPEN_WITH_WARNING: '开放 · 预警',
@@ -238,6 +267,39 @@ const DICT = {
     compliance: '<strong>非保本。</strong> 1 RWA = $1.00 是<em>目标</em>兑付价，取决于进口商付款、货物结算与保险覆盖。仅限合格投资者。',
     onchain_h: '链上锚定 · AgentBLRWA',
     mint_hint: '输入融资金额并点击「铸造 RWA 上链」。连接钱包且合约已部署时铸造真实链上交易，否则走高保真模拟交易。',
+    ebl_upload_h: 'eBL 单据管理',
+    ebl_upload_drop: '将 eBL、发票和保险单拖放到此处',
+    ebl_upload_or: '或者',
+    ebl_upload_browse: '点击选择文件',
+    ebl_upload_device: '从本机上传',
+    ebl_uploading: '⏳ 正在向 ENI 上传 {n} 个文件…',
+    ebl_upload_success: '✅ {n} 份单据上传成功',
+    ebl_upload_failed: '❌ {n} 份单据上传失败',
+    ebl_upload_toast: '{n} 份单据已上传至 ENI',
+    exporter_preferences: '出口商偏好（自主 Agent 约束）',
+    pref_min_price: '最低发行价 (USD)',
+    pref_speed: '到账速度偏好',
+    pref_ai_recommended: 'AI 推荐',
+    pref_price_updated: '出口商将最低发行价约束更新为 {value}',
+    pref_speed_updated: '出口商将到账速度偏好更新为 {value}',
+
+    // protocol evidence
+    protocol_evidence_h: '实时协议凭证',
+    protocol_refresh: '刷新事件',
+    protocol_loading_deployment: '正在加载部署信息…',
+    protocol_loading_events: '正在从 RPC 读取 PricingUpdated 事件…',
+    protocol_permissionless: '{network} · 测试网无许可访问 · 任意钱包均可认购',
+    protocol_compliance: '{network} · 需要通过生产环境合规准入',
+    protocol_no_events: '当前区块范围内未找到 PricingUpdated 事件。',
+    protocol_event_pool: '定价更新 · 池 #{pool}',
+    network_not_deployed: '未部署',
+
+    // deal modal / agent terminal
+    modal_title: '项目详情',
+    modal_subtitle: '航运追踪与 AI 风险报告',
+    modal_close: '关闭',
+    agent_terminal_h: '[ 系统 ] 自主 Agent 终端',
+    agent_terminal_ready: '> 系统就绪，等待自主 Agent 执行任务…',
 
     // deal strip
     ds_route: '航线', ds_cargo: '货物', ds_ebl: '电子提单', ds_declared: '申报货值', ds_collateral: 'AI 核验货值',
@@ -448,6 +510,23 @@ const DICT = {
     wallet_copy: 'Copy address',
     wallet_view_explorer: 'View on explorer',
     wallet_disconnect: 'Disconnect',
+    wallet_choose: 'Choose wallet',
+    wallet_evm: 'EVM contracts',
+    wallet_native: 'Injective native',
+    wallet_verify: 'Sign testnet verification tx',
+    wallet_waiting_signature: 'Waiting for wallet signature…',
+    wallet_verified: '{wallet} verified: {hash} ↗',
+    wallet_signature_rejected: 'Signature rejected',
+    wallet_verification_failed: 'Verification failed: {msg}',
+
+    // runtime mode
+    demo_mode_copy: 'DEMO MODE · No wallet required · simulated receipts are not chain transactions',
+    live_mode_copy: 'LIVE MODE · Real wallet, USDC and on-chain transactions',
+    switch_to_live: 'Switch to Live',
+    switch_to_demo: 'Switch to Demo',
+    demo_reset: 'Reset demo',
+    demo_reset_done: 'Demo state reset',
+    live_config_required: 'Configure X402_MODE=live, X402_FACILITATOR_URL and X402_PAY_TO first',
 
 	    // category filter
 	    cat_all: 'All',
@@ -455,6 +534,7 @@ const DICT = {
 	    cat_metal: 'Metal',
 	    cat_ore: 'Ore',
 	    search_ph: 'Search eBL or AI natural language filter…',
+	    ai_parse: 'AI Filter',
 	    ai_search_title: 'AI parses natural-language preferences to filter eBLs',
 	    ai_searching: 'AI parsing…',
 
@@ -524,6 +604,13 @@ const DICT = {
     market_voyage_note: '{pct}% to {disch} · ETA {eta}',
     market_arrived: 'Arrived at {disch}',
 
+    // investor portfolio
+    portfolio_h: 'My Portfolio',
+    portfolio_invested: 'Invested:',
+    portfolio_avg_yield: 'Avg Yield:',
+    portfolio_empty: 'No investments yet.',
+    portfolio_metrics: 'Yield: {yield} | Risk: {risk}',
+
     // dynamic labels
     action_OPEN_OFFERING: 'OPEN',
     action_OPEN_WITH_WARNING: 'OPEN · WARNING',
@@ -571,6 +658,39 @@ const DICT = {
     compliance: '<strong>Not principal-protected.</strong> 1 RWA = $1.00 is a <em>target</em> redemption value, depending on importer payment, cargo settlement and insurance coverage. Permissioned investors only.',
     onchain_h: 'On-chain anchoring · AgentBLRWA',
     mint_hint: 'Enter a financing amount and click “Mint RWA on-chain”. With a wallet connected and the contract deployed it mints a real on-chain tx, otherwise a high-fidelity simulated tx.',
+    ebl_upload_h: 'eBL Document Management',
+    ebl_upload_drop: 'Drag and drop your eBL, invoice and insurance policies here',
+    ebl_upload_or: 'or',
+    ebl_upload_browse: 'click to browse files',
+    ebl_upload_device: 'from your device',
+    ebl_uploading: '⏳ Uploading {n} file(s) to ENI…',
+    ebl_upload_success: '✅ {n} document(s) uploaded successfully',
+    ebl_upload_failed: '❌ {n} upload(s) failed',
+    ebl_upload_toast: '{n} document(s) uploaded to ENI',
+    exporter_preferences: 'Exporter Preferences (Autonomous Agent Constraints)',
+    pref_min_price: 'Min issue price (USD)',
+    pref_speed: 'Speed preference',
+    pref_ai_recommended: 'AI Recommended',
+    pref_price_updated: 'Exporter updated the minimum issue price constraint to {value}',
+    pref_speed_updated: 'Exporter updated the payout speed preference to {value}',
+
+    // protocol evidence
+    protocol_evidence_h: 'Live protocol evidence',
+    protocol_refresh: 'Refresh events',
+    protocol_loading_deployment: 'Loading deployment…',
+    protocol_loading_events: 'Reading PricingUpdated from RPC…',
+    protocol_permissionless: '{network} · permissionless testnet access · any wallet may subscribe',
+    protocol_compliance: '{network} · production compliance gate required',
+    protocol_no_events: 'No PricingUpdated event found in the configured range.',
+    protocol_event_pool: 'Pricing updated · Pool #{pool}',
+    network_not_deployed: 'not deployed',
+
+    // deal modal / agent terminal
+    modal_title: 'Deal Details',
+    modal_subtitle: 'Voyage tracking & AI risk reports',
+    modal_close: 'Close',
+    agent_terminal_h: '[ SYSTEM ] Autonomous Agent Terminal',
+    agent_terminal_ready: '> System ready. Awaiting autonomous agent execution…',
 
     // deal strip
     ds_route: 'Route', ds_cargo: 'Cargo', ds_ebl: 'eBL', ds_declared: 'Declared value', ds_collateral: 'AI-verified value',
