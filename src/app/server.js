@@ -218,7 +218,13 @@ async function serveStatic(urlPath, response) {
       '.html': 'text/html; charset=utf-8',
       '.js': 'text/javascript; charset=utf-8',
       '.css': 'text/css; charset=utf-8',
-      '.json': 'application/json; charset=utf-8'
+      '.json': 'application/json; charset=utf-8',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.svg': 'image/svg+xml',
+      '.webp': 'image/webp'
     };
 
     // 为 HTML 文件注入环境变量

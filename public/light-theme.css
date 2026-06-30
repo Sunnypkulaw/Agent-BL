@@ -171,7 +171,7 @@ body {
   transform: translateY(-2px);
   z-index: 5;
 }
-.market-card-hero { background: rgba(241, 245, 249, 0.7) !important; border-bottom-color: var(--line) !important; }
+.market-card-hero { background-color: rgba(241, 245, 249, 0.3) !important; border-bottom-color: var(--line) !important; }
 .market-card-hero::after { background: none !important; }
 .market-fact { background: rgba(255,255,255,0.7) !important; border-color: var(--line-soft) !important; }
 .market-yield { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
