@@ -1,0 +1,182 @@
+[
+  {
+    "blNumber": "eBL-SPOT-SIM-2025-PO-1001-001",
+    "contractRef": "2025-SIM-PO-1001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货采购",
+    "shipper": {
+      "name": "华南国际贸易有限公司",
+      "businessPerson": "业务负责人",
+      "employeeId": "EMP-2023001"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 137.565,
+      "unit": "吨",
+      "unitPrice": 20260,
+      "totalAmount": 2787090
+    },
+    "delivery": {
+      "method": "库内交易",
+      "location": "佛山地区指定仓库",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-22",
+      "end": "2025-12-31"
+    },
+    "remarks": "现货铝锭采购合同",
+    "metadata": {
+      "contractName": "铝锭现货采购-海亿-1.22",
+      "supplierName": "华南贸易示范公司",
+      "supplierCode": "SUP-PO-102031"
+    }
+  },
+  {
+    "blNumber": "eBL-SPOT-SIM-2025-PO-1002-001",
+    "contractRef": "2025-SIM-PO-1002",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货采购",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 279.281,
+      "unit": "吨",
+      "unitPrice": 20150,
+      "totalAmount": 5627512
+    },
+    "delivery": {
+      "method": "库内交易",
+      "location": "佛山地区指定仓库",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-14",
+      "end": "2025-12-31"
+    },
+    "metadata": {
+      "contractName": "铝锭现货采购-中冶-1.14",
+      "supplierName": "示范金属能源公司",
+      "supplierCode": "SUP-PO-100858"
+    }
+  },
+  {
+    "blNumber": "eBL-SPOT-SIM-2025-PO-1003-001",
+    "contractRef": "2025-SIM-PO-1003",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货采购",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 83.808,
+      "unit": "吨",
+      "unitPrice": 20150,
+      "totalAmount": 1689748
+    },
+    "delivery": {
+      "method": "库内交易",
+      "location": "佛山地区指定仓库",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-14",
+      "end": "2025-12-31"
+    },
+    "metadata": {
+      "contractName": "铝锭现货采购-兴夹-1.14",
+      "supplierName": "华南兴夹投资公司",
+      "supplierCode": "SUP-PO-100879"
+    }
+  },
+  {
+    "blNumber": "eBL-SPOT-SIM-2025-PO-1004-001",
+    "contractRef": "2025-SIM-PO-1004",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货采购",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 162.276,
+      "unit": "吨",
+      "unitPrice": 20285,
+      "totalAmount": 3291787
+    },
+    "delivery": {
+      "method": "库内交易",
+      "location": "佛山地区指定仓库",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-20",
+      "end": "2025-12-31"
+    },
+    "metadata": {
+      "contractName": "铝锭现货采购-海驰-1.20",
+      "supplierName": "示范供应链管理公司",
+      "supplierCode": "SUP-PO-102059"
+    }
+  },
+  {
+    "blNumber": "eBL-SPOT-SIM-2025-PO-1005-001",
+    "contractRef": "2025-SIM-PO-1005",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货采购",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 66.000,
+      "unit": "吨",
+      "unitPrice": 20350,
+      "totalAmount": 1343100
+    },
+    "delivery": {
+      "method": "自提",
+      "location": "前工厂指定地点",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-04-25",
+      "end": "2025-12-31"
+    },
+    "metadata": {
+      "contractName": "铝合金锭现货采购-瑞熠-1.17",
+      "supplierName": "瑞熠通金属公司",
+      "supplierCode": "SUP-PO-104586"
+    }
+  },
+  {
+    "blNumber": "eBL-SPOT-SIM-2025-PO-1006-001",
+    "contractRef": "2025-SIM-PO-1006",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货采购",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 112.054,
+      "unit": "吨",
+      "unitPrice": 20010,
+      "totalAmount": 2242200
+    },
+    "delivery": {
+      "method": "库内交易",
+      "location": "佛山地区指定仓库",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-15",
+      "end": "2025-12-31"
+    },
+    "metadata": {
+      "contractName": "铝锭现货采购-同欧-1.15",
+      "supplierName": "示范贸易实业公司",
+      "supplierCode": "SUP-PO-102021"
+    }
+  }
+]

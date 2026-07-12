@@ -1,0 +1,176 @@
+[
+  {
+    "blNumber": "eBL-SIM-2022-WL-1001-001",
+    "contractRef": "2022-SIM-WL-1001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "shipper": {
+      "name": "华南国际贸易有限公司",
+      "businessPerson": "业务负责人",
+      "employeeId": "EMP-2023001"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 1200,
+      "unit": "吨",
+      "warehouse": "无锡示范仓A",
+      "warehouseSupplier": "无锡华储仓储有限公司",
+      "supplierCode": "SUP-100886"
+    },
+    "storageFee": {
+      "unitPrice": 3.00,
+      "currency": "CNY",
+      "taxRate": 0.06,
+      "totalFee": 3816
+    },
+    "contractPeriod": {
+      "start": "2023-01-01",
+      "end": "2025-12-31"
+    },
+    "remarks": "示范仓储服务合同",
+    "metadata": {
+      "contractName": "无锡华储仓储有限公司仓储合同"
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2022-WL-1002-001",
+    "contractRef": "2022-SIM-WL-1002",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "shipper": {
+      "name": "华南国际贸易有限公司",
+      "businessPerson": "业务负责人",
+      "employeeId": "EMP-2023001"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 1800,
+      "unit": "吨",
+      "warehouse": "无锡示范仓B",
+      "warehouseSupplier": "无锡联运物流有限公司",
+      "supplierCode": "SUP-100472"
+    },
+    "storageFee": {
+      "unitPrice": 5.00,
+      "currency": "CNY",
+      "taxRate": 0.06,
+      "totalFee": 9540
+    },
+    "contractPeriod": {
+      "start": "2023-01-01",
+      "end": "2025-12-31"
+    },
+    "remarks": "示范仓储服务合同"
+  },
+  {
+    "blNumber": "eBL-SIM-2022-WL-1003-001",
+    "contractRef": "2022-SIM-WL-1003",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 2000,
+      "unit": "吨",
+      "warehouse": "无锡示范仓C",
+      "warehouseSupplier": "中储示范无锡物流中心",
+      "supplierCode": "SUP-100258"
+    },
+    "storageFee": {
+      "unitPrice": 5.00,
+      "currency": "CNY",
+      "taxRate": 0.06,
+      "totalFee": 10600
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2024-CC-2001-001",
+    "contractRef": "2024-SIM-CC-2001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "cargo": {
+      "warehouse": "重庆示范物流园",
+      "warehouseSupplier": "重庆集运物流有限公司",
+      "supplierCode": "SUP-101002"
+    },
+    "storageFee": {
+      "unitPrice": 10.00,
+      "taxRate": 0.08
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2024-AL-3001-001",
+    "contractRef": "2024-SIM-AL-3001",
+    "issueDate": "2026-07-13",
+    "cargo": {
+      "warehouse": "浙示范物流中心",
+      "warehouseSupplier": "浙商拓达物流科技有限公司",
+      "supplierCode": "SUP-101939"
+    },
+    "storageFee": {
+      "unitPrice": 2.00
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2023-WL-4001-001",
+    "contractRef": "2023-SIM-WL-4001",
+    "cargo": {
+      "warehouse": "宁波示范仓储",
+      "warehouseSupplier": "浙江国储物流宁波分公司",
+      "supplierCode": "SUP-103832"
+    },
+    "storageFee": {
+      "unitPrice": 18.00
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2022-WL-1004-001",
+    "contractRef": "2022-SIM-WL-1004",
+    "cargo": {
+      "warehouse": "无锡五矿示范仓",
+      "warehouseSupplier": "五矿无锡物流园有限公司",
+      "supplierCode": "SUP-100339"
+    },
+    "storageFee": {
+      "unitPrice": 5.00
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2022-WL-1005-001",
+    "contractRef": "2022-SIM-WL-1005",
+    "cargo": {
+      "warehouse": "中部陆港示范区",
+      "warehouseSupplier": "示范物流集团中部陆港有限公司",
+      "supplierCode": "SUP-330083"
+    },
+    "storageFee": {
+      "unitPrice": 5.00
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2022-WL-1006-001",
+    "contractRef": "2022-SIM-WL-1006",
+    "cargo": {
+      "warehouse": "中州示范仓储",
+      "warehouseSupplier": "示范物流集团中州有限公司",
+      "supplierCode": "SUP-317389"
+    },
+    "storageFee": {
+      "unitPrice": 4.00
+    }
+  },
+  {
+    "blNumber": "eBL-SIM-2022-WL-1007-001",
+    "contractRef": "2022-SIM-WL-1007",
+    "cargo": {
+      "warehouse": "巩义示范仓",
+      "warehouseSupplier": "华南仓储有限公司巩义分公司",
+      "supplierCode": "SUP-104318"
+    },
+    "storageFee": {
+      "unitPrice": 8.00
+    }
+  }
+]

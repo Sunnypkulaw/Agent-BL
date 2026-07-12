@@ -20,6 +20,14 @@ import { X402_SERVICES } from '../x402/config.js';
 import { demoModeController, LiveModeUnavailableError } from '../demo/mode.js';
 import { storeState, createPool, subscribeToPool } from './store.js';
 import { recommend } from '../agent/investmentAdvisor.js';
+import {
+  loadSpotPurchase,
+  loadSpotSale,
+  loadTransport,
+  loadWarehouse,
+  loadAllDesensitizationData,
+  getDesensitizationSummary
+} from '../data/desensitizationStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -287,6 +295,44 @@ export async function handleRequest(request, response) {
       if (request.method === 'GET' && url.pathname === '/api/cases') {
         const cases = await loadCaseCatalog();
         sendJson(response, 200, { ok: true, count: cases.length, cases });
+        return;
+      }
+
+      // ---- 脱敏数据 API ----
+
+      if (request.method === 'GET' && url.pathname === '/api/desensitization/spot-purchase') {
+        const data = await loadSpotPurchase();
+        sendJson(response, 200, { ok: true, count: data.length, data });
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/desensitization/spot-sale') {
+        const data = await loadSpotSale();
+        sendJson(response, 200, { ok: true, count: data.length, data });
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/desensitization/transport') {
+        const data = await loadTransport();
+        sendJson(response, 200, { ok: true, count: data.length, data });
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/desensitization/warehouse') {
+        const data = await loadWarehouse();
+        sendJson(response, 200, { ok: true, count: data.length, data });
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/desensitization/summary') {
+        const summary = await getDesensitizationSummary();
+        sendJson(response, 200, { ok: true, ...summary });
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/desensitization/all') {
+        const all = await loadAllDesensitizationData();
+        sendJson(response, 200, { ok: true, ...all });
         return;
       }
 

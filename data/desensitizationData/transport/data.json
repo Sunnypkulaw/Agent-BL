@@ -1,0 +1,168 @@
+[
+  {
+    "blNumber": "eBL-TRANS-SIM-2024-LOG-1001-001",
+    "contractRef": "2024-SIM-LOG-1001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "transportType": "陆运",
+    "shipper": {
+      "name": "华南国际贸易有限公司",
+      "businessPerson": "业务负责人",
+      "employeeId": "EMP-2023001"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 1500,
+      "unit": "吨",
+      "origin": "西南示范仓库",
+      "destination": "华南主要目的地"
+    },
+    "transportFee": {
+      "unitPrice": 265.00,
+      "currency": "CNY",
+      "taxRate": 0.09,
+      "totalFee": 397500
+    },
+    "contractPeriod": {
+      "start": "2024-01-01",
+      "end": "2025-12-31"
+    },
+    "remarks": "铁路或汽运陆运服务",
+    "metadata": {
+      "contractName": "西南分公司运输合同",
+      "supplierName": "示范物流西南分公司",
+      "supplierCode": "SUP-LOG-西南01"
+    }
+  },
+  {
+    "blNumber": "eBL-TRANS-SIM-2024-LOG-1002-001",
+    "contractRef": "2024-SIM-LOG-1002",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "transportType": "陆运",
+    "shipper": {
+      "name": "华南国际贸易有限公司",
+      "businessPerson": "业务负责人",
+      "employeeId": "EMP-2023001"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 2200,
+      "unit": "吨",
+      "origin": "西北国际陆港示范区",
+      "destination": "指定目的地"
+    },
+    "transportFee": {
+      "unitPrice": 130.00,
+      "currency": "CNY",
+      "taxRate": 0.09,
+      "totalFee": 286000
+    },
+    "contractPeriod": {
+      "start": "2024-01-01",
+      "end": "2025-12-31"
+    },
+    "remarks": "铁路或汽运",
+    "metadata": {
+      "contractName": "西北陆港运输合同",
+      "supplierName": "示范物流西北国际陆港有限公司",
+      "supplierCode": "SUP-LOG-西北02"
+    }
+  },
+  {
+    "blNumber": "eBL-TRANS-SIM-2023-LOG-2001-001",
+    "contractRef": "2023-SIM-LOG-2001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "transportType": "陆运",
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 1800,
+      "unit": "吨",
+      "origin": "中州示范仓库",
+      "destination": "指定目的地"
+    },
+    "transportFee": {
+      "unitPrice": 190.00,
+      "currency": "CNY",
+      "taxRate": 0.09,
+      "totalFee": 342000
+    },
+    "contractPeriod": {
+      "start": "2023-10-08",
+      "end": "2025-12-31"
+    },
+    "metadata": {
+      "contractName": "中州运输合同",
+      "supplierName": "示范物流中州有限公司",
+      "supplierCode": "SUP-LOG-中州03"
+    }
+  },
+  {
+    "blNumber": "eBL-TRANS-SIM-2025-LOG-3001-001",
+    "contractRef": "2025-SIM-LOG-3001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2027-12-31",
+    "status": "ISSUED",
+    "transportType": "陆运",
+    "cargo": {
+      "description": "铝类货物",
+      "quantity": 5000,
+      "unit": "吨",
+      "origin": "中部陆港示范区",
+      "destination": "多地灵活配送"
+    },
+    "transportFee": {
+      "unitPrice": 200.00,
+      "currency": "CNY",
+      "taxRate": 0.09,
+      "totalFee": 1000000
+    },
+    "contractPeriod": {
+      "start": "2025-06-09",
+      "end": "2027-12-31"
+    },
+    "remarks": "大额长期运输协议",
+    "metadata": {
+      "contractName": "中部陆港运输合同",
+      "supplierName": "示范物流中部国际陆港有限公司",
+      "supplierCode": "SUP-LOG-中部04",
+      "contractAmount": 10000000
+    }
+  },
+  {
+    "blNumber": "eBL-TRANS-SIM-2025-LOG-4001-001",
+    "contractRef": "2025-SIM-LOG-4001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2026-12-31",
+    "status": "ISSUED",
+    "transportType": "陆运",
+    "cargo": {
+      "description": "铝类货物",
+      "quantity": 8000,
+      "unit": "吨",
+      "origin": "云南示范基地",
+      "destination": "指定目的地"
+    },
+    "transportFee": {
+      "unitPrice": 250.00,
+      "currency": "CNY",
+      "taxRate": 0.09,
+      "totalFee": 2000000
+    },
+    "contractPeriod": {
+      "start": "2025-07-17",
+      "end": "2026-12-31"
+    },
+    "remarks": "区域铝材运输合同",
+    "metadata": {
+      "contractName": "云南区域运输合同",
+      "supplierName": "示范物流云南建水分公司",
+      "supplierCode": "SUP-LOG-云南05",
+      "contractAmount": 20000000
+    }
+  }
+]
