@@ -26,12 +26,12 @@
       },
       "accessModel": "permissionless",
       "contracts": {
-        "AgentBLRWA": "0xb568629a226e34842C5aB42588ab7d6F72B235D1",
-        "PaymentOracle": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
-        "EBLRegistry": "0x85bfdcd00E0bBb9dDce3dcD2A58A62380703AdA6",
-        "RWAToken": "0x7eb44f73368d14DBE4c2E30F8490a60513Fe17B0",
-        "RWAOfferingPool": "0x1F44D336111dE4e2640bd9a5945991D42e876f65",
-        "RiskPricingOracle": "0x0F9618DDbac86eD51d48ef1361789D7e5eF1FAE1"
+        "AgentBLRWA": "0x53Ea0C876f28d4D4f07524A0fbf62ad90632F6b0",
+        "PaymentOracle": "0x98De9ccF7AaeD8DA2c328114CAC55fAB55F0abEe",
+        "EBLRegistry": "0xB6F7070493D7d6358AE3f3CE5d463711C432101A",
+        "RWAToken": "0xD5b917e89821CFa39f51efB39e0A0C02B54142CD",
+        "RWAOfferingPool": "0x233301d21e4baD2e8c9dBe69C379ef428d17DBB1",
+        "RiskPricingOracle": "0x7C12daCb2eD8894390F9aA8dA86c42eBeD83C8E7"
       },
       "abis": {
         "AgentBLRWA": [
@@ -2955,446 +2955,47 @@
       },
       "deployments": {
         "AgentBLRWA": {
-          "address": "0xb568629a226e34842C5aB42588ab7d6F72B235D1",
-          "deployTx": "0x6e63267229d526d2076c30491aa4bd3abad25c304306564ade2a73c65e2ba110",
-          "deployedAt": "2026-06-30T11:42:00.396Z"
+          "address": "0x53Ea0C876f28d4D4f07524A0fbf62ad90632F6b0",
+          "deployTx": "0xe7ce213b19ba88aa41efd0157f2967fb3425b7ab8b754d1fd7bf0a6a4e7ae6e1",
+          "blockNumber": 132783471,
+          "deployedAt": "2026-07-07T14:47:11.047Z"
         },
         "PaymentOracle": {
-          "address": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
-          "deployTx": "0xffce87b2095af1e3f58cbb5462bfe26ec4fe5867f863e915271bd91df0c119fd",
-          "deployedAt": "2026-06-29T00:28:06.448Z",
-          "abi": [
-            {
-              "inputs": [],
-              "stateMutability": "nonpayable",
-              "type": "constructor"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "paymentTxHash",
-                  "type": "bytes32"
-                }
-              ],
-              "name": "DuplicatePaymentTransaction",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "receiptId",
-                  "type": "bytes32"
-                }
-              ],
-              "name": "DuplicateReceipt",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "caller",
-                  "type": "address"
-                }
-              ],
-              "name": "NotOwner",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "caller",
-                  "type": "address"
-                }
-              ],
-              "name": "UnauthorizedAttestor",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "receiptId",
-                  "type": "bytes32"
-                }
-              ],
-              "name": "UnknownReceipt",
-              "type": "error"
-            },
-            {
-              "inputs": [],
-              "name": "ZeroAddress",
-              "type": "error"
-            },
-            {
-              "inputs": [],
-              "name": "ZeroAmount",
-              "type": "error"
-            },
-            {
-              "inputs": [],
-              "name": "ZeroHash",
-              "type": "error"
-            },
-            {
-              "anonymous": false,
-              "inputs": [
-                {
-                  "indexed": true,
-                  "internalType": "address",
-                  "name": "attestor",
-                  "type": "address"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "bool",
-                  "name": "allowed",
-                  "type": "bool"
-                }
-              ],
-              "name": "AttestorUpdated",
-              "type": "event"
-            },
-            {
-              "anonymous": false,
-              "inputs": [
-                {
-                  "indexed": true,
-                  "internalType": "address",
-                  "name": "previousOwner",
-                  "type": "address"
-                },
-                {
-                  "indexed": true,
-                  "internalType": "address",
-                  "name": "newOwner",
-                  "type": "address"
-                }
-              ],
-              "name": "OwnershipTransferred",
-              "type": "event"
-            },
-            {
-              "anonymous": false,
-              "inputs": [
-                {
-                  "indexed": true,
-                  "internalType": "bytes32",
-                  "name": "receiptId",
-                  "type": "bytes32"
-                },
-                {
-                  "indexed": true,
-                  "internalType": "bytes32",
-                  "name": "reportHash",
-                  "type": "bytes32"
-                },
-                {
-                  "indexed": true,
-                  "internalType": "bytes32",
-                  "name": "caseIdHash",
-                  "type": "bytes32"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "bytes32",
-                  "name": "paymentTxHash",
-                  "type": "bytes32"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "address",
-                  "name": "payer",
-                  "type": "address"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "address",
-                  "name": "asset",
-                  "type": "address"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "uint256",
-                  "name": "amount",
-                  "type": "uint256"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "address",
-                  "name": "attestor",
-                  "type": "address"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "uint256",
-                  "name": "timestamp",
-                  "type": "uint256"
-                }
-              ],
-              "name": "PaymentAttested",
-              "type": "event"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "receiptId",
-                  "type": "bytes32"
-                },
-                {
-                  "internalType": "bytes32",
-                  "name": "reportHash",
-                  "type": "bytes32"
-                },
-                {
-                  "internalType": "bytes32",
-                  "name": "caseIdHash",
-                  "type": "bytes32"
-                },
-                {
-                  "internalType": "bytes32",
-                  "name": "paymentTxHash",
-                  "type": "bytes32"
-                },
-                {
-                  "internalType": "address",
-                  "name": "payer",
-                  "type": "address"
-                },
-                {
-                  "internalType": "address",
-                  "name": "asset",
-                  "type": "address"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "amount",
-                  "type": "uint256"
-                }
-              ],
-              "name": "attestPayment",
-              "outputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "",
-                  "type": "bytes32"
-                }
-              ],
-              "stateMutability": "nonpayable",
-              "type": "function"
-            },
-            {
-              "inputs": [],
-              "name": "attestationCount",
-              "outputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "",
-                  "type": "uint256"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "receiptId",
-                  "type": "bytes32"
-                }
-              ],
-              "name": "getAttestation",
-              "outputs": [
-                {
-                  "components": [
-                    {
-                      "internalType": "bytes32",
-                      "name": "reportHash",
-                      "type": "bytes32"
-                    },
-                    {
-                      "internalType": "bytes32",
-                      "name": "caseIdHash",
-                      "type": "bytes32"
-                    },
-                    {
-                      "internalType": "bytes32",
-                      "name": "paymentTxHash",
-                      "type": "bytes32"
-                    },
-                    {
-                      "internalType": "address",
-                      "name": "payer",
-                      "type": "address"
-                    },
-                    {
-                      "internalType": "address",
-                      "name": "asset",
-                      "type": "address"
-                    },
-                    {
-                      "internalType": "uint256",
-                      "name": "amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "internalType": "address",
-                      "name": "attestor",
-                      "type": "address"
-                    },
-                    {
-                      "internalType": "uint256",
-                      "name": "timestamp",
-                      "type": "uint256"
-                    }
-                  ],
-                  "internalType": "struct PaymentOracle.PaymentAttestation",
-                  "name": "",
-                  "type": "tuple"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "receiptId",
-                  "type": "bytes32"
-                }
-              ],
-              "name": "hasAttestation",
-              "outputs": [
-                {
-                  "internalType": "bool",
-                  "name": "",
-                  "type": "bool"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "name": "isAttestor",
-              "outputs": [
-                {
-                  "internalType": "bool",
-                  "name": "",
-                  "type": "bool"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [],
-              "name": "owner",
-              "outputs": [
-                {
-                  "internalType": "address",
-                  "name": "",
-                  "type": "address"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "bytes32",
-                  "name": "",
-                  "type": "bytes32"
-                }
-              ],
-              "name": "paymentTransactionAttested",
-              "outputs": [
-                {
-                  "internalType": "bool",
-                  "name": "",
-                  "type": "bool"
-                }
-              ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "attestor",
-                  "type": "address"
-                },
-                {
-                  "internalType": "bool",
-                  "name": "allowed",
-                  "type": "bool"
-                }
-              ],
-              "name": "setAttestor",
-              "outputs": [],
-              "stateMutability": "nonpayable",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "newOwner",
-                  "type": "address"
-                }
-              ],
-              "name": "transferOwnership",
-              "outputs": [],
-              "stateMutability": "nonpayable",
-              "type": "function"
-            }
-          ]
+          "address": "0x98De9ccF7AaeD8DA2c328114CAC55fAB55F0abEe",
+          "deployTx": "0x9b633734a19f7f44e85abe537f594684bfa597b9394a0918dc09682fa3b70dd1",
+          "deployedAt": "2026-07-07T14:47:30.245Z"
         },
         "EBLRegistry": {
-          "address": "0x85bfdcd00E0bBb9dDce3dcD2A58A62380703AdA6",
-          "deployTx": "0x9a0ea74cfd90ca86302d4b95bc4c0366cf2030b503dbc4fb75884f5cf3d3e7ef",
-          "blockNumber": 131941943,
-          "deployedAt": "2026-06-29T14:19:15.565Z"
+          "address": "0xB6F7070493D7d6358AE3f3CE5d463711C432101A",
+          "deployTx": "0x5e47f17da22fb033b90ac6ad4cb4dfe530f65e684c811d92044d6ddf721cd997",
+          "blockNumber": 132783473,
+          "deployedAt": "2026-07-07T14:47:11.047Z"
         },
         "RWAToken": {
-          "address": "0x7eb44f73368d14DBE4c2E30F8490a60513Fe17B0",
-          "deployTx": "0x3d6dce85fb6538eced5f745795f858af80cee9cdb26a919927b8878dbcb05027",
-          "blockNumber": 131941947,
-          "deployedAt": "2026-06-29T14:19:15.565Z"
+          "address": "0xD5b917e89821CFa39f51efB39e0A0C02B54142CD",
+          "deployTx": "0x0e59a224d26844b9b6c7a813f9f69ec62eafd24ece552ff8573cb2186d7c6977",
+          "blockNumber": 132783478,
+          "deployedAt": "2026-07-07T14:47:11.047Z"
         },
         "RWAOfferingPool": {
-          "address": "0x1F44D336111dE4e2640bd9a5945991D42e876f65",
-          "deployTx": "0x03bdf76c4f783e78ca48a20fcfc3fe3c3dbafef3eb49a2d8215467541eec2a05",
-          "blockNumber": 131941951,
-          "deployedAt": "2026-06-29T14:19:15.565Z"
+          "address": "0x233301d21e4baD2e8c9dBe69C379ef428d17DBB1",
+          "deployTx": "0x45a6fb71655cd939f24b87deb5775d99dac3b1a8e78081bfd85e041d5169923f",
+          "blockNumber": 132783482,
+          "deployedAt": "2026-07-07T14:47:11.047Z"
         },
         "RiskPricingOracle": {
-          "address": "0x0F9618DDbac86eD51d48ef1361789D7e5eF1FAE1",
-          "deployTx": "0x9ca2ef628aa4878ed9ad34a0ea9b27a57e5099d30121991c7de98c8fd13c5365",
-          "blockNumber": 131941955,
-          "deployedAt": "2026-06-29T14:19:15.565Z"
+          "address": "0x7C12daCb2eD8894390F9aA8dA86c42eBeD83C8E7",
+          "deployTx": "0xd5724b974ec330419d84d80874a325fae6186d6d52b03854f39476fc5c28b457",
+          "blockNumber": 132783486,
+          "deployedAt": "2026-07-07T14:47:11.047Z"
         }
       },
       "deployedAt": "2026-06-29T09:08:01.232Z",
       "deployTx": "0xd666868dadc99a1020a697ba71e40e8886c2dbe382259cefef65ba581749819e",
       "paymentOracle": {
-        "address": "0x36d9Ff1256b3db1EFC1EAcB4c9b5033165D24571",
-        "deployTx": "0xffce87b2095af1e3f58cbb5462bfe26ec4fe5867f863e915271bd91df0c119fd",
-        "deployedAt": "2026-06-29T00:28:06.448Z",
+        "address": "0x98De9ccF7AaeD8DA2c328114CAC55fAB55F0abEe",
+        "deployTx": "0x9b633734a19f7f44e85abe537f594684bfa597b9394a0918dc09682fa3b70dd1",
+        "deployedAt": "2026-07-07T14:47:30.245Z",
         "abi": [
           {
             "inputs": [],
@@ -3801,20 +3402,20 @@
         "network": "injective_testnet",
         "chainId": 1439,
         "deployer": "0xFf86f010D005d15bd43e1f254C12ACabEFae218d",
-        "deployedAt": "2026-06-29T14:19:15.565Z",
+        "deployedAt": "2026-07-07T14:47:11.047Z",
         "deployTransactions": {
-          "AgentBLRWA": "0xa9b1a6172e72f19dfb4f21c88676b701f65ad0bde410b92de83d4304ca851735",
-          "EBLRegistry": "0x9a0ea74cfd90ca86302d4b95bc4c0366cf2030b503dbc4fb75884f5cf3d3e7ef",
-          "RWAToken": "0x3d6dce85fb6538eced5f745795f858af80cee9cdb26a919927b8878dbcb05027",
-          "RWAOfferingPool": "0x03bdf76c4f783e78ca48a20fcfc3fe3c3dbafef3eb49a2d8215467541eec2a05",
-          "RiskPricingOracle": "0x9ca2ef628aa4878ed9ad34a0ea9b27a57e5099d30121991c7de98c8fd13c5365"
+          "AgentBLRWA": "0xe7ce213b19ba88aa41efd0157f2967fb3425b7ab8b754d1fd7bf0a6a4e7ae6e1",
+          "EBLRegistry": "0x5e47f17da22fb033b90ac6ad4cb4dfe530f65e684c811d92044d6ddf721cd997",
+          "RWAToken": "0x0e59a224d26844b9b6c7a813f9f69ec62eafd24ece552ff8573cb2186d7c6977",
+          "RWAOfferingPool": "0x45a6fb71655cd939f24b87deb5775d99dac3b1a8e78081bfd85e041d5169923f",
+          "RiskPricingOracle": "0xd5724b974ec330419d84d80874a325fae6186d6d52b03854f39476fc5c28b457"
         },
         "explorerAddresses": {
-          "AgentBLRWA": "https://testnet.blockscout.injective.network/address/0xC636aAA726dBb9298882CddA9BCedfa11CDe453b",
-          "EBLRegistry": "https://testnet.blockscout.injective.network/address/0x85bfdcd00E0bBb9dDce3dcD2A58A62380703AdA6",
-          "RWAToken": "https://testnet.blockscout.injective.network/address/0x7eb44f73368d14DBE4c2E30F8490a60513Fe17B0",
-          "RWAOfferingPool": "https://testnet.blockscout.injective.network/address/0x1F44D336111dE4e2640bd9a5945991D42e876f65",
-          "RiskPricingOracle": "https://testnet.blockscout.injective.network/address/0x0F9618DDbac86eD51d48ef1361789D7e5eF1FAE1"
+          "AgentBLRWA": "https://testnet.blockscout.injective.network/address/0x53Ea0C876f28d4D4f07524A0fbf62ad90632F6b0",
+          "EBLRegistry": "https://testnet.blockscout.injective.network/address/0xB6F7070493D7d6358AE3f3CE5d463711C432101A",
+          "RWAToken": "https://testnet.blockscout.injective.network/address/0xD5b917e89821CFa39f51efB39e0A0C02B54142CD",
+          "RWAOfferingPool": "https://testnet.blockscout.injective.network/address/0x233301d21e4baD2e8c9dBe69C379ef428d17DBB1",
+          "RiskPricingOracle": "https://testnet.blockscout.injective.network/address/0x7C12daCb2eD8894390F9aA8dA86c42eBeD83C8E7"
         },
         "abis": {
           "AgentBLRWA": [
@@ -6339,87 +5940,87 @@
         "wiring": [
           {
             "label": "RWAToken.setPool",
-            "txHash": "0x00cc885611bf8b07ec4b3e1c8fdd3ae7c97f9cb04d0113fe7e82a7ea0c4f67dc",
-            "blockNumber": 131941959,
-            "explorer": "https://testnet.blockscout.injective.network/tx/0x00cc885611bf8b07ec4b3e1c8fdd3ae7c97f9cb04d0113fe7e82a7ea0c4f67dc"
+            "txHash": "0x8f6b06d330d473747a04fdb35e22deb335d57866cd9763130245998e56702884",
+            "blockNumber": 132783491,
+            "explorer": "https://testnet.blockscout.injective.network/tx/0x8f6b06d330d473747a04fdb35e22deb335d57866cd9763130245998e56702884"
           },
           {
             "label": "RWAOfferingPool.setOracle",
-            "txHash": "0xa79210f0e3b2cd65798b69c5aad063f3e011d1c31b1a00faefce9730feced3e7",
-            "blockNumber": 131941962,
-            "explorer": "https://testnet.blockscout.injective.network/tx/0xa79210f0e3b2cd65798b69c5aad063f3e011d1c31b1a00faefce9730feced3e7"
+            "txHash": "0x6c56084bc3badb8ec688ca55a8ca5e1ac207497bb9978f2de1511b9285bb31bb",
+            "blockNumber": 132783495,
+            "explorer": "https://testnet.blockscout.injective.network/tx/0x6c56084bc3badb8ec688ca55a8ca5e1ac207497bb9978f2de1511b9285bb31bb"
           },
           {
             "label": "RWAOfferingPool.setAgentExecutor",
-            "txHash": "0x5e72fbc22ef795f633fdbcbc0de6c0baedfc50908cfb22a9c695729d5c818edf",
-            "blockNumber": 131941966,
-            "explorer": "https://testnet.blockscout.injective.network/tx/0x5e72fbc22ef795f633fdbcbc0de6c0baedfc50908cfb22a9c695729d5c818edf"
+            "txHash": "0x6628c26a8c90692a337a2be6ee4b117b5f21796ca1b9ddce986470c2d1ccd4a1",
+            "blockNumber": 132783499,
+            "explorer": "https://testnet.blockscout.injective.network/tx/0x6628c26a8c90692a337a2be6ee4b117b5f21796ca1b9ddce986470c2d1ccd4a1"
           }
         ],
         "smoke": {
-          "verifiedAt": "2026-06-29T14:19:15.565Z",
+          "verifiedAt": "2026-07-07T14:47:11.047Z",
           "eblId": 1,
           "poolId": 1,
           "transactions": [
             {
               "label": "create:mintEBLV2",
-              "txHash": "0x93f151461884afbd5c5a24be4ce72b95fe6acac99205e05e487477492fb39d22",
-              "blockNumber": 131941969,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0x93f151461884afbd5c5a24be4ce72b95fe6acac99205e05e487477492fb39d22"
+              "txHash": "0x0e3d654f3ab07b51a0905c6c8f2afd4642778a5e0164d1449c50c91cf44786bd",
+              "blockNumber": 132783503,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0x0e3d654f3ab07b51a0905c6c8f2afd4642778a5e0164d1449c50c91cf44786bd"
             },
             {
               "label": "create:pledge",
-              "txHash": "0xc8d36be67fc4da8ff015ed6cc87d7a2f621d6a1ab30eada5e5bd4d26bb7f75be",
-              "blockNumber": 131941973,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0xc8d36be67fc4da8ff015ed6cc87d7a2f621d6a1ab30eada5e5bd4d26bb7f75be"
+              "txHash": "0xc939ea68aeb6ab61ced1d4f27778b69ebb114d863934634a77202b04699766e0",
+              "blockNumber": 132783508,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0xc939ea68aeb6ab61ced1d4f27778b69ebb114d863934634a77202b04699766e0"
             },
             {
               "label": "create:createOffering",
-              "txHash": "0xd93c59eb10b8b5a3c7c2146de8496663f7a7bbcf442d85ec6aec7760fb5d7a9c",
-              "blockNumber": 131941976,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0xd93c59eb10b8b5a3c7c2146de8496663f7a7bbcf442d85ec6aec7760fb5d7a9c"
+              "txHash": "0xe1cb3040682eea21f6d18698ed8a73e3527d74f95371386cfd639fd3d685da6b",
+              "blockNumber": 132783512,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0xe1cb3040682eea21f6d18698ed8a73e3527d74f95371386cfd639fd3d685da6b"
             },
             {
               "label": "subscribe",
-              "txHash": "0xfb2a1d466ca0839159fc78e0f2b77e29756ea1b304cc4677734731fa0b33108b",
-              "blockNumber": 131941980,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0xfb2a1d466ca0839159fc78e0f2b77e29756ea1b304cc4677734731fa0b33108b"
+              "txHash": "0x32b07c3007292eff34526e7ee832d2c51120a6d7a82f8a3cb769c773885745a3",
+              "blockNumber": 132783516,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0x32b07c3007292eff34526e7ee832d2c51120a6d7a82f8a3cb769c773885745a3"
             },
             {
               "label": "reprice",
-              "txHash": "0x82fdf5675a48e24739a53655d92662fdc2dccac9889a53137f5405e092f2e370",
-              "blockNumber": 131941984,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0x82fdf5675a48e24739a53655d92662fdc2dccac9889a53137f5405e092f2e370"
+              "txHash": "0xa36847f509c94b2a6118782ff5ada343af349b9b5642329a062e6fb664c9cd29",
+              "blockNumber": 132783520,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0xa36847f509c94b2a6118782ff5ada343af349b9b5642329a062e6fb664c9cd29"
             },
             {
               "label": "pause",
-              "txHash": "0xa7a3991fcffddffa0664b525c0ddeb9854d98ca2a704308caf3dcef9da89c80f",
-              "blockNumber": 131941987,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0xa7a3991fcffddffa0664b525c0ddeb9854d98ca2a704308caf3dcef9da89c80f"
+              "txHash": "0x44892c8bb8cb2f74c57d3af250d289ac84f6a048cae65b5171e7ba5aeadb34dd",
+              "blockNumber": 132783524,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0x44892c8bb8cb2f74c57d3af250d289ac84f6a048cae65b5171e7ba5aeadb34dd"
             },
             {
               "label": "resume",
-              "txHash": "0x663e269a9541e290166f5fae620cddfeac2aae740198e9751672ade20ba6aa84",
-              "blockNumber": 131941991,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0x663e269a9541e290166f5fae620cddfeac2aae740198e9751672ade20ba6aa84"
+              "txHash": "0x7f850d246160663e27982722a08ca6fc3ac38e045df4625032384075ca77954a",
+              "blockNumber": 132783529,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0x7f850d246160663e27982722a08ca6fc3ac38e045df4625032384075ca77954a"
             },
             {
               "label": "settlement:payment-proof",
-              "txHash": "0xa27a4bc408eab765812f64d8e48855e56b93ec938e69a8a2cb6de530c2699e0e",
-              "blockNumber": 131941995,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0xa27a4bc408eab765812f64d8e48855e56b93ec938e69a8a2cb6de530c2699e0e"
+              "txHash": "0x14ee847ea71ed3c1a5d6046433783e01e5f8a32e071845a7683f1385cbda09ed",
+              "blockNumber": 132783533,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0x14ee847ea71ed3c1a5d6046433783e01e5f8a32e071845a7683f1385cbda09ed"
             },
             {
               "label": "settlement:arrival-proof",
-              "txHash": "0x671c3c57555eed74cdc4b0e3af415e83f3880d496248b3ad4b649ebb60e47ac8",
-              "blockNumber": 131941998,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0x671c3c57555eed74cdc4b0e3af415e83f3880d496248b3ad4b649ebb60e47ac8"
+              "txHash": "0x8b45acdae49310705e0a4cd3e45d9627b45114f538a827c41992e91f2d848297",
+              "blockNumber": 132783537,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0x8b45acdae49310705e0a4cd3e45d9627b45114f538a827c41992e91f2d848297"
             },
             {
               "label": "settle",
-              "txHash": "0xa0f549a4804fa1db2e2c83187505fcfc150f87c06bd122f1611c69e75834a666",
-              "blockNumber": 131942002,
-              "explorer": "https://testnet.blockscout.injective.network/tx/0xa0f549a4804fa1db2e2c83187505fcfc150f87c06bd122f1611c69e75834a666"
+              "txHash": "0xf31c9b3b72b71a2726ef7f43bc0e9cd330cc82cadca16d8120f2508b8512e13b",
+              "blockNumber": 132783540,
+              "explorer": "https://testnet.blockscout.injective.network/tx/0xf31c9b3b72b71a2726ef7f43bc0e9cd330cc82cadca16d8120f2508b8512e13b"
             }
           ],
           "finalState": "Repaid",

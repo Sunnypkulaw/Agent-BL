@@ -20,5 +20,8 @@
   },
   "allowScripts": {
     "keccak@3.0.4": true
+  },
+  "dependencies": {
+    "agentbl-agent-starter": "file:.."
   }
 }
