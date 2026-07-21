@@ -1,0 +1,268 @@
+[
+  {
+    "blNumber": "eBL-SALES-SIM-2024-XS-1001-001",
+    "contractRef": "2024-SIM-XS-1001",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "shipper": {
+      "name": "华南国际贸易有限公司",
+      "businessPerson": "业务负责人",
+      "employeeId": "EMP-2023001"
+    },
+    "customer": {
+      "name": "示范金属材料有限公司",
+      "customerCode": "CUST-101706"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 310.000,
+      "unit": "吨",
+      "totalAmount": 6221700
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2024-12-30",
+      "end": "2025-12-31"
+    },
+    "remarks": "现货铝锭销售合同",
+    "metadata": {
+      "contractName": "铝锭现货销售-融和天创",
+      "businessUnit": "市场开发部"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2024-XS-1002-001",
+    "contractRef": "2024-SIM-XS-1002",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范合金有限公司",
+      "customerCode": "CUST-101124"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 275.000,
+      "unit": "吨",
+      "totalAmount": 5511000
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2024-12-26",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2024-XS-1003-001",
+    "contractRef": "2024-SIM-XS-1003",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范联合物资有限公司",
+      "customerCode": "CUST-101829"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 320.000,
+      "unit": "吨",
+      "totalAmount": 6422400
+    },
+    "delivery": {
+      "method": "包到",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2024-12-31",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2025-XS-1004-001",
+    "contractRef": "2025-SIM-XS-1004",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "嘉能可示范有限公司",
+      "customerCode": "CUST-100780"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 1000.000,
+      "unit": "吨",
+      "totalAmount": 21000000
+    },
+    "delivery": {
+      "method": "包到",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-06",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2024-XS-1005-001",
+    "contractRef": "2024-SIM-XS-1005",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范金属有限公司",
+      "customerCode": "CUST-100197"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 320.000,
+      "unit": "吨",
+      "totalAmount": 6720000
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2025-XS-1006-001",
+    "contractRef": "2025-SIM-XS-1006",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范喜盈金属材料有限公司",
+      "customerCode": "CUST-104359"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 27.399,
+      "unit": "吨",
+      "totalAmount": 551268
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-02",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2025-XS-1007-001",
+    "contractRef": "2025-SIM-XS-1007",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范广展冶金集团有限公司",
+      "customerCode": "CUST-101157"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 69.478,
+      "unit": "吨",
+      "totalAmount": 1397203
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-02",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2025-XS-1008-001",
+    "contractRef": "2025-SIM-XS-1008",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范华之鹏供应链有限公司",
+      "customerCode": "CUST-100267"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 36.910,
+      "unit": "吨",
+      "totalAmount": 742260
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-02",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2025-XS-1009-001",
+    "contractRef": "2025-SIM-XS-1009",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范远大物产集团有限公司",
+      "customerCode": "CUST-103531"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 110.408,
+      "unit": "吨",
+      "totalAmount": 2218097
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-02",
+      "end": "2025-12-31"
+    }
+  },
+  {
+    "blNumber": "eBL-SALES-SIM-2025-XS-1010-001",
+    "contractRef": "2025-SIM-XS-1010",
+    "issueDate": "2026-07-13",
+    "validUntil": "2025-12-31",
+    "status": "ISSUED",
+    "contractType": "现货销售",
+    "customer": {
+      "name": "示范江铜供应链管理有限公司",
+      "customerCode": "CUST-104738"
+    },
+    "cargo": {
+      "description": "铝锭",
+      "quantity": 71.617,
+      "unit": "吨",
+      "totalAmount": 1438786
+    },
+    "delivery": {
+      "method": "库内交接",
+      "paymentMethod": "现汇"
+    },
+    "contractPeriod": {
+      "start": "2025-01-03",
+      "end": "2025-12-31"
+    }
+  }
+]
