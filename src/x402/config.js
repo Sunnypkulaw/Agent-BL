@@ -51,6 +51,15 @@ export const DEFAULT_X402_ENDPOINTS = Object.freeze([
     mimeType: 'application/json',
     priceEnv: 'X402_PRICE_SMOKE_ATOMIC',
     defaultAmount: '1000'
+  }),
+  Object.freeze({
+    id: 'mystery-voyage',
+    method: 'POST',
+    path: '/api/x402/mystery/voyage',
+    description: 'Fair reveal and deterministic AI Risk Passport for a Mystery Voyage',
+    mimeType: 'application/json',
+    priceEnv: 'X402_PRICE_MYSTERY_ATOMIC',
+    defaultAmount: '1000'
   })
 ]);
 
@@ -153,7 +162,8 @@ export function loadX402Config(env = process.env, options = {}) {
     throw new X402ConfigError(`X402_ASSET must be canonical USDC for ${network}: ${networkConfig.asset}`);
   }
 
-  const payToInput = options.payTo ?? env.X402_PAY_TO ?? (mode === 'demo' ? DEMO_PAY_TO : undefined);
+  const configuredPayTo = options.payTo ?? env.X402_PAY_TO;
+  const payToInput = configuredPayTo || (mode === 'demo' ? DEMO_PAY_TO : undefined);
   if (!payToInput) throw new X402ConfigError('X402_PAY_TO is required in live mode');
   const payTo = normalizeAddress(payToInput, 'X402_PAY_TO');
   if (mode === 'live' && /^0x0{40}$/iu.test(payTo)) {
@@ -314,6 +324,14 @@ export const X402_SERVICES = Object.freeze([
     priceUSDC: 0.0015,
     title: 'Anti-Fraud Document Review',
     description: 'Five-dimension eBL, invoice and insurance consistency review with pricing impact',
+    status: 'available'
+  }),
+  Object.freeze({
+    serviceId: 'mystery-voyage',
+    endpoint: '/api/x402/mystery/voyage',
+    priceUSDC: 0.001,
+    title: 'Mystery Voyage Risk Passport',
+    description: 'Commit-reveal voyage discovery with a verifiable AI risk passport; no automatic RWA subscription',
     status: 'available'
   })
 ]);

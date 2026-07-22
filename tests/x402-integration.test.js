@@ -7,7 +7,14 @@
 
 import assert from 'node:assert/strict';
 import { test, describe } from 'node:test';
-import { createServer } from '../src/app/server.js';
+
+// This suite explicitly verifies the offline demo transport. Pin the mode
+// before loading the app so developer-machine Live credentials cannot alter it.
+process.env.DEMO_MODE = 'true';
+process.env.X402_MODE = 'demo';
+delete process.env.X402_FACILITATOR_URL;
+delete process.env.X402_PAY_TO;
+const { createServer } = await import('../src/app/server.js');
 
 describe('x402 Config', () => {
   test('exports network identifiers', async () => {

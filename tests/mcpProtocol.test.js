@@ -6,7 +6,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { assertPaidReportEnvelope } from '../src/x402/paidReport.js';
 
 function parseTool(result) {
-  assert.equal(result.isError, undefined);
+  assert.equal(result.isError, undefined, JSON.stringify(result));
   return JSON.parse(result.content.find((item) => item.type === 'text').text);
 }
 

@@ -60,6 +60,28 @@ test('X402-7: creates a valid immutable-delivery envelope with deterministic IDs
   assert.equal(report.asset, ASSET.toLowerCase());
 });
 
+test('MBOX-X402-2: Mystery envelope canonically binds payment, case, pool, passport and reveal proof', () => {
+  const riskPassportHash = `0x${'11'.repeat(32)}`;
+  const revealProofHash = `0x${'22'.repeat(32)}`;
+  const report = envelope({
+    kind: 'mystery-voyage-risk-passport',
+    case_id: 'CASE-SELECTED',
+    selected_pool_id: 'pool-selected',
+    risk_passport_hash: riskPassportHash,
+    reveal_proof_hash: revealProofHash,
+    data_snapshot: {
+      selected_pool_id: 'pool-selected',
+      risk_passport_hash: riskPassportHash,
+      reveal_proof_hash: revealProofHash
+    }
+  });
+  assertPaidReportEnvelope(report);
+  const tampered = structuredClone(report);
+  tampered.selected_pool_id = 'pool-other';
+  tampered.report_hash = computeReportHash(tampered);
+  assert.equal(validatePaidReportEnvelope(tampered).valid, false);
+});
+
 test('X402-7: report hash is stable under object key reordering', () => {
   const first = envelope({ data_snapshot: { alpha: 1, nested: { beta: 2, gamma: 3 } } });
   const second = envelope({ data_snapshot: { nested: { gamma: 3, beta: 2 }, alpha: 1 } });

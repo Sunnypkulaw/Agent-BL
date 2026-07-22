@@ -380,29 +380,69 @@ export async function handleRequest(request, response) {
       // BE-11, 12, 13: Market, Pool, and Role Dashboard APIs
       // ---------------------------------------------------------
       
-      // Helper to lazily initialize mock pools from cases
+      // Lazily initialize demo market pools from the same canonical PricingQuote
+      // consumed by pricing, oracle and Mystery Voyage.
       const ensureMockPools = async () => {
         if (storeState.pools.size === 0) {
           const cases = await loadCaseCatalog();
           for (const c of cases) {
             const caseData = c.case;
             if (!caseData || !caseData.financing) continue;
-            // Provide a generic mock quote for demo purposes
-            const quote = {
-              requested_cash_usd: caseData.financing.requested_cash_usd || 1000000,
-              final_issue_price_usd: 0.9,
-              implied_gross_yield_bps: 1000,
-              risk_level: c.risk_hint || 'MEDIUM'
-            };
+            const configuredSpeed = caseData.financing.payout_speed;
+            const quote = normalizePricingQuoteHashes(quoteFromCase(caseData, {
+              // A few imported/desensitized fixtures predate the FAST/BALANCED/
+              // LOW_COST enum. They still receive a real deterministic quote.
+              payout_speed: PAYOUT_SPEEDS.includes(configuredSpeed) ? configuredSpeed : 'BALANCED'
+            }));
+            assertPricingQuote(quote, caseData);
             createPool(c.case_id, caseData, quote);
           }
         }
       };
 
+      // MBOX-BE-5: freeze an eligible candidate snapshot before payment.
+      if (request.method === 'POST' && url.pathname === '/api/mystery/preview') {
+        const body = await readJsonBody(request);
+        await ensureMockPools();
+        const { mysteryHttpStatus, previewMysteryVoyage } = await import('../mystery/service.js');
+        try {
+          const preview = await previewMysteryVoyage(body ?? {}, { pools: storeState.pools });
+          sendJson(response, 201, preview);
+        } catch (error) {
+          sendJson(response, mysteryHttpStatus(error), {
+            ok: false,
+            code: error.code ?? 'mystery_preview_failed',
+            error: error.message,
+            details: error.details
+          });
+        }
+        return;
+      }
+
+      // MBOX-BE-5: proof is disclosed only after a successful paid reveal.
+      if (request.method === 'GET'
+        && url.pathname.startsWith('/api/mystery/')
+        && url.pathname.endsWith('/proof')) {
+        const revealId = decodeURIComponent(url.pathname.slice('/api/mystery/'.length, -'/proof'.length));
+        const { getMysteryProof, mysteryHttpStatus } = await import('../mystery/service.js');
+        try {
+          sendJson(response, 200, await getMysteryProof(revealId));
+        } catch (error) {
+          sendJson(response, mysteryHttpStatus(error), {
+            ok: false,
+            code: error.code ?? 'mystery_proof_failed',
+            error: error.message,
+            details: error.details
+          });
+        }
+        return;
+      }
+
       // BE-11: Market Listings
       if (request.method === 'GET' && url.pathname === '/api/market/listings') {
         await ensureMockPools();
-        const activePools = Array.from(storeState.pools.values()).filter(p => p.status !== 'Paused');
+        const activePools = Array.from(storeState.pools.values())
+          .filter((pool) => ['Open', 'Repriced'].includes(pool.status));
         sendJson(response, 200, { ok: true, count: activePools.length, pools: activePools });
         return;
       }
@@ -414,7 +454,7 @@ export async function handleRequest(request, response) {
         
         // Format pools to match investmentAdvisor expects
         const availableCases = Array.from(storeState.pools.values())
-          .filter(p => p.status !== 'Paused')
+          .filter((pool) => ['Open', 'Repriced'].includes(pool.status))
           .map(p => ({
             id: p.poolId,
             caseEntry: { 
@@ -424,8 +464,8 @@ export async function handleRequest(request, response) {
             caseData: p.caseData,
             riskLevel: p.quote.risk_level,
             yieldBps: p.quote.implied_gross_yield_bps,
-            riskBps: 200, // mock base risk bps
-            score: (p.quote.implied_gross_yield_bps / 200), // mock score
+            riskBps: p.quote.risk_score_bps,
+            score: p.quote.implied_gross_yield_bps / Math.max(1, p.quote.risk_score_bps),
             financingUsd: p.quote.requested_cash_usd,
             price: p.quote.final_issue_price_usd
           }));
@@ -696,6 +736,49 @@ export async function handleRequest(request, response) {
         return;
       }
 
+      // MBOX-X402-1/2: payment completes the committed reveal and binds the
+      // selected case + Risk Passport + reveal proof into PaidReportEnvelope.
+      if (url.pathname === '/api/x402/mystery/voyage') {
+        const { createX402Route } = await import('../x402/server.js');
+        const route = createX402Route({
+          serviceId: 'mystery-voyage',
+          priceUSDC: 0.001,
+          preflight: async (_paidRequest, paymentContext) => {
+            const body = request.x402Body ?? await readJsonBody(request);
+            await ensureMockPools();
+            const { preflightMysteryVoyage } = await import('../mystery/service.js');
+            await preflightMysteryVoyage({
+              reveal_id: body?.reveal_id,
+              user_nonce: body?.user_nonce,
+              wallet_address: paymentContext.payer
+            }, { pools: storeState.pools });
+          },
+          handler: async (_paidRequest, paymentContext) => {
+            const body = request.x402Body ?? await readJsonBody(request);
+            await ensureMockPools();
+            const { revealMysteryVoyage } = await import('../mystery/service.js');
+            const record = await revealMysteryVoyage({
+              reveal_id: body?.reveal_id,
+              user_nonce: body?.user_nonce,
+              wallet_address: paymentContext.payer,
+              payment_tx_hash: paymentContext.payment_tx
+            }, { pools: storeState.pools });
+            return {
+              ...record.report,
+              reveal_state: record.state,
+              proof: record.proof,
+              disclosure: {
+                purchase: 'AI_DUE_DILIGENCE_REVEAL_ONLY',
+                automatically_subscribes_rwa: false,
+                independent_investment_signature_required: true
+              }
+            };
+          }
+        });
+        await route(request, response);
+        return;
+      }
+
       // x402-protected: premium risk intel (HTTP 402 before payment)
       if (url.pathname === '/api/x402/intel/premium-risk') {
         const { createX402Route, buildPremiumRiskIntel } = await import('../x402/server.js');
@@ -760,6 +843,14 @@ export async function handleRequest(request, response) {
         const service = X402_SERVICES.find((entry) => entry.serviceId === requestedServiceId);
         if (!service) {
           sendJson(response, 400, { ok: false, error: 'Unknown x402 serviceId', serviceId: requestedServiceId });
+          return;
+        }
+        if (service.serviceId === 'mystery-voyage') {
+          sendJson(response, 400, {
+            ok: false,
+            code: 'mystery_preview_required',
+            error: 'Use /api/mystery/preview followed by /api/x402/mystery/voyage'
+          });
           return;
         }
         const { PAID_REPORT_BUILDERS } = await import('../x402/endpoints.js');

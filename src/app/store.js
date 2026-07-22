@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { STATE_BY_PRICING_ACTION } from '../core/pricingSchema.js';
 
 // In-memory data store for the AgentBL backend.
 // Satisfies hackathon requirements for mock persistence without an external DB.
@@ -13,15 +14,22 @@ export function resetStore() {
   storeState.investments = [];
 }
 
-export function createPool(poolId, caseData, quote) {
+export function createPool(poolId, caseData, quote, options = {}) {
+  const createdAt = options.createdAt ?? new Date().toISOString();
+  const status = options.status
+    ?? STATE_BY_PRICING_ACTION[quote.pricing_action]
+    ?? 'Open';
   storeState.pools.set(poolId, {
     poolId,
     caseData,
     quote,
-    status: 'Open',
+    status,
     subscribedUsd: 0,
     targetUsd: quote.requested_cash_usd,
-    createdAt: new Date().toISOString()
+    createdAt,
+    quoteUpdatedAt: options.quoteUpdatedAt ?? createdAt,
+    complianceStatus: options.complianceStatus ?? 'CLEARED',
+    investorEligible: options.investorEligible ?? true
   });
   return storeState.pools.get(poolId);
 }

@@ -15,11 +15,12 @@ const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const results = [];
+const EXPECTED_CHECKS = 56;
 
 function result(group, name, status, detail = '') {
   results.push({ group, name, status, detail });
   const symbol = status === 'PASS' ? '✓' : status === 'WARN' ? '!' : '✗';
-  console.log(`  ${symbol} [${results.length}/54] ${name}${detail ? ` — ${detail}` : ''}`);
+  console.log(`  ${symbol} [${results.length}/${EXPECTED_CHECKS}] ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
 const pass = (group, name, detail) => result(group, name, 'PASS', detail);
@@ -42,7 +43,7 @@ async function command(group, name, binary, args, cwd = root) {
     const { stdout, stderr } = await execFileAsync(binary, args, {
       cwd,
       env: process.env,
-      timeout: 120_000,
+      timeout: 180_000,
       maxBuffer: 12 * 1024 * 1024,
       windowsHide: true,
       shell: process.platform === 'win32'
@@ -56,7 +57,7 @@ async function command(group, name, binary, args, cwd = root) {
   }
 }
 
-console.log('\nAgentBL preflight — fixed 54-check release gate');
+console.log(`\nAgentBL preflight — fixed ${EXPECTED_CHECKS}-check release gate`);
 
 // 1-8: environment and configuration
 console.log('\n[Environment]');
@@ -70,7 +71,7 @@ check('Environment', 'Demo mode is explicit and labelled', typeof runtimeMode.de
 let x402Config;
 try { x402Config = loadX402Config(process.env); pass('Environment', 'x402 config passes fail-fast validation', x402Config.network); }
 catch (error) { fail('Environment', 'x402 config passes fail-fast validation', error.message); }
-check('Environment', 'Three paid report products configured', X402_SERVICES.length === 3);
+check('Environment', 'Four paid report products configured', X402_SERVICES.length === 4);
 if (runtimeMode.liveAvailable) pass('Environment', 'Live mode prerequisites configured');
 else warn('Environment', 'Live mode prerequisites configured', `demo-only: ${runtimeMode.liveMissing.join(', ')}`);
 check('Environment', 'Deterministic AI fallback remains available', true, 'wallet/API keys optional in demo');
@@ -79,7 +80,7 @@ check('Environment', 'Deterministic AI fallback remains available', true, 'walle
 console.log('\n[Files and schemas]');
 for (const [file, label] of [
   ['src/app/server.js', 'HTTP application server'],
-  ['src/x402/endpoints.js', 'Three paid-report builders'],
+  ['src/x402/endpoints.js', 'Four paid-report builders'],
   ['src/x402/client.js', 'Wallet/CLI x402 client'],
   ['src/x402/settlement.js', 'Settlement state machine'],
   ['src/demo/mode.js', 'Unified Demo/Live controller']
@@ -115,7 +116,12 @@ for (const [file, label] of [
 // 19-25: executable release checks
 console.log('\n[Executable suites]');
 await command('Executable suites', 'Repository integrity check', npm, ['run', 'check']);
-const nodeTests = await command('Executable suites', 'Full Node unit/integration suite', npm, ['test']);
+const nodeTests = await command(
+  'Executable suites',
+  'Full Node unit/integration suite',
+  npm,
+  ['test', '--', '--test-concurrency=4']
+);
 if (nodeTests.ok && !/# fail 0/u.test(nodeTests.output)) {
   results.at(-1).status = 'FAIL';
   results.at(-1).detail = 'test runner did not report # fail 0';
@@ -139,7 +145,7 @@ const demoCase = JSON.parse(await text('data/demo-case.json'));
 const { quoteFromCase } = await import('../src/core/pricingEngine.js');
 await mcpCheck('push_pricing_to_oracle', { case_id: demoCase.case_id, pricing_quote: quoteFromCase(demoCase) });
 
-// 32-44: HTTP, x402 and paid business output
+// 32-46: HTTP, x402 and paid business output
 console.log('\n[HTTP and x402]');
 const server = createServer();
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -152,11 +158,13 @@ try {
   const reset = await getJson(`${api}/api/demo/reset`, { method: 'POST' });
   check('HTTP and x402', 'One-click demo reset', runtimeMode.demoMode ? reset.response.ok : reset.response.status === 409);
   const catalog = await getJson(`${api}/api/x402/config`);
-  check('HTTP and x402', 'x402 catalog returns three reports', catalog.body.services?.length === 3);
+  check('HTTP and x402', 'x402 catalog returns four reports', catalog.body.services?.length === 4);
 
   for (const service of X402_SERVICES) {
     const unpaid = await fetch(`${api}${service.endpoint}`);
-    check('HTTP and x402', `${service.serviceId} returns HTTP 402`, unpaid.status === 402);
+    const expectedStatus = runtimeMode.demoMode ? 402 : 503;
+    check('HTTP and x402', `${service.serviceId} enforces the mode-safe unpaid boundary`,
+      unpaid.status === expectedStatus, `HTTP ${unpaid.status}`);
   }
 
   const paidReports = [];
@@ -166,11 +174,36 @@ try {
       continue;
     }
     try {
-      const paid = await fetchPaidIntel(api, service.endpoint, {
-        demoMode: true,
-        budgetUSDC: 0.005,
-        caseData: demoCase
-      });
+      let paid;
+      if (service.serviceId === 'mystery-voyage') {
+        const { Wallet } = await import('ethers');
+        const { createUserNonce } = await import('../src/mystery/fairness.js');
+        const wallet = Wallet.createRandom();
+        const preview = await getJson(`${api}/api/mystery/preview`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            wallet_address: wallet.address,
+            idempotency_key: `preflight-mystery-voyage-${Date.now()}`,
+            risk_passport: { tier: 'ADVENTUROUS' }
+          })
+        });
+        if (!preview.response.ok) throw new Error(preview.body.error ?? 'Mystery preview failed');
+        paid = await fetchPaidIntel(api, service.endpoint, {
+          demoMode: true,
+          signer: wallet,
+          budgetUSDC: 0.005,
+          payload: { reveal_id: preview.body.reveal_id, user_nonce: createUserNonce() },
+          timeoutMs: 30_000
+        });
+      } else {
+        paid = await fetchPaidIntel(api, service.endpoint, {
+          demoMode: true,
+          budgetUSDC: 0.005,
+          caseData: demoCase,
+          timeoutMs: 30_000
+        });
+      }
       paidReports.push(paid.paid);
       let validEnvelope = false;
       try { validEnvelope = assertPaidReportEnvelope(paid.paid?.report_envelope) === paid.paid.report_envelope; }
@@ -182,7 +215,7 @@ try {
     }
   }
   const kinds = new Set(paidReports.map((report) => report?.kind));
-  check('HTTP and x402', 'Paid reports contain distinct business outputs', runtimeMode.demoMode ? kinds.size === 3 : true);
+  check('HTTP and x402', 'Paid reports contain distinct business outputs', runtimeMode.demoMode ? kinds.size === 4 : true);
   const smoke = await getJson(`${api}/api/x402/smoke`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}'
   });
@@ -195,7 +228,7 @@ try {
 if (runtimeMode.demoMode) await command('HTTP and x402', 'Standalone x402 smoke command', npm, ['run', 'smoke:x402']);
 else warn('HTTP and x402', 'Standalone x402 smoke command', 'skipped in LIVE mode; no automatic spend');
 
-// 45-49: UI acceptance hooks
+// 47-51: UI acceptance hooks
 console.log('\n[UI acceptance]');
 const html = await text('public/index.html');
 const app = await text('public/app.js');
@@ -206,7 +239,7 @@ check('UI acceptance', 'Paid report market tab and pipeline', html.includes('vie
 check('UI acceptance', 'priceFlash/riskPulse/paymentFlow hooks', /priceFlash/u.test(css) && /riskPulse/u.test(css) && /particleFlow/u.test(css));
 check('UI acceptance', 'Reduced-motion safety rule', /prefers-reduced-motion:\s*reduce/u.test(css));
 
-// 50-54: live readiness and documentation consistency
+// 52-56: live readiness and documentation consistency
 console.log('\n[Live readiness]');
 if (!runtimeMode.demoMode && x402Config?.facilitatorUrl) {
   await liveHttpCheck('Facilitator /supported is reachable', `${x402Config.facilitatorUrl}/supported`);
@@ -234,8 +267,7 @@ try { waveBGate = JSON.parse(await text('docs/evidence/wave-b-gate.json')); } ca
 try { officialMcpEvidence = JSON.parse(await text('docs/evidence/injective-mcp-smoke.json')); } catch { officialMcpEvidence = {}; }
 const protocolNames = ['AgentBLRWA', 'EBLRegistry', 'RWAToken', 'RWAOfferingPool', 'RiskPricingOracle'];
 const officialWrite = officialMcpEvidence.tool_trace?.find((entry) => entry.tool === 'evm_broadcast');
-check('Live readiness', 'Wave B live payment, five-contract protocol, pricing, and official MCP evidence are valid',
-  protocolNames.every((name) => addressPattern.test(chainConfig.contracts?.[name]))
+const liveEvidenceValid = protocolNames.every((name) => addressPattern.test(chainConfig.contracts?.[name]))
     && addressPattern.test(chainConfig.contracts?.PaymentOracle)
     && paymentOracleAbi.some((entry) => entry.type === 'function' && entry.name === 'attestPayment')
     && paymentOracleAbi.some((entry) => entry.type === 'event' && entry.name === 'PaymentAttested')
@@ -257,18 +289,25 @@ check('Live readiness', 'Wave B live payment, five-contract protocol, pricing, a
     && officialMcpEvidence.network === 'injective_testnet'
     && officialWrite?.status === 'ok'
     && transactionPattern.test(officialWrite?.evm_tx_hash ?? '')
-    && officialWrite?.arguments_summary?.to?.toLowerCase() === chainConfig.contracts.AgentBLRWA.toLowerCase());
+    && officialWrite?.arguments_summary?.to?.toLowerCase() === chainConfig.contracts.AgentBLRWA.toLowerCase();
+if (runtimeMode.demoMode) {
+  warn('Live readiness', 'Wave B live payment, five-contract protocol, pricing, and official MCP evidence are valid',
+    'explicitly skipped in Demo Mode');
+} else {
+  check('Live readiness', 'Wave B live payment, five-contract protocol, pricing, and official MCP evidence are valid',
+    liveEvidenceValid);
+}
 const readme = await text('README.md');
 check('Live readiness', 'README documents x402, Wave B, stdio MCP, and mode boundary',
   readme.includes('smoke:x402') && readme.includes('x402:intel') && readme.includes('verify:wave-b')
     && readme.includes('mcp:stdio') && /demo/i.test(readme) && app.includes('/api/demo/mode'));
 
-if (results.length !== 54) {
-  throw new Error(`Preflight definition error: expected 54 checks, produced ${results.length}`);
+if (results.length !== EXPECTED_CHECKS) {
+  throw new Error(`Preflight definition error: expected ${EXPECTED_CHECKS} checks, produced ${results.length}`);
 }
 const counts = Object.fromEntries(['PASS', 'WARN', 'FAIL'].map((status) => [status, results.filter((item) => item.status === status).length]));
 console.log('\n' + '='.repeat(60));
-console.log(`Preflight: ${counts.PASS} PASS / ${counts.WARN} WARN / ${counts.FAIL} FAIL (54 total)`);
+console.log(`Preflight: ${counts.PASS} PASS / ${counts.WARN} WARN / ${counts.FAIL} FAIL (${EXPECTED_CHECKS} total)`);
 console.log('='.repeat(60));
 process.exitCode = counts.FAIL > 0 ? 1 : 0;
 

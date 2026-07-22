@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { after, before, test } from 'node:test';
-import { createServer } from '../src/app/server.js';
 import { createPaidFetch, fetchPaidIntel } from '../src/x402/client.js';
 import { X402_SERVICES } from '../src/x402/config.js';
 import { assertPaidReportEnvelope } from '../src/x402/paidReport.js';
@@ -12,11 +11,16 @@ import {
 } from '../src/x402/endpoints.js';
 
 const demoCase = JSON.parse(await fs.readFile('data/demo-case.json', 'utf8'));
+const standardServices = X402_SERVICES.filter((service) => service.serviceId !== 'mystery-voyage');
+process.env.DEMO_MODE = 'true';
+process.env.X402_MODE = 'demo';
+delete process.env.X402_FACILITATOR_URL;
+delete process.env.X402_PAY_TO;
+const { createServer } = await import('../src/app/server.js');
 let server;
 let baseUrl;
 
 before(async () => {
-  process.env.DEMO_MODE = 'true';
   server = createServer();
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -48,11 +52,11 @@ function challengeResponse(overrides = {}) {
   });
 }
 
-test('X402-8: catalog exposes exactly three distinct paid business reports', () => {
+test('X402-8/MBOX-X402-1: catalog exposes four distinct paid business reports', () => {
   assert.deepEqual(X402_SERVICES.map((entry) => entry.serviceId), [
-    'premium-risk', 'premium-valuation', 'fraud-review'
+    'premium-risk', 'premium-valuation', 'fraud-review', 'mystery-voyage'
   ]);
-  assert.equal(new Set(X402_SERVICES.map((entry) => entry.endpoint)).size, 3);
+  assert.equal(new Set(X402_SERVICES.map((entry) => entry.endpoint)).size, 4);
 });
 
 test('X402-8: premium risk report reuses world-risk repricing', async () => {
@@ -82,7 +86,7 @@ test('X402-8: fraud review reuses consistency checker, pricing and scenario runn
   assert.ok(report.scenario.final_state);
 });
 
-test('X402-8: all three business endpoints return HTTP 402 before payment', async () => {
+test('X402-8/MBOX-X402-1: all four business endpoints return HTTP 402 before payment', async () => {
   for (const service of X402_SERVICES) {
     const response = await fetch(`${baseUrl}${service.endpoint}`);
     assert.equal(response.status, 402, service.serviceId);
@@ -90,7 +94,7 @@ test('X402-8: all three business endpoints return HTTP 402 before payment', asyn
   }
 });
 
-for (const service of X402_SERVICES) {
+for (const service of standardServices) {
   test(`X402-8: ${service.serviceId} unlocks after a signed demo payment`, async () => {
     const result = await fetchPaidIntel(baseUrl, service.endpoint, {
       demoMode: true,

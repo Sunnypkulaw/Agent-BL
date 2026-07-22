@@ -43,16 +43,18 @@ function supportedBody(overrides = {}) {
   };
 }
 
-test('X402-3: demo mode has safe deterministic testnet defaults and three priced endpoints', () => {
+test('X402-3: demo mode has safe deterministic testnet defaults and four priced endpoints', () => {
   const config = loadX402Config({});
   assert.equal(config.mode, 'demo');
   assert.equal(config.network, 'eip155:1439');
   assert.equal(config.asset, TESTNET_USDC);
   assert.equal(config.payTo, DEMO_PAY_TO);
   assert.equal(config.facilitatorUrl, null);
-  assert.equal(config.endpoints.length, 3);
-  assert.deepEqual(config.endpoints.map((entry) => entry.amount), ['50000', '100000', '1000']);
-  assert.equal(Object.keys(routeMapFromConfig(config)).length, 3);
+  assert.equal(config.endpoints.length, 4);
+  assert.deepEqual(config.endpoints.map((entry) => entry.amount), ['50000', '100000', '1000', '1000']);
+  assert.equal(Object.keys(routeMapFromConfig(config)).length, 4);
+  assert.equal(config.endpoints.at(-1).id, 'mystery-voyage');
+  assert.equal(loadX402Config({ X402_PAY_TO: '' }).payTo, DEMO_PAY_TO);
 });
 
 test('X402-3: live mode fails fast when payTo or facilitator URL is missing', () => {
@@ -152,4 +154,3 @@ test('X402-3: live startup fails closed on wrong network, asset, or transfer met
     /6 decimals and eip3009/u
   );
 });
-

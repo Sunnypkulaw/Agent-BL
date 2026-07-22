@@ -12,7 +12,8 @@ const MAX_SNAPSHOT_BYTES = 256 * 1024;
 export const PAID_REPORT_KINDS = Object.freeze([
   'risk-intelligence',
   'collateral-valuation',
-  'document-fraud-review'
+  'document-fraud-review',
+  'mystery-voyage-risk-passport'
 ]);
 
 export const PAID_REPORT_REQUIRED_FIELDS = Object.freeze([
@@ -54,6 +55,9 @@ export const PAID_REPORT_ENVELOPE_SCHEMA = Object.freeze({
     data_snapshot: { type: 'object' },
     model_provider: { type: 'string', minLength: 1, maxLength: 160 },
     evidence_hash: { type: 'string', pattern: '^0x[0-9a-fA-F]{64}$' },
+    selected_pool_id: { type: 'string', minLength: 1, maxLength: 160 },
+    risk_passport_hash: { type: 'string', pattern: '^0x[0-9a-fA-F]{64}$' },
+    reveal_proof_hash: { type: 'string', pattern: '^0x[0-9a-fA-F]{64}$' },
     report_hash: { type: 'string', pattern: '^0x[0-9a-fA-F]{64}$' },
     expires_at: { type: 'string', format: 'date-time' }
   }
@@ -228,6 +232,28 @@ export function assertPaidReportEnvelope(envelope) {
     errors.push('model_provider must be a non-empty string of at most 160 characters');
   }
   if (!HASH_RE.test(envelope.evidence_hash ?? '')) errors.push('evidence_hash must be a 32-byte hash');
+  if (envelope.kind === 'mystery-voyage-risk-passport') {
+    if (typeof envelope.selected_pool_id !== 'string' || envelope.selected_pool_id.length < 1 || envelope.selected_pool_id.length > 160) {
+      errors.push('selected_pool_id is required for a Mystery Voyage report');
+    }
+    if (!HASH_RE.test(envelope.risk_passport_hash ?? '')) {
+      errors.push('risk_passport_hash is required for a Mystery Voyage report');
+    }
+    if (!HASH_RE.test(envelope.reveal_proof_hash ?? '')) {
+      errors.push('reveal_proof_hash is required for a Mystery Voyage report');
+    }
+    if (isRecord(envelope.data_snapshot)) {
+      if (envelope.data_snapshot.selected_pool_id !== envelope.selected_pool_id) {
+        errors.push('selected_pool_id must match the Mystery Voyage data_snapshot');
+      }
+      if (envelope.data_snapshot.risk_passport_hash !== envelope.risk_passport_hash) {
+        errors.push('risk_passport_hash must match the Mystery Voyage data_snapshot');
+      }
+      if (envelope.data_snapshot.reveal_proof_hash !== envelope.reveal_proof_hash) {
+        errors.push('reveal_proof_hash must match the Mystery Voyage data_snapshot');
+      }
+    }
+  }
   if (!HASH_RE.test(envelope.report_hash ?? '')) errors.push('report_hash must be a 32-byte hash');
   const sensitivePaths = findSensitivePaths(envelope);
   if (sensitivePaths.length > 0) errors.push(`sensitive content is forbidden at: ${sensitivePaths.join(', ')}`);

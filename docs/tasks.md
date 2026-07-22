@@ -702,3 +702,823 @@ npm run demo
 - [Microsoft Foundry Agent Evaluators](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators)：Task Completion、Tool Call、Groundedness 等评测。
 - [Microsoft Foundry Agent Tracing](https://learn.microsoft.com/en-us/azure/foundry/observability/concepts/trace-agent-concept)：OpenTelemetry、tool spans、延迟与成本可观测。
 - [AgentLevy](https://ethglobal.com/showcase/agentlevy-s577a)、[Alpha402](https://ethglobal.com/showcase/alpha402-04vgq)、[AgentSlam](https://ethglobal.com/showcase/agentslam-znyyq)、[RWA-GPT](https://ethglobal.com/showcase/rwagpt-fssdh)：用于提炼可验证交付、可视化状态机、可靠 fallback 和自然语言 RWA UX 模式。
+
+---
+
+## 20. Mystery Voyage：盲盒增长机制与落地计划（2026-07-22）
+
+### 20.1 产品结论：盲的是航线，不盲风险
+
+盲盒不能被做成“随机买高收益 RWA”或“抽中稀有高 APY”的金融博彩。AgentBL 最适合的冠军版机制是：
+
+> **Mystery Voyage（神秘航线）是一种惊喜式 RWA 发现入口：合格用户先选择风险护照，系统在公开风险边界内锁定候选集；用户通过 x402 小额购买一次 AI 尽调揭晓，看到完整货物、航线、定价、最坏情景和公平性证明后，再单独决定是否认购。**
+
+核心原则：
+
+```text
+盲盒前：公开候选数量、命中概率、风险区间、价格/收益区间、最大压力损失、报告费和筛选规则
+盲盒中：只支付 AI 报告费；不划转投资本金，不自动认购，不承诺奖品价值
+盲盒后：揭晓具体 eBL/RWA + 完整 AI 报告 + 随机性证明；用户再次确认后才进入原有 subscribe 流程
+```
+
+一句话路演：**“We hide the voyage, never the risk. x402 unlocks the due diligence; Injective proves the reveal; investing is always a second, explicit decision.”**
+
+### 20.2 为什么它与当前项目天然匹配
+
+| 当前真实能力 | Mystery Voyage 如何复用 | 必要改造 |
+|---|---|---|
+| 投资市场 `GET /api/market/listings` | 候选 RWA 池与揭晓后的详情页 | 候选集必须使用真实 `PricingQuote`，不能继续依赖 `0.90 / 1000bps / riskBps=200` 硬编码 mock |
+| AI 定价、审单、估值、世界风险 | 生成盲盒前风险边界和揭晓后的 AI Risk Passport | 增加候选资格策略、压力损失和适配理由 |
+| x402 三类付费报告 | 用真实 HTTP 402 完成“开盒”动作 | 新增 `mystery-voyage` 服务与付费报告 kind/builder |
+| `PaymentOracle` | 将开盒支付、报告哈希、case 绑定上链 | P0 直接复用，无需为动画新部署合约 |
+| `RWAOfferingPool` + `InvestorComplianceGate` | 揭晓后进行独立、合规的 RWA 认购 | 开盒前后均检查 eligible、pool state 和额度 |
+| 投资组合 API/页面 | 揭晓后把认购结果加入持仓 | 增加“发现来源 = Mystery Voyage”，不虚构 Live tx |
+| Demo Mode / Live Mode | 离线稳定演示 + 真实 x402/Explorer 证据 | Demo receipt 必须标 `DEMO`；Live 只接受真实 payment tx |
+
+它带来的不是孤立玩法，而是一条新的增长漏斗：
+
+```text
+市场访客
+  → 选择风险护照（低认知负担）
+  → x402 小额付费开盒（协议收入）
+  → AI 尽调揭晓（教育 + 信任）
+  → 查看航线故事 / 公平性证明（分享传播）
+  → 二次确认认购（合格投资转化）
+  → Voyage Passport 收藏章（非金融留存）
+```
+
+### 20.3 P0 机制：Mystery Voyage Discovery Box
+
+#### 20.3.1 开盒前的 Risk Passport
+
+用户必须先选择或确认：
+
+- 风险档：`CONSERVATIVE / BALANCED / ADVENTUROUS`；
+- 单次报告预算和未来投资预算上限（两者严格分开）；
+- 最大可接受风险分、最大压力损失和最低抵押覆盖；
+- 禁投货物、航线、司法辖区与制裁命中项；
+- 预计到期区间和流动性偏好；
+- 合规资格与风险确认状态。
+
+开盒按钮上方必须公开：
+
+- 当前符合条件的候选数 `N`，默认每个候选概率均为 `1/N`；
+- 若未来使用权重，必须在支付前公开每个权重和算法版本，禁止暗箱调权；
+- 候选风险、发行价、目标上行和压力损失的最小/最大区间；
+- `1 RWA = $1.00` 仅为 target redemption value，非保本；
+- 本次只支付 x402 AI 报告费，开盒不会认购资产；
+- 报告价格、是否可退款、失效时间和异常重试规则。
+
+#### 20.3.2 用户流程
+
+```text
+1. Preview：用户选择 Risk Passport，后端过滤 eligible + Open/Repriced 的池
+2. Commit：后端冻结候选快照，返回 candidate_set_hash + server_commitment + 概率/风险边界
+3. User entropy：浏览器用 crypto.getRandomValues 生成 user_nonce（必须晚于 server commitment）
+4. x402：用户支付 0.001 USDC demo price，PaymentOracle 绑定 payment tx 与报告哈希
+5. Reveal：服务端公开 server_secret，双方熵选择一个 pool，返回完整 AI Risk Passport
+6. Verify：浏览器本地重算 commitment、candidate set、selection hash 和 selected index
+7. Decide：用户阅读完整风险后点击“认购”或“返回市场”；认购是第二笔独立签名/交易
+8. Collect：完成一次揭晓获得非转让 Voyage Passport 路线章，不影响收益、额度或概率
+```
+
+#### 20.3.3 揭晓内容
+
+揭晓页必须一次显示：
+
+- 货物、起运港/目的港、ETA、eBL/cargo hash 摘要；
+- `final_issue_price_usd`、目标兑付价、目标上行和“非保证收益”提示；
+- AI 核验货值、抵押覆盖、风险分、风险等级、最坏压力回收率/损失；
+- 审单疑点、保险缺口、战争/天气/港口证据和数据新鲜度；
+- 为什么它符合用户 Risk Passport；
+- x402 payment tx、`PaymentAttested`、`report_hash`、`evidence_hash`；
+- 公平性证明和一键 Verify；
+- 两个同等显著按钮：“查看完整报告”和“风险确认后认购”，不得用倒计时逼单。
+
+### 20.4 可验证公平：P0 commit-reveal，生产版接外部 VRF
+
+P0 使用可重放的 commit-reveal，不使用 `Math.random()`、时间戳或后端临时挑选结果：
+
+```text
+eligible_pool_ids  = sort(filter(listings, risk_passport + compliance + active_state))
+candidate_set_hash = keccak256(canonical_json(eligible_pool_ids + disclosed_weights + quote_hashes))
+server_commitment  = keccak256(server_secret)
+
+# server_commitment 必须先返回；之后客户端才生成 user_nonce 并发起 x402
+selection_hash = keccak256(
+  algorithm_version || round_id || server_secret || user_nonce ||
+  payment_tx_hash || candidate_set_hash || wallet_address
+)
+selected_index = rejection_sample(selection_hash, eligible_pool_ids.length)
+```
+
+`MysteryRevealProof` 建议结构：
+
+```ts
+type MysteryRevealProof = {
+  reveal_id: string;
+  round_id: string;
+  algorithm_version: 'mystery-voyage-v1';
+  risk_passport_hash: `0x${string}`;
+  candidate_pool_ids: string[];       // 揭晓后公开，用于复算
+  candidate_quote_hashes: `0x${string}`[];
+  disclosed_weights: number[];        // P0 全为 1
+  candidate_set_hash: `0x${string}`;
+  server_commitment: `0x${string}`;
+  server_secret: `0x${string}`;       // 仅在支付结算后公开
+  user_nonce: `0x${string}`;
+  payment_tx_hash: `0x${string}` | `demo://receipt/${string}`;
+  selection_hash: `0x${string}`;
+  selected_index: number;
+  selected_pool_id: string;
+  report_hash: `0x${string}`;
+  created_at: string;
+  expires_at: string;
+};
+```
+
+公平性边界必须诚实说明：commit-reveal 可以阻止服务端在看到用户 nonce / payment tx 后换结果，但不能彻底消除服务端选择性中止。P0 对中止采取“记录 abort + 原支付凭证免费重开/退款状态 + 不得静默换池”；生产版再接经核验支持 Injective 的外部 VRF/随机信标，并把 request/fulfillment 证明纳入同一 proof。
+
+### 20.5 P1 进阶：Portfolio Mystery Box（先揭晓、再成交）
+
+P1 可以让机构投资者提交一个组合意图，例如“预算 5,000 USDC、最多 3 个项目、风险不高于 WARNING、单项目不超过 40%、最低抵押覆盖 120%”。AI 先随机生成符合约束的多航线组合，揭晓并展示每项完整报告，用户再次签名后才逐池认购。
+
+约束：
+
+- P1 仍然不是“先扣投资本金再告诉你买了什么”；资金最多进入可撤销 reservation/escrow，不得在揭晓前不可逆成交；
+- 每个选中池必须分别通过 `InvestorComplianceGate.isEligible`、状态、剩余额度和集中度检查；
+- 组合选择必须满足总预算、单池上限、货物/航线分散度、相关性和最大压力损失；
+- 任一池在揭晓到确认期间变为 Paused/Frozen，整单 fail closed，由用户重新确认新组合；
+- P1 合约仅在 P0 用户漏斗被验证后开发，避免为一个营销动画增加新的资金托管攻击面。
+
+不做：随机 APY、稀有度对应更高收益、付费无限重抽、邀请返投资本金、可交易盲盒 NFT、未揭晓即自动认购、面向未完成 KYC/AML 的公众销售。
+
+### 20.6 经济模型与增长策略
+
+| 收入/增长项 | 设计 | 护栏 |
+|---|---|---|
+| x402 开盒收入 | P0 demo 建议 `0.001 USDC/reveal`；商业价格按完整数据成本配置 | 报告费与投资本金分离；付费不改变风险分、揭晓概率或发行价 |
+| Premium upsell | 揭晓摘要后可购买已有 valuation / fraud / world-risk 深度报告 | 不重复收费；页面显示已购内容与 TTL |
+| Issuer-sponsored discovery | 出口商可赞助合格投资者的报告费，提升项目发现率 | Sponsor 不得影响随机权重、AI 评分或搜索排名，必须显式披露 |
+| Voyage Passport | 收集铜、原油、大豆、橡胶等航线章，形成分享卡和回访理由 | 非转让、无现金价值、不影响投资资格/收益/概率 |
+| Institution API | 其他 Agent 通过 MCP/A2A 批量请求 Risk Passport 与公平揭晓 | 预算、频率、合规、幂等和审计日志强制执行 |
+
+北极星指标不是“开盒次数”，而是 **Qualified Report-to-Investment Conversion**：完成风险披露的合格用户中，报告揭晓后进入认购确认的比例。
+
+必须埋点：`mystery_impression → passport_completed → preview_created → 402_challenged → payment_settled → reveal_verified → report_opened → risk_acknowledged → subscribe_started → subscribe_confirmed`。
+
+增长验收目标（黑客松演示/封闭测试，不对外声称真实市场数据）：
+
+- 90% 的测试者在 10 秒内说清“只买了报告，还没买 RWA”；
+- 100% 能在揭晓页找到非保本、最坏损失和 Verify；
+- Demo 开盒全流程 ≤ 45 秒，随后 ≤ 15 秒展示独立认购确认；
+- 付费/揭晓失败率、选择性中止率和风险确认跳出率独立展示，不用转化率掩盖风险。
+
+#### 20.6.1 MBOX-PM-3 冻结规范：披露、风险确认、退款与冷静期
+
+本规范是产品底线，不是法律意见；上线司法辖区的适用法、合格投资者规则、数字内容撤回权和退款时限仍须由当地律师确认。前端、API 和 Demo 必须遵循同一状态顺序：
+
+~~~text
+DISCLOSURE
+  → USER_ACKNOWLEDGED_REPORT_PURCHASE
+  → COMMITTED
+  → X402_SETTLED
+  → REVEALED
+  → PROOF_VERIFIED
+  → REVIEW_COOLDOWN
+  → USER_ACKNOWLEDGED_INVESTMENT_RISK
+  → OPTIONAL_SUBSCRIPTION_SIGNATURE
+~~~
+
+任何跳步、预勾选、合并签名或“开盒即认购”均视为 P0 blocker。
+
+**A. 开盒付款前必须同屏展示**
+
+1. **买到什么**：本次购买的是一次 AI 尽调报告和 Mystery Voyage 揭晓服务，不是 RWA、存款、保险、抽奖券或收益权；
+2. **支付什么**：精确报告费、币种、网络、收款方、一次性/非订阅属性、预计 gas，以及“投资预算不会在本步骤扣除”；
+3. **候选与概率**：候选数、每个候选的公开权重/概率、算法版本、候选快照时间和有效期；
+4. **风险边界**：风险等级、发行价、目标上行、最大压力损失的候选区间，并单独声明投资本金最高可能损失 100%；
+5. **非保本**：1 RWA = 1.00 USD 仅是 target redemption value，不是保证兑付；报告、Physical AI、礼物和 Trust Premium 都不改变这一点；
+6. **数据边界**：数据来源、新鲜度、Demo/Live 状态，以及 AI/传感器可能错误、延迟或离线；
+7. **公平边界**：commit-reveal 可验证选取结果，但 P0 仍存在服务端选择性中止风险；中止按下方矩阵处理；
+8. **礼物边界**：开盒和礼物不改变候选概率、风险评分、发行价或投资资格；实体礼物仅在独立合规认购后按规则处理；
+9. **取消/退款**：付款前可随时退出；付款后的交付、免费重开、退款触发条件和处理状态；
+10. **隐私**：支付钱包在公链可见；报告、分享卡和配送信息各自的公开范围。
+
+付款按钮上方保留三个默认未勾选的确认框：
+
+~~~text
+[ ] 我确认本次支付仅购买 AI 尽调揭晓，不会自动认购任何 RWA。
+[ ] 我已看到候选概率、风险/损失区间、报告费用和退款规则。
+[ ] 我理解 AI 报告和物理证据可能出错，且不构成保本、收益或投资建议。
+~~~
+
+英文冻结文案：
+
+~~~text
+I am purchasing an AI due-diligence reveal, not an RWA.
+No investment principal will move until I review the revealed risk and sign separately.
+Target redemption, AI analysis, physical evidence and gifts are not guarantees.
+~~~
+
+**B. 揭晓后、认购签名前必须展示**
+
+- 被选中的具体 pool、cargo、route、quote hash、候选快照和本地 Verify 结果；
+- issue price、target redemption、目标上行、压力情景回收率/损失和本金可能全部损失；
+- 原始风险、Physical Confidence/Trust Credit、剩余硬风险及 evidence freshness；
+- 当前 pool 状态、剩余额度、报价失效时间、合规资格和即将签署的认购金额；
+- “返回市场”“查看完整报告”“认购”三个清晰选项，不使用默认焦点、自动跳转或倒计时逼单。
+
+认购前使用第二组、默认未勾选且不能沿用开盒确认的确认框：
+
+~~~text
+[ ] 我已查看完整报告、最坏情景和仍未被 Trust Credit 抵扣的风险。
+[ ] 我理解 target redemption 和目标上行都不保证，本金可能部分或全部损失。
+[ ] 我确认当前认购金额、RWA 数量、pool 状态、报价有效期和钱包地址。
+[ ] 我理解航线收藏章或礼物不是投资回报，也不影响本次价格或兑付。
+~~~
+
+只有四项确认仍有效且冷静期结束，才可以构造 subscribe 交易。任一报价、风险、pool 状态、证据 freshness 或钱包发生变化，必须清空确认并重新开始冷静期。
+
+**C. 冷静期冻结规则**
+
+| 模式 | 最短时间 | 起点 | 结束后动作 |
+|---|---:|---|---|
+| Final Demo | 5 秒，明确标 DEMO ACCELERATED | 完整报告渲染且 proof verify 为 PASS | 仅解锁认购按钮，绝不自动发送交易 |
+| Production Prototype | 默认 60 秒，可被适用法延长、不可被前端参数缩短 | 同上 | 用户主动完成第二组确认后签名 |
+| Quote/Risk Changed | 重新计时 | 新报价和差异摘要完成渲染 | 旧确认作废 |
+| Pool Paused/Frozen/Expired | 不结束 | 状态恢复并获得新 quote 前 | 禁止认购，只允许退出/刷新 |
+
+冷静期页面不得播放“仅剩 X 秒”“错过机会”等 FOMO 文案；计时器只表达“请先阅读风险”。
+
+**D. 报告费异常处理矩阵**
+
+| 场景 | 产品结果 | 资金规则 | 审计状态 |
+|---|---|---|---|
+| 付款前取消 | 返回市场 | 不收费 | CANCELLED_BEFORE_PAYMENT |
+| 钱包拒签/结算失败 | 保留 preview，可重试 | 不得标记已收费 | PAYMENT_FAILED |
+| 同一幂等键重复结算 | 只交付一份报告 | 多收部分自动原路退款 | DUPLICATE_REFUND_PENDING / REFUNDED |
+| 已结算但服务端未在 30 秒内揭晓 | 用户选择原路退款或一次免费重开；无选择时默认退款 | 不得静默换池 | ABORTED_AFTER_PAYMENT |
+| commitment/proof/candidate set 校验失败 | 立即终止，不展示替代结果 | 自动原路退款 | PROOF_INVALID_REFUND_PENDING |
+| 揭晓瞬间选中池已不合格、Paused/Frozen/过期 | 不交付可认购结果 | 原路退款或用户主动选择一次免费重开 | CANDIDATE_INVALIDATED |
+| 有效报告已完整交付，用户选择不投资 | 报告仍可在 TTL 内重读 | 报告费不退，适用法另有规定除外；投资本金始终未动 | DELIVERED_NO_SUBSCRIPTION |
+| 有效揭晓后市场自然变化 | 显示 stale，不允许用旧确认认购；提供一次免费 refresh | 不把市场风险伪装成报告失败 | STALE_AFTER_REVEAL |
+| 用户断网/关闭页面 | 用 receipt/reveal id 恢复同一报告 | 不重复收费 | DELIVERED_RECOVERABLE |
+
+Live 退款必须返回 refund tx/status 并可查询；Demo 退款必须显示 SIMULATED REFUND，禁止生成随机 tx hash。所有退款原路退回原资产和原钱包，任何 gas/费用承担规则必须在付款前披露。
+
+**E. 禁词与替代表达**
+
+| 禁止 | 使用 |
+|---|---|
+| guaranteed / 保证、保本、稳赚 | target / non-guaranteed / 目标兑付、可能亏损 |
+| win / jackpot / 中奖、大奖、欧皇 | reveal / discover / 揭晓、发现航线 |
+| prize value / 奖品价值 | report service + equal-value keepsake / 报告服务 + 等值纪念物 |
+| risk-free / 无风险 | risk-bounded discovery / 风险边界透明的发现 |
+| buy now before it is gone / 立即抢购 | review the report and decide separately / 阅读报告后独立决定 |
+
+**F. 最低审计事件**
+
+disclosure_viewed、report_acknowledged、payment_settled、reveal_delivered、proof_verified、cooldown_started/completed/reset、risk_acknowledged、subscribe_signed、refund_requested/pending/settled 必须携带 policy version、时间、模式和幂等键；不得记录配送地址、完整单据或复选框外的行为画像。
+
+MBOX-PM-3 完成标准：以上文案与状态矩阵冻结；实现阶段由 MBOX-FE-2/3/6、MBOX-BE-4/6、MBOX-X402-1/2 和 MBOX-QA-1/3 落地。
+
+#### 20.6.2 MBOX-PM-4 冻结规范：Voyage Passport 收藏章与分享卡
+
+**产品定义**
+
+Voyage Passport 是用户完成一次可验证揭晓后获得的**非金融产品凭证和旅程收藏记录**。它证明“这个钱包在某个时间验证过某条航线的 AI 报告”，不证明货物所有权、RWA 持仓、投资收益、信用评级、保险覆盖或未来权益。
+
+P0/P1 均采用服务端签名的 off-chain credential；禁止 ERC-20、可转让 NFT、可交易稀有度、地板价、版税和二级市场。未来若使用不可转让 token，也只能用于防篡改/访问，不得附带经济权利，且须另行完成法律与隐私审查。
+
+**A. 两级收藏章**
+
+| 类型 | 获得条件 | 显示内容 | 不得暗示 |
+|---|---|---|---|
+| Discovery Stamp | 报告已交付且 reveal proof 验证通过 | 货物类别、粗粒度航线、日期、模式、proof digest | 已投资、拥有货物、获得收益 |
+| Investor Journey Stamp | 独立风险确认完成且认购交易成功/明确 Demo 成功 | Discovery 内容 + 脱敏 subscription proof/tx link | 保本、投资成功结局、比别人更高收益 |
+
+Discovery Stamp 与 Investor Journey Stamp 使用明显不同图标和标签；不能仅凭颜色区分。取消、退款、proof invalid 或 reveal aborted 不发章。报告交付但未认购，只能获得 Discovery Stamp。
+
+**B. Credential 数据结构**
+
+~~~ts
+type VoyagePassportCredential = {
+  credential_id: string;
+  schema_version: 'voyage-passport-v1';
+  stamp_type: 'DISCOVERY' | 'INVESTOR_JOURNEY';
+  voyage_id: string;
+  cargo_category: string;
+  route_label: string;
+  route_code: string;
+  revealed_at: string;
+  experience_mode: 'DEMO' | 'RECORDED_REPLAY' | 'LIVE_PROTOTYPE' | 'VESSEL_LIVE';
+  reveal_proof_digest: string;
+  report_hash: string;
+  physical_evidence_digest?: string;
+  subscription_reference?: string;
+  artwork_variant: string;
+  issuer: 'AgentBL';
+  issuer_signature: string;
+  revoked_at?: string;
+};
+~~~
+
+credential 不保存钱包余额、认购金额、收益率、风险偏好、真实姓名、配送地址、完整钱包、完整 eBL/case id、精确实时位置或未公开商业单据。服务端以钱包签名证明查看/导出权限，不建立公开的钱包行为排行榜。
+
+**C. 收藏章视觉语法**
+
+- 正面：货物插画、粗粒度航线弧线、港口印章、voyage_id、Discovery/Investor Journey 类型；
+- 背面：揭晓日期、experience mode、三段短哈希、Verify QR/NFC；
+- 视觉 variant 可以是 Dawn / Storm / Night / Port Arrival 等路线故事，但每个 variant 等概率或公开固定规则、无价格差异；
+- 禁用金/银/钻石等级、SSR、Legendary、Winner、Profit Badge 等会暗示经济价值的稀有度语言；
+- 可以展示“已收集 3/6 类航线”，不能展示“资产价值”“收藏市值”“预计升值”；
+- Physical AI 数据只显示验证摘要和时间，不在分享图泄露实时船位或摄像头访问令牌。
+
+**D. 分享卡公开字段**
+
+允许默认公开：
+
+- AgentBL / Mystery Voyage 品牌；
+- cargo category 和粗粒度 route label；
+- Discovery 或 Investor Journey 类型；
+- experience mode，必须醒目显示 Demo/Replay/Prototype/Live；
+- reveal month 或日期；
+- Verified reveal、proof digest 前后各 4–6 位、Verify URL/QR；
+- “Not an investment certificate · Not proof of ownership or return”；
+- 用户自选昵称；默认不显示钱包。
+
+只有用户主动打开 Advanced Share 并再次确认，才允许增加完整公共 tx hash/Explorer link。无论用户是否选择，永不公开：
+
+- 投资金额、RWA 数量、PnL、目标上行、钱包余额；
+- 完整钱包、KYC 状态、风险档、制裁/合规结果；
+- 精确 GPS、当前船位、实时摄像头 URL/token；
+- 出口商/进口商未公开身份、eBL、发票、保险单或商业价格；
+- 配送地址、电话、邮箱、真实姓名；
+- “我赚了”“稳赚航线”“中奖”等用户模板。
+
+冻结分享卡页脚：
+
+~~~text
+A product-experience credential for a verified AI report reveal.
+Not an RWA, not cargo ownership, not proof of investment performance.
+~~~
+
+中文：
+
+~~~text
+本卡仅记录一次可验证的 AI 报告揭晓体验。
+不是 RWA、货权凭证或投资业绩证明。
+~~~
+
+**E. 生命周期与用户权利**
+
+| 操作 | 规则 |
+|---|---|
+| Claim | proof 验证通过后由用户主动领取，不自动铸造，不收 gas |
+| Export | PNG/PDF/JSON credential；导出前展示公开字段预览 |
+| Verify | 公共页只验证 issuer signature、schema、revocation 和 proof digest |
+| Hide | 用户可随时从个人收藏册隐藏，不影响报告或持仓 |
+| Delete | 删除 AgentBL 托管的展示副本和昵称；链上 payment/tx 不能删除的边界须说明 |
+| Revoke | proof 被证明无效、错误签发或用户成功撤销报告交付时撤销；历史分享卡显示 REVOKED |
+| Transfer | 永不支持；钱包迁移只能经旧/新钱包双签复制并撤销旧 credential |
+| Commercialize | 不支持出售、抵押、授权版税或兑换投资优惠 |
+
+**F. 与航线礼物的关系**
+
+Passport 是数字收藏记录，Voyage Keepsake 是可选、等值的实体/数字纪念物。二者均不属于投资回报：
+
+- Discovery 用户可获得数字章，但不能因此获得实体礼物或认购优惠；
+- Investor Journey 用户可以选择实体纪念物或同值数字版，费用从 marketing/sponsor budget 支出；
+- 礼物 artwork_variant 可以对应 Passport 图案，但不能对应不同现金价值、收益率、抽取概率或服务优先级；
+- NFC/QR 只打开脱敏 credential/证据页，不把配送记录、地址或钱包写入标签。
+
+**G. 五问理解测试**
+
+封闭测试必须随机提问，五题全对才算 PM-4 验收通过：
+
+1. 这张 Passport 是否代表你拥有货物或 RWA？正确答案：否；
+2. Discovery Stamp 是否说明你已经投资？正确答案：否；
+3. 它是否能出售或转让？正确答案：否；
+4. 图案 variant 是否影响收益、价格或下一次概率？正确答案：否；
+5. 分享卡默认是否公开钱包、金额或实时船位？正确答案：否。
+
+验收阈值：至少 10 名非项目成员参加，首次作答全对率 ≥90%；任何一题低于 90%，必须修改命名/视觉后复测。Final Demo 前无法完成真实用户测试时，任务只可标 Spec Done / Validation Pending，不得宣称已完成用户验证。
+
+测试记录只使用匿名编号，不采集钱包、姓名或联系方式：
+
+| Participant | Q1 | Q2 | Q3 | Q4 | Q5 | First-pass all correct | Confusing phrase |
+|---|---|---|---|---|---|---|---|
+| P01–P10 | Y/N | Y/N | Y/N | Y/N | Y/N | Y/N | 可选短语，不记录身份 |
+
+结果摘要固定填写：样本数、五题各自正确率、首次全对率、修改过的文案、复测结果和测试日期。禁止删除失败样本或只报告平均分。
+
+MBOX-PM-4 完成标准：产品定义、credential 字段、视觉/分享白名单、隐私、生命周期、礼物关系和理解测试冻结；实现阶段由 MBOX-FE-7、GIFT-FINAL-1/2/3 和 MBOX-QA-5 落地。
+
+### 20.7 工程任务清单
+
+#### 20.7.1 Product / Risk / Compliance
+
+| ID | Priority | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| MBOX-PM-1 | P0 | 冻结命名和叙事：Mystery Voyage = surprise discovery，不是 randomized investment | PM | Todo | README、路演稿、UI 三处文案审查 | - |
+| MBOX-PM-2 | P0 | 定义三档 Risk Passport、候选过滤规则、压力损失边界和禁止辖区 | PM + Risk | Todo | policy fixture 覆盖三档及零候选状态 | - |
+| MBOX-PM-3 | P0 | 完成开盒前披露、揭晓后风险确认、退款/免费重开和冷静期规则 | PM + Compliance | Done | 合规 checklist；不得出现 guaranteed / win / jackpot | §20.6.1：双确认状态机、逐屏披露、冷静期、9 类异常矩阵、禁词与审计事件已冻结 |
+| MBOX-PM-4 | P1 | 设计 Voyage Passport 收藏章和分享卡，禁止代币化/现金价值 | Product | Review | 用户测试能区分收藏章与投资凭证 | §20.6.2：Spec Done；两级章、credential、分享/隐私白名单、生命周期和五问测试已冻结；10 人验证 Pending |
+
+#### 20.7.2 Backend / AI / x402
+
+| ID | Priority | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| MBOX-BE-1 | P0 | 用 `quoteFromCase`/真实池状态替换市场初始化中的硬编码报价和 `riskBps=200` | Backend | Done | `tests/marketApi.test.js` 断言 listing 与 PricingQuote 一致 | `src/app/server.js`/`src/app/store.js`：22 个融资案例使用规范化 PricingQuote 与 pricing action 状态；marketApi 校验 quote/risk/price，Paused 不上架 |
+| MBOX-BE-2 | P0 | 新增 `src/mystery/policy.js`：按 Risk Passport、合规、池状态、额度和 freshness 确定性过滤 | Backend + AI | Done | `tests/mysteryPolicy.test.js` 覆盖低/中/高风险、制裁、Paused、过期、零候选 | `tests/mysteryPolicy.test.js`：三档阈值、compliance、额度、freshness、货物/航线/辖区排除与零候选全部通过 |
+| MBOX-BE-3 | P0 | 新增 `src/mystery/fairness.js`：canonical hash、commit、rejection sampling、proof verify | Backend | Done | 10,000 seed property test + tamper test；同 proof 必须选出同一 pool | `tests/mysteryFairness.test.js`：10,000 seeds 分布、确定性重放及 pool/weight/nonce/payment/quote/数组篡改测试通过 |
+| MBOX-BE-4 | P0 | 新增持久化 reveal store：状态 `PREVIEWED/COMMITTED/PAID/REVEALED/ABORTED/EXPIRED`、TTL、幂等键 | Backend | Done | 重启恢复、并发支付、重复 receipt、过期和 replay tests | `src/mystery/store.js` + `tests/mysteryStore.test.js`：重启恢复、wallet-scope 幂等、并发单揭晓、receipt replay、TTL、ABORTED 持久化通过 |
+| MBOX-BE-5 | P0 | 新增 `POST /api/mystery/preview` 与 `GET /api/mystery/:id/proof` | Backend | Done | API schema tests；preview 不泄露 selected pool/server secret | `tests/mysteryApi.test.js`：preview=201、付款前 proof=409、付款后 proof 可验证；preview 不含候选 ID、selected pool 或 server secret |
+| MBOX-X402-1 | P0 | 在 `X402_SERVICES`、paid-report kinds/builders 和 server route 增加 `mystery-voyage` | Backend + Web3 | Done | unpaid=402、paid=200、报告 envelope/schema/hash 全通过 | 四产品 catalog/V2 config/builder/route 已接入；Demo preflight 验证 mystery-voyage unpaid=402、signed paid=200、envelope 合法 |
+| MBOX-X402-2 | P0 | 将 x402 payment tx、selected case、Risk Passport hash、reveal proof hash 绑定进 `PaidReportEnvelope`/`PaymentOracle` | Backend + Web3 | Done | 从 Explorer tx 可重放到同一个 selected pool/report hash | `tests/paidReport.test.js`/`tests/mysteryApi.test.js`：payment_tx、case_id、selected_pool_id、risk_passport_hash、reveal_proof_hash 进入 canonical report_hash；PaymentOracle 继续锚定该 hash |
+| MBOX-AI-1 | P0 | 生成揭晓版 `AI Risk Passport`：适配理由、定价分解、压力回收、证据 freshness | AI | Done | schema + groundedness eval；LLM 失败有 deterministic fallback | `src/mystery/riskPassport.js`：确定性报告含 suitability、真实定价分解、压力回收、抵押覆盖、evidence graph/freshness 与 non-guarantee；端到端 groundedness 断言通过 |
+| MBOX-BE-6 | P0 | 处理候选在支付前后失效：fail closed、记录 abort、免费重开/退款状态，不静默替换 | Backend | Done | 状态竞态与 Paused/Frozen 注入测试 | 付款前全候选重验并 `PAYMENT_NOT_SETTLED`；付款后竞态进入 `ABORTED` + `REFUND_OR_FREE_REOPEN_AVAILABLE`；API/store 注入测试通过 |
+| MBOX-BE-7 | P1 | 将 Mystery reveal 来源写入 portfolio/analytics，不改变原始 PricingQuote 或 yield | Backend | Todo | portfolio API 与事件漏斗测试 | - |
+| MBOX-MCP-1 | P1 | 增加 `preview_mystery_voyage` / `verify_mystery_reveal` MCP 能力，购买仍受预算与人工授权约束 | AI + Backend | Todo | MCP Inspector 调用 + 超预算拒绝测试 | - |
+
+#### 20.7.3 Frontend / Experience
+
+| ID | Priority | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| MBOX-FE-1 | P0 | 在市场首屏增加 Mystery Voyage 入口和 Risk Passport 三档选择器 | Frontend | Todo | 375px/1440px 手动验收；键盘可操作 | - |
+| MBOX-FE-2 | P0 | 开盒前卡片展示 N、等概率、风险/收益/压力损失区间、0.001 USDC 和非认购说明 | Frontend + PM | Todo | 5 秒理解测试；截图 review | - |
+| MBOX-FE-3 | P0 | 复用 x402 stepper 展示 Commit → 402 → Settlement → Reveal → Verify | Frontend | Todo | Demo/Live 两模式；Live 仅真实 tx 可跳 Explorer | - |
+| MBOX-FE-4 | P0 | 实现开箱动画和路线揭晓：集装箱封条、地图航线、cargo image、风险脉冲 | Frontend | Todo | `prefers-reduced-motion` 下无强动画；无 layout shift | - |
+| MBOX-FE-5 | P0 | 实现浏览器本地 proof verifier，任一字段被篡改立即红色 fail closed | Frontend + Web3 | Todo | Playwright/DOM tamper cases；成功显示复算摘要 | - |
+| MBOX-FE-6 | P0 | 揭晓后保持“看报告/认购”双 CTA；认购前弹出第二次金额、损失与风险确认 | Frontend + Compliance | Todo | 不签第二次确认不会调用 subscribe | - |
+| MBOX-FE-7 | P1 | Voyage Passport 收藏册、可分享但脱敏的航线卡 | Frontend | Todo | 卡片不含商业秘密、钱包余额或误导性收益承诺 | - |
+| MBOX-I18N-1 | P0 | 补齐中英双语 Mystery Voyage 文案并加入 i18n coverage | Frontend | Todo | `tests/i18nCoverage.test.js` | - |
+
+#### 20.7.4 Contract / Security / QA
+
+| ID | Priority | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| MBOX-WEB3-1 | P0 | P0 不新增托管合约；复用 PaymentOracle 和 RWAOfferingPool，并记录 reveal proof hash | Web3 | Todo | 设计 review 证明开盒失败不会触碰投资本金 | - |
+| MBOX-WEB3-2 | P1 | 仅在组合意图进入实施时设计 `MysteryAllocationRouter`，支持 eligibility、caps、pause、cancel/refund | Web3 | Todo | Hardhat state-machine、重入、权限、暂停与退款 tests | - |
+| MBOX-QA-1 | P0 | 增加安全矩阵：nonce 重放、receipt 重放、候选篡改、权重篡改、选择性 abort、并发开盒 | QA + Security | Todo | 全部 fail closed，错误码可恢复且有审计日志 | - |
+| MBOX-QA-2 | P0 | 验证不变量：不合格/Paused/Frozen/过期/超风险池永远不会被选中 | QA | Todo | policy fuzz/property tests | - |
+| MBOX-QA-3 | P0 | 验证资金隔离：开盒只结算报告费，未二次确认时 subscription/portfolio/USDC investment 均不变 | QA | Todo | API + contract harness 余额前后断言 | - |
+| MBOX-QA-4 | P0 | 加入 preflight：Mystery offline、x402 demo、proof replay、i18n/reduced-motion 静态检查 | QA | Todo | `npm run preflight` 连续 3 次全绿 | - |
+| MBOX-QA-5 | P0 | 完成 20 人封闭可用性测试和事件漏斗报告 | PM + QA | Todo | 输出理解率、完成时间、失败率，不虚构真实投资转化 | - |
+
+### 20.8 实施顺序与出线 Gate
+
+#### Wave M0（0-6h）：先冻结规则
+
+```text
+MBOX-PM-1 → MBOX-PM-2 → MBOX-PM-3 → MysteryRevealProof schema
+```
+
+Gate M0：任何成员都能回答“盲什么、不盲什么、何时付报告费、何时才投资、如何验证公平”。未通过不得先做动画。
+
+#### Wave M1（6-24h）：确定性引擎与 API
+
+```text
+MBOX-BE-1 → MBOX-BE-2 → MBOX-BE-3 → MBOX-BE-4/5 → MBOX-AI-1
+```
+
+Gate M1：离线测试中，同一 proof 永远选出同一池；篡改候选/nonce/权重/报价任一字段都会失败；零候选和状态变化均 fail closed。
+
+#### Wave M2（24-42h）：x402 与一屏体验
+
+```text
+MBOX-X402-1/2 → MBOX-FE-1/2/3/4/5 → MBOX-I18N-1
+```
+
+Gate M2：45 秒内演示 Preview → 402 → Payment → Reveal → Verify；Demo/Live 标签清楚，真实模式能从 payment tx 追到 `PaymentAttested` 和 report hash。
+
+#### Wave M3（42-60h）：独立认购与安全
+
+```text
+MBOX-FE-6 → MBOX-BE-6/7 → MBOX-WEB3-1 → MBOX-QA-1/2/3/4
+```
+
+Gate M3：未二次签名不会认购；不合格或暂停池不会入选；开盒失败不影响投资本金；preflight 连续三次通过。
+
+#### Wave M4（60-72h）：增长验证与路演冻结
+
+```text
+MBOX-QA-5 → 60 秒脚本彩排 → 备份视频 → 功能冻结
+```
+
+Gate M4：测试者能明确复述“我花 0.001 USDC 买的是 AI 尽调揭晓，不是随机买了 RWA”；路演不使用“稳赚、中奖、大奖、保底”等表述。
+
+### 20.9 60 秒冠军演示脚本
+
+```text
+0-08s  “市场项目太多，普通投资者不知道先研究哪一个。”选择 Balanced Risk Passport。
+08-16s 展示 5 个合格候选、等概率、风险/压力损失区间：“我们隐藏航线，但从不隐藏风险。”
+16-28s 点击 Open Mystery Voyage：真实 HTTP 402 → 0.001 USDC → payment tx。
+28-40s 集装箱开封，揭晓“500 吨铜，新加坡→上海”；AI Risk Passport 展开审单、估值、战争/保险证据。
+40-50s 点击 Verify：本地重算 candidate hash、双边 entropy、selected index；打开 PaymentAttested Explorer。
+50-60s 强调“开盒只买报告”。阅读最坏损失后，用户另行确认认购；Injective 执行原有合规池状态机。
+```
+
+结束语：
+
+> **Most blind boxes hide both value and risk. AgentBL flips the model: the voyage is a surprise, but risk, probability, payment and allocation are all verifiable.**
+
+---
+
+## 21. Final Demo 增强：Living Voyage（物理 AI × 信任溢价 × 航线礼物）
+
+本节吸收 docs/enhancement-physical-ai-trust-insurance-zk(2).md 的**增强维度一：物理 AI**和**增强维度四：信任稀缺性的经济学**，并把它们接到上一节 Mystery Voyage。目标不是在 final demo 前假装已经拥有远洋船队，而是讲清一个评委能记住、工程上有诚实边界的故事：
+
+> **投资者开出的不是一个收益数字，而是一扇通往真实航程的窗口：看见货物、验证状态、观察海面；物理证据越充分，AI 越能把“信任”转成可解释的融资成本下降。完成认购后，客户收到一件来自这条航线的等值纪念礼物，把一次金融交易变成一段可追踪的航海记忆。**
+
+### 21.1 决赛版一句话和三层体验
+
+~~~text
+Mystery Voyage         = 发现一条未知但风险边界透明的航线
+VoyageCam / Ocean View = 打开这条航线的物理窗口
+Trust Premium          = 摄像头 + AIS + 传感器 + 单据证据 → 更小的不确定性折扣
+Voyage Keepsake        = 认购后的等值路线纪念物 + 链接到证据与旅程
+~~~
+
+用户看到的完整闭环：
+
+~~~text
+盲盒揭晓
+  → CargoCam：看集装箱封条、货舱/甲板和装载状态
+  → Ocean Window：把摄像头切到海平线、航迹和海况预设
+  → Physical AI：视觉 + AIS/GPS + 温湿度/震动/光线/封条交叉验证
+  → Trust Evidence Graph：物理置信度上升，Trust Premium 进入价格瀑布
+  → 明确风险后认购
+  → 航线礼物寄到客户手中，NFC/QR 回到同一份链上证明
+~~~
+
+决赛现场所有画面必须带状态标签：
+
+| 标签 | 含义 | 允许的说法 |
+|---|---|---|
+| LIVE PROTOTYPE | 手机/USB 摄像头或真实 WebRTC 流实时接入 | “这是我们正在控制的物理摄像头原型” |
+| RECORDED REPLAY | 预录视频按真实时间戳回放，传感器数据可复现 | “这是同一条 AI 管道的可验证回放” |
+| DIGITAL TWIN / VISION | 3D/模型船/合成数据，仅展示未来体验 | “这是未来接入船队后的产品愿景” |
+
+禁止把 RECORDED REPLAY 或 DIGITAL TWIN 说成已接入真实船只；这条诚实边界反而会让“可信”叙事成立。
+
+### 21.2 增强维度一：Physical AI / VoyageCam
+
+#### 21.2.1 两个镜头，不只是监控画面
+
+**CargoCam（证明货物存在）**：默认显示集装箱门、电子封条、货舱/甲板和装载区域；AI 识别封条完整性、箱体异常、积水/烟雾、装载数量变化和光照突变。
+
+**Ocean Window（让投资者参与航行）**：用户可以在安全预设中切换“海平线 / 船尾浪花 / 云层天气 / 目的港方向”，看到海面风景和航线阶段。它是沉浸式访问，不是驾驶权限：不能控制舵、动力、通信、船员区域或安全设备。
+
+摄像头交互必须由 ViewBroker 管理：
+
+- 每个钱包一次只持有 15–30 秒的 PTZ 预设租约；
+- 预设命令排队、限速、可审计，禁止任意角度扫描船员/港口安保区域；
+- 默认无音频、自动遮挡人脸/文件/船桥，敏感地理位置可延迟或模糊；
+- 所有持仓者获得同等基础观看机会，不能用投资金额购买“更接近货物”的权利；
+- 流媒体本身不上链，链上只记录片段哈希、传感器 Merkle root、时间和模型版本。
+
+#### 21.2.2 物理证据输入与 AI 输出
+
+从增强方案的 PhysicalConfidence 继续扩展为可接入现有 PricingQuote 的可选字段：
+
+~~~ts
+type VoyagePhysicalEvidence = {
+  source_level: 'NONE' | 'DOCUMENT_ONLY' | 'GPS_TRACKED' | 'MULTI_SENSOR' | 'FULL_STACK';
+  camera_mode: 'NONE' | 'RECORDED_REPLAY' | 'LIVE_PROTOTYPE' | 'VESSEL_LIVE';
+  gps_corroborated: boolean;
+  ais_corroborated: boolean;
+  sensor_data_consistent: boolean;
+  container_seal_intact: boolean;
+  last_seen_at: string;
+  segment_hashes: string[];
+  sensor_root: string;
+  anomaly_events: Array<{
+    type: 'ROUTE_DEVIATION' | 'TEMPERATURE_EXCURSION' | 'SHOCK_DETECTED'
+      | 'SEAL_BROKEN' | 'CAMERA_OFFLINE' | 'AIS_GAP';
+    timestamp: string;
+    severity: 'info' | 'warning' | 'critical';
+    evidence_hash: string;
+  }>;
+  confidence_score: number; // 0..1, evidence completeness, not a safety guarantee
+};
+~~~
+
+Physical AI 每次刷新都输出三件事：
+
+1. **Observation**：看到了什么，来源是视频、AIS、传感器还是单据；
+2. **Consistency**：多源是否互相支持，是否存在 AIS spoofing、镜头离线或封条状态冲突；
+3. **Action**：只建议 OPEN_WITH_WARNING / REPRICE_DOWN / PAUSE_OFFERING 等既有动作，不允许仅凭一帧画面自动清算。
+
+关键不变量：
+
+~~~text
+物理证据缺失 ≠ 货物安全
+物理证据完整 ≠ 投资无风险
+关键异常/战争/保险失效 → 信任积分归零或触发既有 PAUSE/FREEZE
+物理数据只能减少不确定性折扣，不能抹掉硬风险和抵押覆盖护栏
+~~~
+
+#### 21.2.3 决赛可演示的物理 AI 方案
+
+按可落地程度排序：
+
+~~~text
+P0：本地 RECORDED REPLAY + data/physical-intel fixtures
+    预录海面/货柜视频、AIS 轨迹、温度/震动/封条时间线同步回放
+    点击“封条异常”后，Physical AI 生成 anomaly → 价格瀑布出现风险加码
+
+P0.5：LIVE PROTOTYPE
+    一台手机/USB PTZ 对准模型集装箱或真实仓库箱体
+    评委点击 CargoCam/Ocean Window，边看画面边查看签名 telemetry
+
+P1：VESSEL LIVE
+    WebRTC + MQTT/HTTP sensor gateway + AIS provider + edge CV
+    分段哈希和传感器 root 定期锚定 Injective，支持投资者 token-gated view
+~~~
+
+P0 也要让评委感到“真的能用”：回放中的每一帧有 timestamp、segment hash 和模型版本；不是一个循环播放的装饰视频。
+
+### 21.3 增强维度四：Trust Premium / 信任的显式定价
+
+#### 21.3.1 信任不是口号，而是价格瀑布中的一行
+
+现有引擎的核心不变量必须保留。信任层只作为风险份额的**证据抵扣**，不另起一套会破坏 PricingQuote 的公式：
+
+~~~text
+raw_risk_score_bps      = existing document + market + world-risk policy
+evidence_credit_bps     = f(physical confidence, corroboration, integrity, freshness)
+trust_credit_bps        = min(evidence_credit_bps, TRUST_CREDIT_CAP_BPS,
+                              raw_risk_score_bps)
+adjusted_risk_score_bps = max(0, raw_risk_score_bps - trust_credit_bps)
+
+# 接回现有 pricingEngine
+risk_share        = f(adjusted_risk_score_bps)
+risk_discount_bps = price_delta(speed_price, price_from_share(risk_share))
+indicative_price  = base_issue_price - urgency_discount - risk_discount
+final_price       = max(indicative_price, collateral_floor)
+~~~
+
+trust_credit_bps 不能由项目方手填，必须来自证据图，并受以下上限约束：
+
+- 单据、AIS、GPS、摄像头、温度传感器证明同一事实时只计一次，防止 double counting；
+- FULL_STACK 也不能抵扣战争、制裁、保险到期、严重封条异常等硬风险；
+- 证据超过 freshness TTL、摄像头离线或 AIS 出现不可解释空洞时，信用自动衰减；
+- 任何信任分不会把 PAUSE_OFFERING 自动改回 OPEN_OFFERING；恢复必须经过现有 Agent/Oracle 状态机；
+- 页面同时展示原始风险、证据抵扣和调整后风险，禁止只展示更好看的最终数值。
+
+#### 21.3.2 评委一眼能懂的 Trust Waterfall
+
+在 AI Console 增加并排对比（数字必须由 fixture/policy 计算，以下仅为叙事示意）：
+
+| 证据组合 | Trust 信号 | 价格变化 | 投资者看到的含义 |
+|---|---|---|---|
+| 仅 eBL/发票/保险 | 纸面自洽 | 基准 | “文件没有互相矛盾，但物理世界未知” |
+| + AIS/GPS 交叉 | 船在合理航线上 | 风险折扣下降 | “位置不是单一 GPS 声明” |
+| + 摄像头封条 + 温湿度 | 货物状态被持续观察 | 风险折扣继续下降 | “不是只看一张装船照片” |
+| + 历史还款/担保/保险 | 信任可复用 | 形成 Trust Premium | “信任变成了融资成本节省” |
+
+必须向投资者解释：价格更高不代表“送你收益”，而是由于不确定性下降，出口商不必支付同样深的风险折价；投资者仍承担真实贸易、市场和违约风险。
+
+#### 21.3.3 信任飞轮
+
+~~~text
+投资者愿意开盒/认购
+  → 项目愿意安装摄像头、电子封条和传感器
+  → 物理证据变多且更可靠
+  → AI 不确定性折扣下降，出口商融资成本降低
+  → 更多货主加入，更多投资者愿意查看真实航程
+  → 设备商、船东、保险人和担保人有经济动力接入
+  → AgentBL 从“AI 定价页面”变成“信任定价网络”
+~~~
+
+### 21.4 航线周边礼物：把一次投资变成一段可记住的旅程
+
+礼物命名为 **Voyage Keepsake / 航线纪念盒**，不是“抽奖奖品”。盲盒可以隐藏礼物的具体图案或路线彩蛋，但不隐藏价值、配送条件和退换规则。
+
+#### 21.4.1 创意礼物目录
+
+| 航线/货物 | 纪念物创意 | 链接方式 |
+|---|---|---|
+| 新加坡 → 上海铜阴极 | 复刻集装箱封条的金属书签、港口坐标明信片、NFC 证据卡 | NFC 打开 reveal proof、封条状态时间线和海景回放 |
+| 曼谷 → 青岛橡胶 | 再生帆布航线贴章、航线天气卡、港口印章贴纸 | 扫码查看温湿度/震动 telemetry 与 AI 风险解释 |
+| 巴西/亚洲大豆航线 | 航线插画折页、贸易路线磁贴、可持续包装故事卡 | 打开 cargo provenance 与 ESG/合规证据摘要 |
+| 原油/矿石等不适合寄送的货物 | 3D 纸模集装箱、船舶轮廓卡、数字船票 | 不寄送危险或受监管货物，数字卡链接 voyage timeline |
+| 任意完成认购的客户 | 唯一 voyage_id 航海护照页，记录“你见证过这批货” | 不代表所有权、不代表收益、不影响下一次概率 |
+
+礼物原则：
+
+- 每个订单为等值、低价值、非现金、非金融商品；“稀有”只能描述插画/故事，不得对应更高 APY、保本或更大额度；
+- 礼物成本来自协议 marketing/sponsor budget，不从 exporter proceeds、保险池或投资者 target redemption 中扣除；
+- 运输地址、姓名和海关信息只在加密的 off-chain fulfillment store 保存，链上只放 gift_fulfillment_hash；
+- 受制裁地区、危险品、跨境清关不可行时，自动切换为同值数字纪念物，不让“礼物”阻塞兑付；
+- 报告用户获得数字航线章；只有完成独立合规认购并选择收货的客户进入实体礼物队列，避免用礼物诱导未合格用户购买证券；
+- 任何礼物都可以拒收或换成数字版，前端展示“礼物不是投资回报”。
+
+#### 21.4.2 最有记忆点的开盒瞬间
+
+~~~text
+AI Reveal：你打开的是 SG → Shanghai Copper Voyage #0007
+屏幕：实时/回放海面，投资者拖动“CargoCam ↔ Ocean Window”
+AI：封条完整，AIS 与 GPS 一致，温度稳定；Trust Credit +XX bps（可验证）
+用户：确认风险并认购，第二个链上事件完成
+实体/数字盒：出现“Port of Singapore → Shanghai”印章
+NFC：手机打开这条 voyage 的 PaymentAttested、PricingUpdated、传感器时间线
+~~~
+
+这让“礼物”不是凭空发周边，而是一个可携带的证据入口：客户把卡片放在桌上，未来仍能回到那条真实或回放航程。
+
+### 21.5 Final Demo 叙事（90 秒版本）
+
+~~~text
+0-10s  “传统 RWA 让你盯着一张 PDF 猜货物是否存在。AgentBL 让你先选风险边界，再打开一条航线。”
+10-22s 选择 Balanced Mystery Voyage，展示候选数、风险区间、最坏情景和 x402 报告费。
+22-32s 402 → payment tx → 开盒；镜头从封条切到海平线，旁边显示 LIVE PROTOTYPE/RECORDED REPLAY。
+32-45s 评委移动 CargoCam/Ocean Window；Physical AI 同时读视频、AIS/GPS、温度和封条 telemetry。
+45-58s AI 故意演示一次异常：AIS 偏离/封条告警；Physical Confidence 下降，RiskPricingOracle 建议 REPRICE 或 PAUSE。
+58-70s 恢复正常证据；Trust Waterfall 显示“不确定性折扣减少 XXbps”，并解释这不是保证收益。
+70-80s 投资者完成第二次风险确认和 RWA 认购，Explorer 展示 payment、reveal、pricing 三类证据。
+80-90s 航线纪念盒出现：NFC 卡打开同一条证据链。“我们不卖盲目的收益；我们把看得见的信任定价，并让客户带走这段航程。”
+~~~
+
+若现场没有真实摄像头，直接说：
+
+> “今天是 RECORDED REPLAY，但验证器、时间戳、异常检测和价格动作是真实运行的；把输入换成船载 WebRTC/MQTT，协议不需要重写。”
+
+### 21.6 工程任务清单
+
+#### 21.6.1 Physical AI / Data / Trust Pricing
+
+| ID | Priority | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| PHY-FINAL-1 | P0 | 建立 data/physical-intel/ fixtures：CargoCam/Ocean Window 视频、AIS/GPS、温湿度、震动、封条、异常事件 | AI + Backend | Todo | fixture replay 在固定时间线输出稳定 hash/root | - |
+| PHY-FINAL-2 | P0 | 定义 VoyagePhysicalEvidence 与向后兼容的 PricingQuote.physical_confidence | AI + Backend | Todo | schema 正例/缺省 NONE/非法 source level tests | - |
+| PHY-FINAL-3 | P0 | 实现 Physical AI deterministic fallback：多源一致性、异常分类、freshness 和 confidence score | AI | Todo | anomaly fixtures：正常、AIS gap、封条破损、温度越界 | - |
+| PHY-FINAL-4 | P0 | 实现 ViewBroker 的预设镜头、租约、排队、限速、隐私遮罩与权限边界 | Frontend + Backend | Todo | 未授权钱包、重复控制、敏感 preset、租约过期均 fail closed | - |
+| PHY-FINAL-5 | P0 | 前端增加 CargoCam/Ocean Window 双面板与 LIVE/REPLAY/TWIN 状态标签 | Frontend | Todo | 375px/1440px、键盘、reduced-motion；截图审查不误导 | - |
+| TRUST-FINAL-1 | P0 | 将 physical evidence 转成 capped trust_credit_bps，先调整现有 risk_score_bps，再由引擎推导 risk_discount_bps，不破坏 PricingQuote 不变量 | AI + Backend | Todo | document-only/GPS/full-stack 对比 + collateral/critical guard tests | - |
+| TRUST-FINAL-2 | P0 | 建立 Trust Evidence Graph：每个 bps credit 绑定 source、timestamp、hash、模型版本 | AI | Todo | 任一证据删除/重复计数/过期都会改变或拒绝 quote | - |
+| TRUST-FINAL-3 | P0 | 实现物理异常 → REPRICE_DOWN/PAUSE_OFFERING 的事件管道，禁止异常直接清算 | Agent + Web3 | Todo | autonomous agent、oracle、offering simulator 三方状态一致 | - |
+| TRUST-FINAL-4 | P1 | 将 Insurance/ZK/Guarantor 预留为 trust layer provider，不在 final demo 伪造已部署保险或 ZK | Web3 + Security | Todo | provider 缺失时显示 NOT_CONNECTED，不得提高 trust credit | - |
+
+#### 21.6.2 Voyage Keepsake / Growth Experience
+
+| ID | Priority | Task | Owner | Status | Verification | Done Evidence |
+|---|---|---|---|---|---|---|
+| GIFT-FINAL-1 | P0 | 设计三套路线纪念物视觉：铜、橡胶、通用数字船票；统一低价值、非金融、等值 | Product + Design | Todo | UI 文案和路演 Q&A 明确“不是投资回报” | - |
+| GIFT-FINAL-2 | P0 | 揭晓后生成脱敏 Voyage Passport 和 NFC/QR mock link，链接 reveal/report/evidence | Frontend + Backend | Todo | 链接只返回 hash、时间线和公开摘要，不泄露地址/完整单据 | - |
+| GIFT-FINAL-3 | P1 | 实体礼物 fulfillment 状态机：ELIGIBLE/ADDRESS_ENCRYPTED/PACKED/SHIPPED/DIGITAL_FALLBACK | Backend | Todo | 地址不进日志/链上；制裁/清关失败自动数字版 | - |
+| GIFT-FINAL-4 | P1 | 建立 sponsor/marketing budget ledger，礼物费用与 RWA pool/insurance pool 隔离 | PM + Finance | Todo | 账本断言 gift cost 不改变 exporter cash、redemption exposure 或 yield | - |
+| GIFT-FINAL-5 | P0 | 90 秒 Final Demo 彩排：Mystery → Camera → Physical AI → Trust Premium → Subscribe → Keepsake | PM + QA | Todo | 连续三次无口头补丁；每个模拟输入均有屏幕标签 | - |
+
+### 21.7 决赛冲刺 Waves
+
+#### Wave F0（0-4h）：故事和可信标签冻结
+
+~~~text
+PHY-FINAL-1 → GIFT-FINAL-1 → 统一 LIVE PROTOTYPE / RECORDED REPLAY / DIGITAL TWIN 文案
+~~~
+
+Gate F0：评委能分辨当前 demo、可插拔接口和长期愿景；不出现“已接入真实船队/已投保/已完成 ZK”这类未经证实的表述。
+
+#### Wave F1（4-14h）：物理 AI 临场感
+
+~~~text
+PHY-FINAL-2/3 → PHY-FINAL-4/5 → anomaly event → autonomous action
+~~~
+
+Gate F1：镜头切换和 telemetry 时间线能在 15 秒内完成；一次异常能让评委看到 confidence、risk action 和链上/模拟 evidence hash 同步变化。
+
+#### Wave F2（14-24h）：信任进入价格
+
+~~~text
+TRUST-FINAL-1/2/3 → Pricing Console Trust Waterfall → pricing invariant/preflight
+~~~
+
+Gate F2：同一交易的 document-only 与 physical-evidence 版本，价格差异来自可解释 bps credit；critical risk 不会被“信任”洗白。
+
+#### Wave F3（24-32h）：航线礼物和传播记忆
+
+~~~text
+GIFT-FINAL-2 → GIFT-FINAL-3/4（若无时间，仅做 digital fallback）→ GIFT-FINAL-5
+~~~
+
+Gate F3：客户扫码回到同一条证据链；礼物不承诺收益、不改变赔率、不把钱包地址写入链上。
+
+#### Wave F4（32h+）：只修演示阻塞项
+
+~~~text
+npm run preflight → npm run test → npm run demo:once → 90 秒录屏与现场彩排
+~~~
+
+### 21.8 最终回答评委的四句话
+
+1. **“物理 AI 做什么？”** —— 它把摄像头、AIS/GPS、温湿度、震动和电子封条交叉成可审计的 Physical Confidence；不是只播放海景。
+2. **“看见货物会不会保证收益？”** —— 不会。它只减少可验证的不确定性折扣；战争、保险、市场和进口商违约仍然可能让投资者亏损。
+3. **“礼物是不是拉人头或抽奖？”** —— 不是。它是完成合规订单后的等值航线纪念物，费用独立、无现金价值、不影响价格、概率或认购资格。
+4. **“现在真的接船了吗？”** —— 现场诚实标注是 replay 或 live prototype；物理数据接口、哈希证据、异常管道和价格动作已经按同一协议设计，换成真实 WebRTC/MQTT 不需要重写 RWA 主链路。
+
+最终收束：
+
+> **AgentBL does not ask investors to trust a black box. It lets them open a voyage, look at the cargo, verify the evidence, price the trust, and take home a proof of the journey.**

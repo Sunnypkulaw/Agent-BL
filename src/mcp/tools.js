@@ -436,12 +436,24 @@ export async function handlePurchasePremiumAnalysis({
   }
 
   const { fetchPaidIntel } = await import('../x402/client.js');
-  const result = await withEphemeralApp((baseUrl) => fetchPaidIntel(baseUrl, service.endpoint, {
-    demoMode: true,
-    budgetUSDC: Number(budget_usdc),
-    caseData,
-    timeoutMs: 15_000
-  }));
+  const previousDemoMode = process.env.DEMO_MODE;
+  const previousX402Mode = process.env.X402_MODE;
+  process.env.DEMO_MODE = 'true';
+  process.env.X402_MODE = 'demo';
+  let result;
+  try {
+    result = await withEphemeralApp((baseUrl) => fetchPaidIntel(baseUrl, service.endpoint, {
+      demoMode: true,
+      budgetUSDC: Number(budget_usdc),
+      caseData,
+      timeoutMs: 15_000
+    }));
+  } finally {
+    if (previousDemoMode === undefined) delete process.env.DEMO_MODE;
+    else process.env.DEMO_MODE = previousDemoMode;
+    if (previousX402Mode === undefined) delete process.env.X402_MODE;
+    else process.env.X402_MODE = previousX402Mode;
+  }
   if (!result.paid?.report_envelope) throw new Error(result.error?.error ?? 'Paid report was not unlocked');
   const envelope = result.paid.report_envelope;
   return {

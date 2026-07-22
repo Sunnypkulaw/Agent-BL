@@ -56,7 +56,7 @@ for (const file of requiredFiles) {
 
 const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
 for (const script of [
-  'install', 'dev', 'test', 'check', 'demo', 'smoke', 'scenarios', 'mcp',
+  'postinstall', 'dev', 'test', 'check', 'demo', 'smoke', 'scenarios', 'mcp',
   'mcp:stdio', 'deploy:protocol', 'verify:wave-b', 'smoke:mcp:injective',
   'migrate:chain-config'
 ]) {

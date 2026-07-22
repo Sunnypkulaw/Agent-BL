@@ -428,6 +428,8 @@ npm run qa                         # Judge Q&A assistant
 # 5. Test x402 payment flow
 npm run smoke:x402                 # Demo mode x402 flow
 npm run smoke:x402:live            # Live testnet settlement (requires wallet)
+npm run x402:intel                 # Purchase premium intelligence through x402
+npm run verify:wave-b              # Verify payment, oracle and protocol evidence
 
 # 6. Interact with MCP server
 npm run mcp:stdio                  # Start MCP server
@@ -1078,6 +1080,8 @@ npm run qa                         # 评委 Q&A 助手
 # 5. 测试 x402 支付流程
 npm run smoke:x402                 # Demo mode x402 流程
 npm run smoke:x402:live            # 真实测试网结算（需要钱包）
+npm run x402:intel                 # 通过 x402 购买高级情报
+npm run verify:wave-b              # 校验支付、预言机与协议证据
 
 # 6. 与 MCP Server 交互
 npm run mcp:stdio                  # 启动 MCP server

@@ -305,7 +305,7 @@ export async function recoverSigner(message, signature) {
   return ethers.verifyMessage(message, signature);
 }
 
-export function createX402Route({ serviceId, priceUSDC, handler }) {
+export function createX402Route({ serviceId, priceUSDC, preflight, handler }) {
   if (!serviceId || !Number.isFinite(priceUSDC) || priceUSDC <= 0 || typeof handler !== 'function') {
     throw new TypeError('serviceId, a positive priceUSDC, and handler are required');
   }
@@ -313,17 +313,17 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
   const payTo = x402PayTo();
 
   return async function x402Route(request, response) {
-    // HACKATHON FIX: Allow personal_sign compatibility route in live mode for demo purposes
-    // TODO: Migrate frontend to x402 V2 middleware (EIP-3009 TransferWithAuthorization)
-    // if (process.env.DEMO_MODE === 'false') {
-    //   response.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
-    //   response.end(JSON.stringify({
-    //     ok: false,
-    //     code: 'x402_v2_live_transport_required',
-    //     error: 'The personal-sign compatibility route is disabled in Live mode; use the verified x402 V2 middleware'
-    //   }));
-    //   return;
-    // }
+    // personal_sign is a demo compatibility transport only. Live delivery must
+    // traverse the V2 EIP-3009 middleware/facilitator and produce a real tx.
+    if (process.env.DEMO_MODE === 'false') {
+      response.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({
+        ok: false,
+        code: 'x402_v2_live_transport_required',
+        error: 'The personal-sign compatibility route is disabled in Live mode; use the verified x402 V2 middleware'
+      }));
+      return;
+    }
     const signature = request.headers['x402-signature'];
     const claimedSigner = request.headers['x402-signer'];
     if (!signature || !claimedSigner) {
@@ -339,6 +339,8 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
       return;
     }
 
+    let paymentSettled = false;
+    let paymentContext = null;
     try {
       let nonce = 'onchain';
       try {
@@ -361,6 +363,10 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
         return;
       }
 
+      if (typeof preflight === 'function') {
+        await preflight(request, { payer });
+      }
+
       let payment;
       const clientTransaction = request.headers['x402-txhash'];
       if (clientTransaction) {
@@ -369,10 +375,6 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
         }
         payment = { txHash: clientTransaction, live: true, payer };
       } else {
-        // HACKATHON FIX: Allow simulated payments in live mode for demo purposes
-        // if (process.env.DEMO_MODE === 'false') {
-        //   throw new Error('Live paid-report delivery requires the original facilitator settlement transaction');
-        // }
         const { recordPaymentEvidence } = await import('./settlement.js');
         const result = await recordPaymentEvidence({
           serviceId,
@@ -383,11 +385,19 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
         payment = result.payment;
       }
 
-      const report = await handler(request);
       const settledAt = payment.receipt?.timestamp ?? new Date().toISOString();
       const paymentTransaction = payment.live === true
         ? payment.txHash
         : `demo://receipt/${String(payment.txHash).replace(/^0x/u, '')}`;
+      paymentContext = {
+        payer,
+        payment_tx: paymentTransaction,
+        settled_at: settledAt,
+        live: payment.live === true,
+        payment
+      };
+      paymentSettled = true;
+      const report = await handler(request, paymentContext);
       const reportEnvelope = createPaidReportEnvelope({
         kind: report.kind,
         case_id: report.case_id,
@@ -403,7 +413,10 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
         evidence_hash: report.evidence_hash
           ?? report.pricing_result?.evidence_hash
           ?? payment.evidence?.responseHash
-          ?? hashReportSnapshot(report)
+          ?? hashReportSnapshot(report),
+        ...(report.selected_pool_id ? { selected_pool_id: report.selected_pool_id } : {}),
+        ...(report.risk_passport_hash ? { risk_passport_hash: report.risk_passport_hash } : {}),
+        ...(report.reveal_proof_hash ? { reveal_proof_hash: report.reveal_proof_hash } : {})
       }, {
         ttlSeconds: Number(process.env.X402_REPORT_TTL_SECONDS ?? 300)
       });
@@ -457,13 +470,26 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
       });
       response.end(JSON.stringify(deliveredBody, null, 2));
     } catch (error) {
-      const status = error?.code === 'INVALID_ARGUMENT' ? 401 : 500;
+      const status = error?.code === 'INVALID_ARGUMENT'
+        ? 401
+        : error?.code
+          ? 409
+          : 500;
       response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
       response.end(JSON.stringify({
         ok: false,
         error: status === 401 ? 'Invalid payment signature' : error.message,
+        code: error.code ?? 'x402_delivery_failed',
+        details: error.details,
         serviceId,
-        payment: { status: 'failed' }
+        payment: paymentSettled
+          ? {
+            status: 'settled_refund_required',
+            payer: paymentContext?.payer,
+            txHash: paymentContext?.payment?.txHash,
+            refund: error.details?.abort?.refund_status ?? 'REFUND_REVIEW_REQUIRED'
+          }
+          : { status: error?.code ? 'not_settled' : 'failed' }
       }));
     }
   };
@@ -472,5 +498,6 @@ export function createX402Route({ serviceId, priceUSDC, handler }) {
 export {
   buildPremiumFraudReview,
   buildPremiumRiskIntel,
-  buildPremiumValuation
+  buildPremiumValuation,
+  buildMysteryVoyageRiskPassport
 } from './endpoints.js';

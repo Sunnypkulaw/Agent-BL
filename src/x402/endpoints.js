@@ -5,6 +5,7 @@ import { assessWorldRisk } from '../agent/worldRiskAgent.js';
 import { quoteFromCase } from '../core/pricingEngine.js';
 import { runScenario } from '../core/scenarioRunner.js';
 import { repriceWithWorldRisk } from '../core/worldRiskPricing.js';
+import { buildMysteryRiskPassport } from '../mystery/riskPassport.js';
 
 /**
  * X402-8 paid-report builders. They compose the existing deterministic agents;
@@ -121,8 +122,13 @@ export async function buildPremiumFraudReview(caseData) {
   };
 }
 
+export async function buildMysteryVoyageRiskPassport(input) {
+  return buildMysteryRiskPassport(input);
+}
+
 export const PAID_REPORT_BUILDERS = Object.freeze({
   'premium-risk': buildPremiumRiskIntel,
   'premium-valuation': buildPremiumValuation,
-  'fraud-review': buildPremiumFraudReview
+  'fraud-review': buildPremiumFraudReview,
+  'mystery-voyage': buildMysteryVoyageRiskPassport
 });
