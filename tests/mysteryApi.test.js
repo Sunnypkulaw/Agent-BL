@@ -6,6 +6,7 @@ import { after, before, test } from 'node:test';
 import { Wallet } from 'ethers';
 import { resetStore, storeState } from '../src/app/store.js';
 import { createUserNonce } from '../src/mystery/fairness.js';
+import { passportClaimMessage } from '../src/mystery/passport.js';
 import { resetDefaultMysteryRevealStore } from '../src/mystery/store.js';
 import { createPaidFetch } from '../src/x402/client.js';
 import { assertPaidReportEnvelope } from '../src/x402/paidReport.js';
@@ -100,6 +101,83 @@ test('MBOX-BE-5/X402-1/2/AI-1: preview → 402 → paid reveal → public proof 
   assert.equal(proofResponse.status, 200);
   assert.deepEqual(proofBody.verification, { valid: true, errors: [] });
   assert.equal(proofBody.proof.selected_pool_id, revealed.body.selected_pool_id);
+
+  const discoverySignature = await wallet.signMessage(passportClaimMessage({
+    revealId: created.body.reveal_id,
+    stampType: 'DISCOVERY',
+    walletAddress: wallet.address,
+    revealProofHash: revealed.body.proof.reveal_proof_hash
+  }));
+  response = await fetch(`${baseUrl}/api/mystery/${created.body.reveal_id}/passport/claim`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      wallet_address: wallet.address,
+      stamp_type: 'DISCOVERY',
+      claim_signature: discoverySignature
+    })
+  });
+  const discovery = await response.json();
+  assert.equal(response.status, 201);
+  assert.equal(discovery.credential.stamp_type, 'DISCOVERY');
+  assert.equal(discovery.share.experience_mode, 'DEMO');
+  assert.equal('wallet_address' in discovery.share, false);
+
+  response = await fetch(`${baseUrl}/api/pool/subscribe`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      wallet_address: wallet.address,
+      pool_id: revealed.body.selected_pool_id,
+      amount_usd: 1000,
+      mystery_source: {
+        reveal_id: created.body.reveal_id,
+        selected_pool_id: revealed.body.selected_pool_id,
+        reveal_proof_hash: revealed.body.proof.reveal_proof_hash
+      }
+    })
+  });
+  const subscription = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(subscription.investment.source.kind, 'MYSTERY_VOYAGE');
+  assert.equal(subscription.investment.price, revealed.body.pricing.issue_price_usd);
+  assert.equal(subscription.investment.yieldBps, revealed.body.pricing.implied_gross_yield_bps);
+
+  const investorSignature = await wallet.signMessage(passportClaimMessage({
+    revealId: created.body.reveal_id,
+    stampType: 'INVESTOR_JOURNEY',
+    walletAddress: wallet.address,
+    revealProofHash: revealed.body.proof.reveal_proof_hash
+  }));
+  response = await fetch(`${baseUrl}/api/mystery/${created.body.reveal_id}/passport/claim`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      wallet_address: wallet.address,
+      stamp_type: 'INVESTOR_JOURNEY',
+      claim_signature: investorSignature
+    })
+  });
+  const investorPassport = await response.json();
+  assert.equal(response.status, 201);
+  assert.equal(investorPassport.credential.stamp_type, 'INVESTOR_JOURNEY');
+
+  response = await fetch(`${baseUrl}/api/mystery/passports?wallet_address=${encodeURIComponent(wallet.address)}`);
+  const passportList = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(passportList.credentials.length, 2);
+  response = await fetch(`${baseUrl}${investorPassport.share.verify_path}`);
+  const publicVerification = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(publicVerification.verification.valid, true);
+  assert.equal(publicVerification.credential.stamp_type, 'INVESTOR_JOURNEY');
+
+  response = await fetch(`${baseUrl}/api/mystery/analytics`);
+  const analytics = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(analytics.funnel.preview_count, 1);
+  assert.equal(analytics.funnel.mystery_subscription_count, 1);
+  assert.ok(analytics.events.some((event) => event.stage === 'MYSTERY_SUBSCRIPTION'));
 });
 
 test('MBOX-BE-6: a candidate invalidated before payment aborts without collecting or replacing', async () => {

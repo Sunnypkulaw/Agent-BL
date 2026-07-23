@@ -506,6 +506,26 @@ const DICT = {
     mystery_evm_wallet_required: 'Live 模式需要连接 EVM 钱包（MetaMask / OKX）',
     mystery_live_v2_required: 'Live 模式需要已部署的 x402 V2 结算网关，当前演示不接受 personal-sign。',
 
+    // ── Voyage Passport collection ──
+    passport_eyebrow: 'Voyage Passport 收藏册',
+    passport_collection_title: '已验证的航线收藏',
+    passport_collection_subtitle: '完成揭晓后领取 Discovery 印章；完成独立 RWA 认购后解锁 Investor Journey 印章。',
+    passport_show_hidden: '显示本地隐藏', passport_refresh: '刷新收藏册', passport_stamps: '枚印章',
+    passport_empty_title: '还没有 Voyage Passport',
+    passport_empty_body: '验证一次 Mystery Voyage 揭晓，即可主动领取第一枚 Discovery 印章。',
+    passport_claim_discovery: '领取 Discovery Passport', passport_claim_journey: '领取 Investor Journey', passport_claimed: '已领取',
+    passport_stamp_discovery: 'Discovery · 揭晓见证', passport_stamp_investor: 'Investor Journey · 投资旅程',
+    passport_verified: '已验证', passport_revoked: '已撤销', passport_reveal_date: '揭晓日期',
+    passport_share: '分享', passport_verify: '公开验证', passport_hide: '本地隐藏', passport_unhide: '取消隐藏',
+    passport_share_title: '分享 Voyage Passport', passport_nickname: '公开昵称（可选）', passport_nickname_placeholder: '远洋船长',
+    passport_advanced_share: '高级：公开交易引用', passport_advanced_note: '仅真实公开交易可用；Demo receipt 永远不会作为链上证据分享。',
+    passport_advanced_unavailable: 'Demo receipt 不支持交易披露；分享卡只包含脱敏体验凭证。',
+    passport_advanced_enable: '加入公开交易引用', passport_advanced_confirm: '我了解这会暴露永久公开的交易链接。',
+    passport_sanitized_json: '脱敏分享载荷', passport_copy: '复制文本', passport_copied: '已复制分享文本', passport_copy_failed: '复制失败，请手动选择文本',
+    passport_export_json: '导出 JSON', passport_export_png: '导出 PNG', passport_export_pdf: '打印 / 保存 PDF',
+    passport_claim_success: 'Passport 已签名并加入收藏册',
+    passport_fixed_disclaimer: '仅为产品体验凭证，不是 RWA、货权、投资证明或收益承诺。',
+
     // ── x402 AI 风控报告市场 ──
     x402_hero_eyebrow: 'x402 AI 风控报告市场',
     x402_hero_h1: '一份 AI 风控报告，一个 RWA 定价决策。链上审计。',
@@ -959,6 +979,26 @@ const DICT = {
     mystery_subscription_success: 'Subscription complete · {tx}', mystery_subscription_complete: 'Subscription recorded',
     mystery_evm_wallet_required: 'Live mode requires an EVM wallet (MetaMask / OKX)',
     mystery_live_v2_required: 'Live mode requires a deployed x402 V2 settlement gateway; personal-sign is not accepted here.',
+
+    // ── Voyage Passport collection ──
+    passport_eyebrow: 'Voyage Passport collection',
+    passport_collection_title: 'Verified voyage collection',
+    passport_collection_subtitle: 'Claim a Discovery stamp after a verified reveal; unlock Investor Journey only after an independent RWA subscription.',
+    passport_show_hidden: 'Show locally hidden', passport_refresh: 'Refresh collection', passport_stamps: 'stamps',
+    passport_empty_title: 'No Voyage Passport yet',
+    passport_empty_body: 'Verify a Mystery Voyage reveal, then actively claim your first Discovery stamp.',
+    passport_claim_discovery: 'Claim Discovery Passport', passport_claim_journey: 'Claim Investor Journey', passport_claimed: 'Claimed',
+    passport_stamp_discovery: 'Discovery · reveal witness', passport_stamp_investor: 'Investor Journey · subscriber',
+    passport_verified: 'Verified', passport_revoked: 'Revoked', passport_reveal_date: 'Reveal date',
+    passport_share: 'Share', passport_verify: 'Verify publicly', passport_hide: 'Hide locally', passport_unhide: 'Unhide',
+    passport_share_title: 'Share Voyage Passport', passport_nickname: 'Public nickname (optional)', passport_nickname_placeholder: 'Captain Atlas',
+    passport_advanced_share: 'Advanced: public transaction reference', passport_advanced_note: 'Available only for a real public transaction. Demo receipts can never be shared as on-chain evidence.',
+    passport_advanced_unavailable: 'Demo receipts do not support transaction disclosure; the share card stays an anonymized experience credential.',
+    passport_advanced_enable: 'Include a public transaction reference', passport_advanced_confirm: 'I understand this reveals a permanent public transaction link.',
+    passport_sanitized_json: 'Sanitized share payload', passport_copy: 'Copy text', passport_copied: 'Share text copied', passport_copy_failed: 'Copy failed; select the text manually',
+    passport_export_json: 'Export JSON', passport_export_png: 'Export PNG', passport_export_pdf: 'Print / Save PDF',
+    passport_claim_success: 'Passport signed and added to your collection',
+    passport_fixed_disclaimer: 'Product-experience credential only. Not an RWA, cargo title, investment certificate, or performance promise.',
 
     // ── x402 AI Risk Report Market ──
     x402_hero_eyebrow: 'x402 AI Risk Report Market',

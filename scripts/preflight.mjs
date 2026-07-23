@@ -135,8 +135,8 @@ check('Executable suites', 'Critical JavaScript modules imported', true, 'server
 
 // 26-31: MCP business tools
 console.log('\n[MCP tools]');
-check('MCP tools', 'MCP manifest exposes exactly 7 tools + 3 resources',
-  MCP_TOOLS_MANIFEST.length === 7 && MCP_RESOURCES.length === 3);
+check('MCP tools', 'MCP manifest exposes exactly 9 tools + 3 resources',
+  MCP_TOOLS_MANIFEST.length === 9 && MCP_RESOURCES.length === 3);
 await mcpCheck('get_trade_case', { case_id: 'CASE-EBL-2026-0001' });
 await mcpCheck('generate_pricing_quote', { case_id: 'CASE-EBL-2026-0001' });
 await mcpCheck('search_knowledge_base', { query: 'copper war risk' });

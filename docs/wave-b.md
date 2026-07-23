@@ -36,7 +36,9 @@
 
 部署脚本会合并而非覆盖 `public/chain-config.json`，随后执行 `mintEBLV2 → pledge → create → subscribe → reprice → pause → resume → settle`。最终链上状态为 `Repaid`，完整交易清单见 [`evidence/wave-b-protocol.json`](./evidence/wave-b-protocol.json)。
 
-## 3. 标准 MCP：7 tools + 3 resources
+## 3. 标准 MCP：9 tools + 3 resources
+
+Wave B 的原始基线是 7 个工具；Mystery Voyage 增加了只读的 `preview_mystery_voyage` 与 `verify_mystery_reveal`，因此当前 surface 为 9 tools + 3 resources。
 
 `npm run mcp:stdio` 使用官方 Model Context Protocol SDK 和 stdio transport，支持 `initialize/listTools/callTool/listResources/readResource`，stdout 仅承载协议帧。
 
@@ -56,7 +58,7 @@ Resources：
 2. `agentbl://risk/methodology`
 3. `agentbl://contracts/deployments`
 
-所有资源固定为 `application/json`，只公开摘要；未知 URI 返回协议错误。`tests/mcpProtocol.test.js` 通过真实 SDK client 对 7 个工具逐一调用并读取 3 个资源。
+所有资源固定为 `application/json`，只公开摘要；未知 URI 返回协议错误。`tests/mcpProtocol.test.js` 通过真实 SDK client 对 Wave B 的 7 个基线工具逐一调用并读取 3 个资源；Mystery Voyage 的 2 个只读工具由当前协议 manifest 额外覆盖。
 
 ## 4. 官方 Injective MCP adapter 与安全边界
 

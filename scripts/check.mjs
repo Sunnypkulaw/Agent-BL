@@ -103,7 +103,7 @@ assert.equal(kbErrors.length, 0, `Knowledge base validation errors: ${kbErrors.j
 // Validate MCP manifest
 const { MCP_TOOLS_MANIFEST, MCP_TOOL_HANDLERS } = await import('../src/mcp/mcpServer.js');
 const { MCP_RESOURCES } = await import('../src/mcp/resources.js');
-assert.equal(MCP_TOOLS_MANIFEST.length, 7, 'MCP manifest must have exactly 7 tools');
+assert.equal(MCP_TOOLS_MANIFEST.length, 9, 'MCP manifest must have exactly 9 tools');
 assert.deepEqual(MCP_RESOURCES.map((resource) => resource.uri).sort(), [
   'agentbl://cases/catalog',
   'agentbl://contracts/deployments',

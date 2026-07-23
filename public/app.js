@@ -2983,6 +2983,9 @@ function wireStaticHandlers() {
 
   // FE-13: Agent Console Toggle
   // FE-13: Agent Console Toggle
+  if (window.matchMedia?.('(max-width: 760px)').matches) {
+    $('#agent-activity-console')?.classList.add('collapsed');
+  }
   $('#toggle-activity-console')?.addEventListener('click', (e) => {
     e.stopPropagation();
     $('#agent-activity-console').classList.toggle('collapsed');

@@ -43,7 +43,7 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 | 评审维度 | 评委必须看到的证据 | 对应任务 | Gate |
 |---|---|---|---|
 | Innovation | "AI 报告本身可按次交易"，支付证据与报告哈希绑定，报告再驱动 RWA 定价 | X402-7~11、X402-15 | 一次真实 402 + 一次真实 oracle event |
-| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 7+3、300+24 tests、live tx | WEB3-17、X402-9、MCP-6~10、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
+| Technical Execution | Injective 五合约 + PaymentOracle、标准 MCP 9+3（7 个 Wave B 基线 + 2 个 Mystery）、300+24 tests、live tx | WEB3-17、X402-9、MCP-6~10、MBOX-MCP-1、DEMO-5 | preflight 全绿，所有 explorer link 可打开 |
 | Use Case & Impact | 45 天回款痛点、银行/保险/投资者/Agent 都能买报告、明确收费与市场入口 | PM-8、X402-8、TRUST-7 | 1 分钟说清 payer/buyer/value/revenue |
 | Product & UX | 402→支付→结算→解锁一屏看懂；证据可展开；钱包失败可恢复 | X402-11/12、DEMO-1~3 | 5 秒理解测试 + 60 秒 demo |
 | Ecosystem Fit | 官方 Injective x402、MCP、EVM、Explorer、可选 precompile；Azure eval/tracing | SP-1~10 | 每个 logo 都能指向代码、配置、trace 或 tx |
@@ -59,7 +59,7 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 | AI 定价、反欺诈审单、风险场景、RAG、xAPI | ✅ 已有 | `npm test` 实测 **300/300 passed**；继续作为产品主线，不重做 |
 | Solidity 合约 | ✅ 五合约协议已部署 | `hardhat test` 实测 **24/24 passed**；EBLRegistry V2、发行池、RWA Token、定价 Oracle 与 AgentBLRWA 已部署并完成全生命周期 smoke |
 | Injective Testnet | ✅ 完整链上证据 | chainId `1439`；真实 USDC 支付、PaymentAttested、PricingUpdated、五合约部署及协议 smoke 均有 explorer 证据 |
-| MCP Server | ✅ 标准 7 tools + 3 resources | 官方 MCP SDK stdio lifecycle 已实测；另通过安全 adapter 完成官方 Injective MCP 查询和受控 raw EVM testnet 交易 |
+| MCP Server | ✅ 标准 9 tools + 3 resources（7 个基线 + 2 个 Mystery） | 官方 MCP SDK stdio lifecycle 已实测；另通过安全 adapter 完成官方 Injective MCP 查询和受控 raw EVM testnet 交易 |
 | Demo Mode | ✅ 已完成 | `DEMO_MODE=true` 默认、顶部常驻 banner、Live toggle、一键 reset；Live 配置不足时显式失败，不伪造链上 tx |
 | x402 | ✅ Live 支付闭环已验证；全部 P0 + P1 动效完成 | X402-1~16（含 P1 动效 X402-12）已完成；真实 V2/EIP-3009 支付、PaidReportEnvelope 与 PaymentAttested 已由 explorer 证据串联；前端付费市场含 TTL 重读、支付流光/priceFlash/riskPulse/impact-pop（reduced-motion 安全）；仅 X402-17(P2 discovery) 待做 |
 | Preflight | ✅ 已完成 | 固定 54 项总闸门；Demo 环境实测 50 PASS / 4 项显式 Live WARN / 0 FAIL，覆盖 Node、Solidity、smoke、scenarios、MCP、x402 与 UI |
@@ -84,7 +84,7 @@ RWA：投资贸易融资资产    阅读报告 → 接受风险 → 认购 RWA �
 | P1 | 多场景回归 | fast / balanced / high-risk repricing |
 | P1 | 产品化市场后端与角色中心 | listings/search、pool subscribe/status、exporter dashboard、investor portfolio |
 | P1 | 自主决策可审计 | 决策日志持久化、证据哈希、链上 tx 回填、Agent 活动面板 |
-| P1 | 标准 MCP + Injective MCP | AgentBL 升级为 7 tools + 3 resources 的 stdio server，并用官方 Injective MCP 查询/执行 |
+| P1 | 标准 MCP + Injective MCP | AgentBL 升级为 9 tools + 3 resources 的 stdio server，并用官方 Injective MCP 查询/执行；历史 Wave B 冻结基线为 7 tools |
 | P1 | Microsoft Foundry 评测 | 接 Azure OpenAI provider、Agent traces 和可复现 eval，给出 AI 质量证据 |
 | P2 | Injective 原生模块 | ERC20/Bank precompile 优先；Exchange precompile 仅在有真实可解释场景时接入 |
 | P2 | AI 与品牌增强 | 多 LLM 共识、出口商偏好参数、Injective 紫色主题与 ENI + Injective 联合品牌 |
@@ -1139,8 +1139,8 @@ MBOX-PM-4 完成标准：产品定义、credential 字段、视觉/分享白名�
 | MBOX-X402-2 | P0 | 将 x402 payment tx、selected case、Risk Passport hash、reveal proof hash 绑定进 `PaidReportEnvelope`/`PaymentOracle` | Backend + Web3 | Done | 从 Explorer tx 可重放到同一个 selected pool/report hash | `tests/paidReport.test.js`/`tests/mysteryApi.test.js`：payment_tx、case_id、selected_pool_id、risk_passport_hash、reveal_proof_hash 进入 canonical report_hash；PaymentOracle 继续锚定该 hash |
 | MBOX-AI-1 | P0 | 生成揭晓版 `AI Risk Passport`：适配理由、定价分解、压力回收、证据 freshness | AI | Done | schema + groundedness eval；LLM 失败有 deterministic fallback | `src/mystery/riskPassport.js`：确定性报告含 suitability、真实定价分解、压力回收、抵押覆盖、evidence graph/freshness 与 non-guarantee；端到端 groundedness 断言通过 |
 | MBOX-BE-6 | P0 | 处理候选在支付前后失效：fail closed、记录 abort、免费重开/退款状态，不静默替换 | Backend | Done | 状态竞态与 Paused/Frozen 注入测试 | 付款前全候选重验并 `PAYMENT_NOT_SETTLED`；付款后竞态进入 `ABORTED` + `REFUND_OR_FREE_REOPEN_AVAILABLE`；API/store 注入测试通过 |
-| MBOX-BE-7 | P1 | 将 Mystery reveal 来源写入 portfolio/analytics，不改变原始 PricingQuote 或 yield | Backend | Todo | portfolio API 与事件漏斗测试 | - |
-| MBOX-MCP-1 | P1 | 增加 `preview_mystery_voyage` / `verify_mystery_reveal` MCP 能力，购买仍受预算与人工授权约束 | AI + Backend | Todo | MCP Inspector 调用 + 超预算拒绝测试 | - |
+| MBOX-BE-7 | P1 | 将 Mystery reveal 来源写入 portfolio/analytics，不改变原始 PricingQuote 或 yield | Backend | Done | portfolio API 与事件漏斗测试 | `src/mystery/passport.js`/`analytics.js`、`src/mystery/service.js`、`src/app/store.js`：Discovery/Investor Journey signed credential、脱敏公开验证、`MYSTERY_VOYAGE` source attribution、匿名 funnel 与 quote/yield integrity；`tests/mysteryPassport.test.js`、`tests/mysteryApi.test.js` 全通过 |
+| MBOX-MCP-1 | P1 | 增加 `preview_mystery_voyage` / `verify_mystery_reveal` MCP 能力，购买仍受预算与人工授权约束 | AI + Backend | Done | MCP Inspector 调用 + 超预算拒绝测试 | `src/mcp/tools.js`/`mcpServer.js`：preview 只读候选与人工确认边界，verifier 本地 fail-closed；MCP surface=9 tools+3 resources；`tests/mysteryMcp.test.js`、`tests/mcp*.test.js`、check/preflight manifest gates 全通过 |
 
 #### 20.7.3 Frontend / Experience
 
@@ -1152,7 +1152,7 @@ MBOX-PM-4 完成标准：产品定义、credential 字段、视觉/分享白名�
 | MBOX-FE-4 | P0 | 实现开箱动画和路线揭晓：集装箱封条、地图航线、cargo image、风险脉冲 | Frontend | Done | `prefers-reduced-motion` 下无强动画；无 layout shift | `public/styles.css`：固定 aspect-ratio/最小高度的集装箱双门与封条、航线轨迹、风险脉冲；`public/mystery.js` 复用 6 类真实 cargo 图片；reduced-motion 关闭 transition/animation 并直接开门 |
 | MBOX-FE-5 | P0 | 实现浏览器本地 proof verifier，任一字段被篡改立即红色 fail closed | Frontend + Web3 | Done | Playwright/DOM tamper cases；成功显示复算摘要 | `public/mystery-proof.js` 本地复算 canonical hash、commitment、candidate set、rejection sampling、selected index 与 report/envelope/payment bindings；proof textarea 输入即验，失败红色 FAIL CLOSED 并禁用认购；测试覆盖 10 类 proof 篡改及 report/envelope 篡改 |
 | MBOX-FE-6 | P0 | 揭晓后保持“看报告/认购”双 CTA；认购前弹出第二次金额、损失与风险确认 | Frontend + Compliance | Done | 不签第二次确认不会调用 subscribe | `public/index.html`/`public/mystery.js`：双 CTA 持续可见；独立弹窗显示 pool/金额/风险/压力损失，勾选后仍须完成第二次签名；源码顺序测试断言 `/api/pool/subscribe` 只在签名成功后调用 |
-| MBOX-FE-7 | P1 | Voyage Passport 收藏册、可分享但脱敏的航线卡 | Frontend | Todo | 卡片不含商业秘密、钱包余额或误导性收益承诺 | - |
+| MBOX-FE-7 | P1 | Voyage Passport 收藏册、可分享但脱敏的航线卡 | Frontend | Done | 卡片不含商业秘密、钱包余额或误导性收益承诺 | `public/index.html`/`mystery.js`/`passport.js`/`styles.css`：Discovery 与 Investor Journey 双印章、独立签名领取、collection refresh/local hide、分享预览与 JSON/PNG/Print-PDF 导出；严格分享白名单、Demo 禁止交易披露、高级分享双确认；`tests/mysteryFrontend.test.js` + 1440/375 浏览器验收通过 |
 | MBOX-I18N-1 | P0 | 补齐中英双语 Mystery Voyage 文案并加入 i18n coverage | Frontend | Done | `tests/i18nCoverage.test.js` | `public/i18n.js` 覆盖入口、三档 Passport、五步支付、揭晓、验证与二次认购；coverage 已扩展扫描 `public/mystery.js` 动态 key，中英缺失/英文混入中文测试通过 |
 
 #### 20.7.4 Contract / Security / QA

@@ -2,7 +2,7 @@
  * MCP Server tests — AgentBL
  *
  * Tests the MCP tool handlers and standalone server capabilities.
- * verifies the fixed seven-tool surface with valid inputs.
+ * verifies the fixed nine-tool surface with valid inputs.
  */
 
 import assert from 'node:assert/strict';
@@ -10,8 +10,8 @@ import { test, describe } from 'node:test';
 import { MCP_TOOLS_MANIFEST, MCP_TOOL_HANDLERS, callTool } from '../src/mcp/mcpServer.js';
 
 describe('MCP Tool Manifest', () => {
-  test('has exactly 7 tools', () => {
-    assert.equal(MCP_TOOLS_MANIFEST.length, 7);
+  test('has exactly 9 tools', () => {
+    assert.equal(MCP_TOOLS_MANIFEST.length, 9);
   });
 
   test('all tools have required fields', () => {

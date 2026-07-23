@@ -4,13 +4,14 @@ import test from 'node:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { assertPaidReportEnvelope } from '../src/x402/paidReport.js';
+import { createRevealProof } from '../src/mystery/fairness.js';
 
 function parseTool(result) {
   assert.equal(result.isError, undefined, JSON.stringify(result));
   return JSON.parse(result.content.find((item) => item.type === 'text').text);
 }
 
-test('MCP-6/7/8: official SDK stdio lifecycle executes 7 tools + reads 3 resources', async () => {
+test('MCP-6/7/8/MBOX-MCP-1: official SDK stdio lifecycle executes 9 tools + reads 3 resources', async () => {
   const client = new Client({ name: 'agentbl-protocol-test', version: '1.0.0' });
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -21,14 +22,16 @@ test('MCP-6/7/8: official SDK stdio lifecycle executes 7 tools + reads 3 resourc
   await client.connect(transport);
   try {
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, 7);
+    assert.equal(listed.tools.length, 9);
     assert.deepEqual(listed.tools.map((tool) => tool.name).sort(), [
       'generate_pricing_quote',
       'get_trade_case',
+      'preview_mystery_voyage',
       'purchase_premium_analysis',
       'push_pricing_to_oracle',
       'search_knowledge_base',
       'simulate_offering',
+      'verify_mystery_reveal',
       'verify_trade_documents'
     ]);
     for (const tool of listed.tools) {
@@ -61,6 +64,28 @@ test('MCP-6/7/8: official SDK stdio lifecycle executes 7 tools + reads 3 resourc
     }));
     assert.equal(purchase.result.payment.challenged, true);
     assertPaidReportEnvelope(purchase.result.report);
+    const preview = parseTool(await client.callTool({
+      name: 'preview_mystery_voyage',
+      arguments: { wallet_address: '0x1111111111111111111111111111111111111111', case_id: 'CASE-EBL-2026-0001', budget_usdc: 0.001 }
+    }));
+    assert.equal(preview.result.authorization.payment_authorized, false);
+    const proof = createRevealProof({
+      reveal_id: 'stdio-mcp-reveal',
+      round_id: 'stdio-mcp-round',
+      risk_passport_hash: `0x${'11'.repeat(32)}`,
+      candidates: [{ pool_id: 'pool-a', quote_hash: `0x${'22'.repeat(32)}`, weight: 1 }],
+      server_secret: `0x${'33'.repeat(32)}`,
+      user_nonce: `0x${'44'.repeat(32)}`,
+      payment_tx_hash: `0x${'55'.repeat(32)}`,
+      wallet_address: '0x1111111111111111111111111111111111111111',
+      created_at: '2026-07-23T08:00:00.000Z',
+      expires_at: '2026-07-23T08:10:00.000Z'
+    });
+    const verified = parseTool(await client.callTool({
+      name: 'verify_mystery_reveal',
+      arguments: { proof }
+    }));
+    assert.equal(verified.result.valid, true);
 
     const resources = await client.listResources();
     assert.equal(resources.resources.length, 3);

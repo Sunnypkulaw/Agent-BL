@@ -9,6 +9,11 @@ const {
   isIndependentSubscriptionAuthorized,
   verifyMysteryProof
 } = await import('../public/mystery-proof.js');
+const {
+  assertSafePassportShareCard,
+  buildPassportShareCard,
+  buildPassportShareText
+} = await import('../public/passport.js');
 
 function fixture() {
   return createRevealProof({
@@ -93,6 +98,56 @@ test('MBOX-FE-6: independent subscription guard requires amount, acknowledgement
   assert.equal(isIndependentSubscriptionAuthorized({ ...input, selectedPoolId: 'pool-b' }), false);
 });
 
+test('MBOX-FE-7: Passport share card uses a strict public whitelist', () => {
+  const source = {
+    credential_id: 'vp_safe123',
+    stamp_type: 'DISCOVERY',
+    voyage_id: 'VOY-1234ABCD',
+    cargo_category: 'Industrial metals',
+    route_label: 'Asia to Europe',
+    route_code: 'ASIA-EUROPE',
+    reveal_date: '2026-07-23',
+    experience_mode: 'DEMO',
+    verified_reveal: true,
+    reveal_proof_digest: `0x${'11'.repeat(32)}`,
+    report_hash: `0x${'22'.repeat(32)}`,
+    artwork_variant: 'DAWN',
+    verify_path: '/api/mystery/passport/vp_safe123/verify',
+    wallet_address: Wallet.createRandom().address,
+    amount_usd: 1_000,
+    implied_yield_bps: 1200,
+    risk_level: 'MEDIUM',
+    exact_gps_position: '1,2',
+    ebl_reference: 'BL-SECRET'
+  };
+  const card = buildPassportShareCard(source, { origin: 'https://agentbl.example', nickname: '  Captain   Atlas  ' });
+  assert.doesNotThrow(() => assertSafePassportShareCard(card));
+  assert.equal(card.nickname, 'Captain Atlas');
+  assert.match(buildPassportShareText(card), /Not an RWA/u);
+  const serialized = JSON.stringify(card).toLowerCase();
+  for (const forbidden of ['wallet', 'amount_usd', 'yield_bps', 'risk_level', 'gps', 'ebl_reference']) {
+    assert.equal(serialized.includes(forbidden), false, forbidden);
+  }
+});
+
+test('MBOX-FE-7: public transaction disclosure requires both advanced confirmations', () => {
+  const source = {
+    credential_id: 'vp_live123', stamp_type: 'INVESTOR_JOURNEY', voyage_id: 'VOY-LIVE1234',
+    cargo_category: 'Energy cargo', route_label: 'Asia corridor', route_code: 'ASIA-ASIA',
+    reveal_date: '2026-07-23', experience_mode: 'LIVE_PROTOTYPE', verified_reveal: true,
+    reveal_proof_digest: `0x${'11'.repeat(32)}`, report_hash: `0x${'22'.repeat(32)}`
+  };
+  const options = {
+    includePublicTx: true,
+    publicTxHash: `0x${'33'.repeat(32)}`,
+    explorerUrl: `https://explorer.injective.network/transaction/0x${'33'.repeat(32)}`
+  };
+  assert.equal('public_tx_hash' in buildPassportShareCard(source, options), false);
+  const disclosed = buildPassportShareCard(source, { ...options, advancedConfirmed: true });
+  assert.equal(disclosed.public_tx_hash, options.publicTxHash);
+  assert.equal(disclosed.explorer_url, options.explorerUrl);
+});
+
 test('MBOX-FE-1~6: DOM contract includes tiers, five steps, reveal, verifier and guarded subscribe', async () => {
   const [html, css, ui] = await Promise.all([
     fs.readFile(new URL('../public/index.html', import.meta.url), 'utf8'),
@@ -106,10 +161,18 @@ test('MBOX-FE-1~6: DOM contract includes tiers, five steps, reveal, verifier and
   for (const id of ['mystery-cargo-image', 'mystery-proof-json', 'mystery-view-report-btn', 'mystery-subscribe-btn', 'mystery-risk-ack']) {
     assert.match(html, new RegExp(`id="${id}"`, 'u'));
   }
+  for (const id of ['passport-collection', 'passport-collection-grid', 'mystery-claim-discovery-btn', 'mystery-claim-journey-btn', 'passport-share-modal', 'passport-advanced-share', 'passport-advanced-confirm', 'passport-export-json', 'passport-export-png', 'passport-print']) {
+    assert.match(html, new RegExp(`id="${id}"`, 'u'));
+  }
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/u);
   assert.match(css, /@media \(max-width: 420px\)/u);
   const secondSignature = ui.indexOf('subscriptionSignature = await mysteryState.signer.signMessage');
   const subscribeCall = ui.indexOf("fetchJson('/api/pool/subscribe'");
   assert.ok(secondSignature >= 0 && subscribeCall > secondSignature, 'pool subscribe must follow the second signature');
+  const claimSignature = ui.indexOf('const signature = await wallet.signMessage(message)');
+  const claimCall = ui.indexOf("/passport/claim`");
+  assert.ok(claimSignature >= 0 && claimCall > claimSignature, 'Passport claim API must follow the wallet signature');
+  assert.match(ui, /mystery_source:\s*\{[^]*reveal_id:\s*report\.reveal_id[^]*selected_pool_id:\s*report\.selected_pool_id[^]*reveal_proof_hash:\s*report\.reveal_proof_hash/u);
+  assert.match(ui, /onclick:\s*\(\)\s*=>\s*openPassportShare/u);
   assert.match(ui, /payment\.live === true[^]*payment\.explorerUrl/u);
 });

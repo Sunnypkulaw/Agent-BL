@@ -10,8 +10,8 @@ import { KNOWLEDGE_BASE } from '../src/rag/knowledgeBase.js';
 // MCP-1: Manifest Tests
 // ============================================================
 
-test('MCP tools manifest has exactly 7 tools', () => {
-  assert.equal(MCP_TOOLS_MANIFEST.length, 7);
+test('MCP tools manifest has exactly 9 tools', () => {
+  assert.equal(MCP_TOOLS_MANIFEST.length, 9);
 });
 
 test('manifest contains all expected tool names', () => {
@@ -23,6 +23,8 @@ test('manifest contains all expected tool names', () => {
   assert.ok(names.includes('search_knowledge_base'));
   assert.ok(names.includes('verify_trade_documents'));
   assert.ok(names.includes('purchase_premium_analysis'));
+  assert.ok(names.includes('preview_mystery_voyage'));
+  assert.ok(names.includes('verify_mystery_reveal'));
 });
 
 test('each tool in manifest has required fields', () => {

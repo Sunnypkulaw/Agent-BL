@@ -145,6 +145,27 @@
           </div>
         </section>
 
+        <section id="passport-collection" class="passport-collection" aria-labelledby="passport-collection-title">
+          <div class="passport-collection-head">
+            <div>
+              <p class="eyebrow" data-i18n="passport_eyebrow">Voyage Passport</p>
+              <h2 id="passport-collection-title" data-i18n="passport_collection_title">Verified voyage collection</h2>
+              <p data-i18n="passport_collection_subtitle">Collect a Discovery stamp for a verified reveal and an Investor Journey stamp after a separate RWA subscription.</p>
+            </div>
+            <div class="passport-collection-controls">
+              <label class="passport-hidden-toggle"><input id="passport-show-hidden" type="checkbox" /><span data-i18n="passport_show_hidden">Show locally hidden</span></label>
+              <button id="passport-refresh-btn" class="btn ghost sm" type="button" data-i18n="passport_refresh">Refresh collection</button>
+              <span class="passport-count"><strong id="passport-collection-count">0</strong> <span data-i18n="passport_stamps">stamps</span></span>
+            </div>
+          </div>
+          <div id="passport-collection-grid" class="passport-collection-grid" aria-live="polite"></div>
+          <div id="passport-collection-empty" class="passport-collection-empty">
+            <span class="passport-empty-symbol" aria-hidden="true">✦</span>
+            <div><strong data-i18n="passport_empty_title">No Voyage Passport yet</strong><p data-i18n="passport_empty_body">Verify a Mystery Voyage reveal, then actively claim your first Discovery stamp.</p></div>
+          </div>
+          <p class="passport-collection-disclaimer" data-i18n="passport_fixed_disclaimer">Product-experience credential only. Not an RWA, cargo title, investment certificate, or performance promise.</p>
+        </section>
+
         <section class="market-shell">
           <aside class="market-rail" aria-label="Marketplace controls">
             <div class="market-rail-head">
@@ -684,7 +705,9 @@
 
           <div id="mystery-post-actions" class="mystery-post-actions" hidden>
             <button id="mystery-view-report-btn" class="btn ghost" type="button" data-i18n="mystery_view_report">View Risk Passport</button>
+            <button id="mystery-claim-discovery-btn" class="btn ghost" type="button" disabled data-i18n="passport_claim_discovery">Claim Discovery Passport</button>
             <button id="mystery-subscribe-btn" class="btn mystery-primary" type="button" data-i18n="mystery_subscribe_selected">Subscribe selected RWA</button>
+            <button id="mystery-claim-journey-btn" class="btn mystery-primary" type="button" hidden disabled data-i18n="passport_claim_journey">Claim Investor Journey</button>
           </div>
         </div>
       </dialog>
@@ -705,9 +728,36 @@
             <input id="mystery-subscribe-amount" type="number" min="1" step="100" value="10000" inputmode="decimal" />
             <label class="mystery-signature-check"><input id="mystery-risk-ack" type="checkbox" /><span data-i18n="mystery_risk_ack">I independently authorize this subscription and accept the displayed loss and risk; the blind-box payment did not invest for me.</span></label>
             <p id="mystery-subscribe-result" class="muted" aria-live="polite"></p>
-            <button id="mystery-confirm-subscribe" class="btn mystery-primary" type="submit" disabled data-i18n="mystery_confirm_subscribe">Sign and subscribe</button>
+            <button id="mystery-confirm-subscribe" class="btn mystery-primary" type="button" disabled data-i18n="mystery_confirm_subscribe">Sign and subscribe</button>
           </div>
         </form>
+      </dialog>
+
+      <dialog id="passport-share-modal" class="passport-share-modal" aria-labelledby="passport-share-title">
+        <div class="modal-close-bar">
+          <div class="modal-header"><span class="passport-dialog-symbol" aria-hidden="true">✦</span><h2 id="passport-share-title" data-i18n="passport_share_title">Share Voyage Passport</h2></div>
+          <button id="passport-share-close" class="btn ghost sm" type="button" data-i18n="modal_close">Close</button>
+        </div>
+        <div class="passport-share-body">
+          <label class="control-label" for="passport-share-nickname" data-i18n="passport_nickname">Public nickname (optional)</label>
+          <input id="passport-share-nickname" type="text" maxlength="32" autocomplete="off" data-i18n-ph="passport_nickname_placeholder" placeholder="Captain Atlas" />
+          <div id="passport-share-preview" class="passport-share-preview" aria-live="polite"></div>
+          <details class="passport-advanced">
+            <summary data-i18n="passport_advanced_share">Advanced public transaction disclosure</summary>
+            <p id="passport-advanced-note" class="muted" data-i18n="passport_advanced_note">Available only for a real public transaction. Demo receipts can never be shared as on-chain evidence.</p>
+            <label><input id="passport-advanced-share" type="checkbox" /><span data-i18n="passport_advanced_enable">Include a public transaction reference</span></label>
+            <label><input id="passport-advanced-confirm" type="checkbox" disabled /><span data-i18n="passport_advanced_confirm">I understand this reveals a permanent public transaction link.</span></label>
+          </details>
+          <label class="control-label" for="passport-json-preview" data-i18n="passport_sanitized_json">Sanitized share payload</label>
+          <textarea id="passport-json-preview" readonly spellcheck="false"></textarea>
+          <p class="passport-share-disclaimer" data-i18n="passport_fixed_disclaimer">Product-experience credential only. Not an RWA, cargo title, investment certificate, or performance promise.</p>
+          <div class="passport-share-actions">
+            <button id="passport-share-copy" class="btn ghost" type="button" data-i18n="passport_copy">Copy text</button>
+            <button id="passport-export-json" class="btn ghost" type="button" data-i18n="passport_export_json">Export JSON</button>
+            <button id="passport-export-png" class="btn ghost" type="button" data-i18n="passport_export_png">Export PNG</button>
+            <button id="passport-print" class="btn mystery-primary" type="button" data-i18n="passport_export_pdf">Print / Save PDF</button>
+          </div>
+        </div>
       </dialog>
 
       <footer class="page-foot">

@@ -1648,6 +1648,61 @@ strong { color: var(--text); }
   box-shadow: var(--shadow); overflow: hidden;
 }
 .mystery-subscribe-modal { width: min(620px, 94vw); }
+.passport-collection { margin: 24px 0 30px; padding: 22px 0 8px; border-top: 1px solid var(--line); }
+.passport-collection-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 16px; }
+.passport-collection-head h2 { margin-top: 4px; font-size: 28px; }
+.passport-collection-head p:not(.eyebrow) { max-width: 650px; margin-top: 7px; color: var(--text-2); font-size: 12px; line-height: 1.55; }
+.passport-collection-controls { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.passport-hidden-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 11px; cursor: pointer; }
+.passport-hidden-toggle input { accent-color: var(--accent); }
+.passport-count { display: inline-flex; align-items: baseline; gap: 4px; min-width: 66px; color: var(--text-3); font-size: 11px; }
+.passport-count strong { color: var(--text); font-size: 18px; }
+.passport-collection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.passport-card { min-width: 0; min-height: 325px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.passport-card-art { height: 108px; display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; color: var(--text); background: linear-gradient(115deg, #173046, #254f5b); }
+.passport-investor_journey .passport-card-art { background: linear-gradient(115deg, #352d27, #6b4b2c); }
+.passport-card-symbol { font-size: 42px; line-height: 1; }
+.passport-card-artwork { align-self: flex-start; padding: 5px 7px; border: 1px solid rgba(255,255,255,.35); border-radius: 4px; color: rgba(255,255,255,.8); font: 700 10px var(--mono); letter-spacing: .14em; }
+.passport-card-body { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 14px; }
+.passport-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.passport-stamp-label { color: var(--text-2); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.passport-status { flex: 0 0 auto; padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.passport-status.verified { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 60%, var(--line)); }
+.passport-status.revoked { color: var(--crit); border-color: var(--crit); }
+.passport-card h3 { font-size: 19px; letter-spacing: .03em; }
+.passport-route { min-height: 34px; color: var(--text-2); font-size: 12px; line-height: 1.45; }
+.passport-card-meta { display: flex; justify-content: space-between; gap: 8px; color: var(--text-3); font-size: 10px; }
+.passport-card-meta code { overflow-wrap: anywhere; }
+.passport-card-notice { margin-top: auto; color: var(--text-3); font-size: 10px; line-height: 1.45; }
+.passport-card-actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--line-soft); }
+.passport-card-actions .btn { flex: 1 1 auto; min-height: 31px; font-size: 10px; }
+.passport-collection-empty { display: flex; align-items: center; gap: 13px; min-height: 120px; padding: 20px; border: 1px dashed var(--line); color: var(--text-2); }
+.passport-collection-empty[hidden] { display: none; }
+.passport-empty-symbol { color: var(--warn); font-size: 28px; }
+.passport-collection-empty strong { color: var(--text); font-size: 14px; }
+.passport-collection-empty p { margin-top: 4px; font-size: 12px; }
+.passport-collection-disclaimer { margin-top: 12px; color: var(--text-3); font-size: 10px; }
+.passport-share-modal { width: min(720px, 94vw); max-height: 92vh; padding: 0; color: var(--text); background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.passport-share-body { display: grid; gap: 12px; max-height: calc(92vh - 72px); overflow: auto; padding: 18px 20px 22px; }
+#passport-share-nickname { width: 100%; padding: 10px; color: var(--text); background: var(--bg-inset); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.passport-share-preview { min-height: 148px; padding: 14px; white-space: pre-wrap; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--bg-inset); color: var(--text-2); font: 12px/1.6 var(--mono); }
+.passport-advanced { border-top: 1px solid var(--line); padding-top: 12px; color: var(--text-2); font-size: 11px; }
+.passport-advanced summary { color: var(--text); cursor: pointer; font-weight: 800; }
+.passport-advanced p { margin: 8px 0; line-height: 1.45; }
+.passport-advanced label { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; }
+.passport-advanced input { margin-top: 1px; accent-color: var(--accent); }
+#passport-json-preview { width: 100%; min-height: 142px; resize: vertical; padding: 11px; color: var(--text-2); background: var(--bg-inset); border: 1px solid var(--line); border-radius: 6px; font: 10px/1.45 var(--mono); }
+.passport-share-disclaimer { padding: 9px 11px; border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent); color: var(--text-2); font-size: 11px; line-height: 1.45; }
+.passport-share-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.passport-dialog-symbol { color: var(--warn); font-size: 20px; }
+.passport-share-modal::backdrop { background: rgba(3, 7, 18, .76); backdrop-filter: blur(5px); }
+@media print {
+  body > *:not(.page) { display: none !important; }
+  .topbar, .subbar, .demo-banner, .passport-collection, .page-foot, .agent-activity-console { display: none !important; }
+  .passport-share-modal { display: block !important; position: static; width: 100%; max-height: none; border: 0; box-shadow: none; }
+  .passport-share-modal .modal-close-bar, .passport-share-actions, .passport-advanced, #passport-json-preview, .passport-share-body > .control-label, #passport-share-nickname { display: none !important; }
+  .passport-share-preview { min-height: 300px; border: 0; font-size: 16px; }
+}
 .mystery-modal::backdrop,
 .mystery-subscribe-modal::backdrop { background: rgba(3, 7, 18, .76); backdrop-filter: blur(5px); }
 .mystery-modal-body { max-height: calc(92vh - 72px); overflow: auto; padding: 16px 20px 24px; }
@@ -1766,6 +1821,7 @@ strong { color: var(--text); }
 #mystery-subscribe-result.tone-crit { color: var(--crit); }
 
 @media (max-width: 1080px) {
+  .passport-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mystery-entry { grid-template-columns: 1fr 1.4fr; }
   .mystery-entry-action { grid-column: 1 / -1; grid-template-columns: 1fr auto; align-items: center; }
   .mystery-entry-action .mystery-mode-note { grid-column: 1 / -1; }
@@ -1773,6 +1829,15 @@ strong { color: var(--text); }
 }
 
 @media (max-width: 760px) {
+  .passport-collection { margin-top: 18px; padding-top: 18px; }
+  .passport-collection-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .passport-collection-head h2 { font-size: 22px; }
+  .passport-collection-controls { justify-content: flex-start; }
+  .passport-collection-grid { grid-template-columns: 1fr; }
+  .passport-card { min-height: 300px; }
+  .passport-share-modal { width: 100vw; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; }
+  .passport-share-body { max-height: calc(100dvh - 66px); padding: 14px; }
+  .passport-share-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .mystery-entry { grid-template-columns: 1fr; gap: 14px; }
   .mystery-entry-action { grid-column: auto; grid-template-columns: 1fr; }
   .mystery-tier-selector { grid-template-columns: 1fr; }
@@ -1800,6 +1865,8 @@ strong { color: var(--text); }
 }
 
 @media (max-width: 420px) {
+  .passport-collection-controls { display: grid; grid-template-columns: 1fr; width: 100%; justify-items: start; }
+  .passport-share-actions { grid-template-columns: 1fr; }
   .mystery-entry-metrics,
   .mystery-boundary-grid,
   .mystery-report-kpis,

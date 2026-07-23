@@ -12,7 +12,9 @@ import {
   handlePushPricingToOracle,
   handleSearchKnowledgeBase,
   handleVerifyTradeDocuments,
-  handlePurchasePremiumAnalysis
+  handlePurchasePremiumAnalysis,
+  handlePreviewMysteryVoyage,
+  handleVerifyMysteryReveal
 } from './tools.js';
 
 // ============================================================
@@ -181,6 +183,40 @@ export const MCP_TOOLS_MANIFEST = [
       },
       required: ['case_id']
     }
+  },
+
+  {
+    name: 'preview_mystery_voyage',
+    description: 'Create a free commit-only Mystery Voyage preview from canonical PricingQuotes. Enforces the caller budget before previewing, never performs payment, and always requires separate host-wallet human approval for the x402 purchase.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        wallet_address: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' },
+        case_id: { type: 'string', description: 'Optional case restriction; omit to use every eligible canonical pool.' },
+        risk_passport: {
+          type: 'object',
+          properties: { tier: { type: 'string', enum: ['CONSERVATIVE', 'BALANCED', 'ADVENTUROUS'] } }
+        },
+        budget_usdc: { type: 'number', minimum: 0, maximum: 0.005, default: 0.001 },
+        idempotency_key: { type: 'string' },
+        ttl_seconds: { type: 'number', minimum: 30, maximum: 3600 }
+      },
+      required: ['wallet_address']
+    }
+  },
+
+  {
+    name: 'verify_mystery_reveal',
+    description: 'Recompute a disclosed Mystery Voyage commit-reveal proof and its optional report/payment bindings locally. This read-only verifier never purchases or subscribes to an RWA.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        proof: { type: 'object', description: 'Disclosed MysteryRevealProof JSON.' },
+        report: { type: 'object', description: 'Optional AI Risk Passport for binding checks.' },
+        report_envelope: { type: 'object', description: 'Optional PaidReportEnvelope for payment binding checks.' }
+      },
+      required: ['proof']
+    }
   }
 ];
 
@@ -195,7 +231,9 @@ export const MCP_TOOL_HANDLERS = {
   push_pricing_to_oracle: handlePushPricingToOracle,
   search_knowledge_base: handleSearchKnowledgeBase,
   verify_trade_documents: handleVerifyTradeDocuments,
-  purchase_premium_analysis: handlePurchasePremiumAnalysis
+  purchase_premium_analysis: handlePurchasePremiumAnalysis,
+  preview_mystery_voyage: handlePreviewMysteryVoyage,
+  verify_mystery_reveal: handleVerifyMysteryReveal
 };
 
 // ============================================================

@@ -3,6 +3,12 @@ import { $, el, clear, toast } from './dom.js';
 import { t, tData } from './i18n.js';
 import * as web3 from './web3.js';
 import { isIndependentSubscriptionAuthorized, verifyMysteryProof } from './mystery-proof.js';
+import {
+  assertSafePassportShareCard,
+  buildPassportShareCard,
+  buildPassportShareText,
+  shortPassportDigest
+} from './passport.js';
 
 const TIER_META = Object.freeze({
   CONSERVATIVE: { riskBps: 500, yieldRange: '3-8%', stressLossPct: 0.25 },
@@ -19,7 +25,12 @@ const mysteryState = {
   canonicalProof: null,
   proofValid: false,
   proofVersion: 0,
-  subscriptionSignature: null
+  subscriptionSignature: null,
+  subscription: null,
+  passports: [],
+  selectedPassport: null,
+  shareCard: null,
+  showHiddenPassports: false
 };
 
 function tierMeta() {
@@ -119,6 +130,217 @@ function renderModeNote() {
   note.className = `mystery-mode-note ${state.demoMode ? 'demo' : 'live'}`;
 }
 
+function passportWallet() {
+  return mysteryState.signer?.address || web3.connectedAddress() || '';
+}
+
+function passportClaimMessage(stampType, walletAddress, revealProofHash, revealId) {
+  return [
+    'AgentBL Voyage Passport Claim',
+    `Reveal: ${String(revealId)}`,
+    `Stamp: ${String(stampType)}`,
+    `Wallet: ${String(walletAddress).toLowerCase()}`,
+    `Proof: ${String(revealProofHash).toLowerCase()}`,
+    'This credential is non-transferable and carries no investment or cargo rights.'
+  ].join('\n');
+}
+
+function hiddenPassportIds() {
+  try { return new Set(JSON.parse(localStorage.getItem('agentbl_hidden_passports') || '[]')); } catch { return new Set(); }
+}
+
+function saveHiddenPassportIds(ids) {
+  try { localStorage.setItem('agentbl_hidden_passports', JSON.stringify([...ids])); } catch { /* private mode */ }
+}
+
+function passportIsDemo(credential) {
+  return String(credential?.experience_mode ?? '').toUpperCase() === 'DEMO';
+}
+
+function passportStampLabel(stampType) {
+  return stampType === 'INVESTOR_JOURNEY' ? t('passport_stamp_investor') : t('passport_stamp_discovery');
+}
+
+function passportStampIcon(stampType) {
+  return stampType === 'INVESTOR_JOURNEY' ? '◆' : '✦';
+}
+
+function passportShareOrigin() {
+  return window.location.origin;
+}
+
+function renderPassportCollection() {
+  const grid = $('#passport-collection-grid');
+  const empty = $('#passport-collection-empty');
+  const count = $('#passport-collection-count');
+  if (!grid || !empty) return;
+  clear(grid);
+  const hidden = hiddenPassportIds();
+  const visible = mysteryState.passports.filter((credential) => mysteryState.showHiddenPassports || !hidden.has(credential.credential_id));
+  if (count) count.textContent = String(visible.length);
+  empty.hidden = visible.length > 0;
+  visible.forEach((credential) => {
+    const share = credential.share ?? credential;
+    let card;
+    try { card = buildPassportShareCard(share, { origin: passportShareOrigin() }); } catch { return; }
+    const stamp = credential.stamp_type ?? card.stamp_type;
+    const article = el('article', { class: `passport-card passport-${stamp.toLowerCase()}` });
+    article.append(
+      el('div', { class: 'passport-card-art', 'aria-hidden': 'true' },
+        el('span', { class: 'passport-card-symbol', text: passportStampIcon(stamp) }),
+        el('span', { class: 'passport-card-artwork', text: String(card.artwork_variant || 'DAWN') })
+      ),
+      el('div', { class: 'passport-card-body' },
+        el('div', { class: 'passport-card-heading' },
+          el('span', { class: 'passport-stamp-label', text: `${passportStampIcon(stamp)} ${passportStampLabel(stamp)}` }),
+          el('span', { class: `passport-status ${card.verified_reveal ? 'verified' : 'revoked'}`, text: card.verified_reveal ? t('passport_verified') : t('passport_revoked') })
+        ),
+        el('h3', { text: card.voyage_id }),
+        el('p', { class: 'passport-route', text: `${card.cargo_category} · ${card.route_label}` }),
+        el('div', { class: 'passport-card-meta' },
+          el('span', { text: `${t('passport_reveal_date')}: ${card.reveal_date || '—'}` }),
+          el('code', { text: shortPassportDigest(card.credential_id) })
+        ),
+        el('p', { class: 'passport-card-notice', text: t('passport_fixed_disclaimer') }),
+        el('div', { class: 'passport-card-actions' },
+          el('button', { class: 'btn ghost sm', type: 'button', text: t('passport_share'), onclick: () => openPassportShare(credential) }),
+          el('a', { class: 'btn ghost sm', href: card.verify_url, target: '_blank', rel: 'noopener', text: t('passport_verify') }),
+          el('button', { class: 'btn ghost sm', type: 'button', text: hidden.has(card.credential_id) ? t('passport_unhide') : t('passport_hide'), onclick: () => togglePassportHidden(card.credential_id) })
+        )
+      )
+    );
+    grid.append(article);
+  });
+}
+
+async function loadPassportCollection(wallet = passportWallet()) {
+  if (!wallet || !/^0x[0-9a-fA-F]{40}$/u.test(wallet)) return;
+  try {
+    const { body } = await fetchJson(`/api/mystery/passports?wallet_address=${encodeURIComponent(wallet)}`);
+    mysteryState.passports = Array.isArray(body.credentials) ? body.credentials : [];
+    renderPassportCollection();
+  } catch (error) {
+    if (error.status !== 404) toast(error.message, true);
+  }
+}
+
+function togglePassportHidden(credentialId) {
+  const ids = hiddenPassportIds();
+  if (ids.has(credentialId)) ids.delete(credentialId); else ids.add(credentialId);
+  saveHiddenPassportIds(ids);
+  renderPassportCollection();
+}
+
+async function claimPassport(stampType) {
+  if (!mysteryState.report || !mysteryState.proofValid) {
+    toast(t('mystery_proof_failed'), true);
+    return;
+  }
+  const wallet = await resolveSigner();
+  const button = stampType === 'INVESTOR_JOURNEY' ? $('#mystery-claim-journey-btn') : $('#mystery-claim-discovery-btn');
+  if (button) button.disabled = true;
+  try {
+    const message = passportClaimMessage(
+      stampType,
+      wallet.address,
+      mysteryState.report.reveal_proof_hash,
+      mysteryState.report.reveal_id
+    );
+    const signature = await wallet.signMessage(message);
+    const { body } = await fetchJson(`/api/mystery/${encodeURIComponent(mysteryState.report.reveal_id)}/passport/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet_address: wallet.address, stamp_type: stampType, claim_signature: signature })
+    });
+    const credential = body.credential;
+    if (credential) {
+      const publicPayment = mysteryState.report?.payment?.live === true
+        ? { txHash: mysteryState.report.payment.txHash, explorerUrl: mysteryState.report.payment.explorerUrl }
+        : null;
+      mysteryState.passports = [...mysteryState.passports.filter((item) => item.credential_id !== credential.credential_id), { ...credential, share: body.share, _publicPayment: publicPayment }];
+      renderPassportCollection();
+      if (stampType === 'DISCOVERY') $('#mystery-claim-discovery-btn').textContent = t('passport_claimed');
+      if (stampType === 'INVESTOR_JOURNEY') $('#mystery-claim-journey-btn').textContent = t('passport_claimed');
+      toast(t('passport_claim_success'));
+    }
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function openPassportShare(credential) {
+  mysteryState.selectedPassport = credential;
+  const nickname = $('#passport-share-nickname');
+  const advanced = $('#passport-advanced-share');
+  const confirm = $('#passport-advanced-confirm');
+  if (nickname) nickname.value = '';
+  if (advanced) { advanced.checked = false; advanced.disabled = passportIsDemo(credential) || !credential._publicPayment; }
+  if (confirm) { confirm.checked = false; confirm.disabled = true; }
+  const advancedNote = $('#passport-advanced-note');
+  if (advancedNote) advancedNote.textContent = (passportIsDemo(credential) || !credential._publicPayment) ? t('passport_advanced_unavailable') : t('passport_advanced_note');
+  renderPassportSharePreview();
+  const dialog = $('#passport-share-modal');
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
+function renderPassportSharePreview() {
+  const credential = mysteryState.selectedPassport;
+  if (!credential) return;
+  const includePublicTx = Boolean($('#passport-advanced-share')?.checked && $('#passport-advanced-confirm')?.checked);
+  const payment = credential._publicPayment ?? {};
+  const card = buildPassportShareCard(credential.share ?? credential, {
+    origin: passportShareOrigin(),
+    nickname: $('#passport-share-nickname')?.value,
+    includePublicTx,
+    advancedConfirmed: includePublicTx,
+    publicTxHash: payment.txHash,
+    explorerUrl: payment.explorerUrl
+  });
+  assertSafePassportShareCard(card);
+  mysteryState.shareCard = card;
+  const preview = $('#passport-share-preview');
+  if (preview) preview.textContent = buildPassportShareText(card);
+  const json = $('#passport-json-preview');
+  if (json) json.value = JSON.stringify(card, null, 2);
+}
+
+function downloadBlob(name, type, content) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = el('a', { href: url, download: name });
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function exportPassportJson() {
+  if (!mysteryState.shareCard) renderPassportSharePreview();
+  downloadBlob(`${mysteryState.shareCard?.credential_id || 'voyage-passport'}.json`, 'application/json', JSON.stringify(mysteryState.shareCard, null, 2));
+}
+
+function exportPassportPng() {
+  const card = mysteryState.shareCard;
+  if (!card) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200; canvas.height = 760;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0b1220'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#f5b942'; ctx.font = '700 34px system-ui'; ctx.fillText(`${passportStampIcon(card.stamp_type)} ${passportStampLabel(card.stamp_type)}`, 70, 90);
+  ctx.fillStyle = '#f3f5f7'; ctx.font = '700 58px system-ui'; ctx.fillText(card.voyage_id, 70, 180);
+  ctx.fillStyle = '#aab4c2'; ctx.font = '28px system-ui'; ctx.fillText(`${card.cargo_category} · ${card.route_label}`, 70, 240);
+  ctx.fillText(`${card.experience_mode} · ${card.reveal_date}`, 70, 300);
+  ctx.fillStyle = '#f3f5f7'; ctx.font = '22px system-ui';
+  const lines = ctx.measureText(card.notice).width > 1000 ? [card.notice.slice(0, 85), card.notice.slice(85)] : [card.notice];
+  lines.forEach((line, index) => ctx.fillText(line, 70, 625 + index * 30));
+  const link = el('a', { href: canvas.toDataURL('image/png'), download: `${card.credential_id || 'voyage-passport'}.png` });
+  link.click();
+}
+
+function printPassport() {
+  if (!mysteryState.shareCard) renderPassportSharePreview();
+  window.print();
+}
+
 export function renderMysteryExperience() {
   mysteryState.tier = selectedTier();
   const meta = tierMeta();
@@ -169,6 +391,7 @@ async function createPreview() {
     mysteryState.report = null;
     mysteryState.canonicalProof = null;
     mysteryState.proofValid = false;
+    mysteryState.subscription = null;
     resetSteps();
     renderCommittedPreview();
     $('#mystery-preopen').hidden = false;
@@ -176,6 +399,7 @@ async function createPreview() {
     $('#mystery-risk-passport').hidden = true;
     $('#mystery-proof-tool').hidden = true;
     $('#mystery-post-actions').hidden = true;
+    await loadPassportCollection(mysteryState.signer.address);
     const modal = $('#mystery-modal');
     if (modal && !modal.open) modal.showModal();
   } catch (error) {
@@ -311,6 +535,13 @@ function renderReport(report) {
   $('#mystery-non-guarantee').textContent = report.non_guarantee_notice || t('mystery_non_guarantee');
   $('#mystery-post-actions').hidden = false;
   $('#mystery-subscribe-btn').disabled = !mysteryState.proofValid;
+  const discoveryClaim = $('#mystery-claim-discovery-btn');
+  const journeyClaim = $('#mystery-claim-journey-btn');
+  if (discoveryClaim) discoveryClaim.disabled = !mysteryState.proofValid;
+  if (journeyClaim) {
+    journeyClaim.hidden = !mysteryState.subscription;
+    journeyClaim.disabled = !mysteryState.proofValid || !mysteryState.subscription;
+  }
 }
 
 async function loadAndVerifyProof() {
@@ -350,6 +581,8 @@ function renderProofResult(result, version) {
   if (!result.valid) {
     mysteryState.proofValid = false;
     $('#mystery-subscribe-btn').disabled = true;
+    $('#mystery-claim-discovery-btn').disabled = true;
+    $('#mystery-claim-journey-btn').disabled = true;
     status.textContent = t('mystery_proof_failed');
     status.className = 'mystery-proof-status failed';
     setStep('verify', 'error', t('mystery_fail_closed'));
@@ -358,6 +591,8 @@ function renderProofResult(result, version) {
   }
   mysteryState.proofValid = true;
   $('#mystery-subscribe-btn').disabled = false;
+  $('#mystery-claim-discovery-btn').disabled = false;
+  if (mysteryState.subscription) $('#mystery-claim-journey-btn').disabled = false;
   status.textContent = t('mystery_proof_valid');
   status.className = 'mystery-proof-status valid';
   setStep('verify', 'done', t('mystery_verified'));
@@ -444,12 +679,22 @@ async function confirmSubscription(event) {
       body: JSON.stringify({
         wallet_address: mysteryState.signer.address,
         pool_id: report.selected_pool_id,
-        amount_usd: amountUsd
+        amount_usd: amountUsd,
+        mystery_source: {
+          reveal_id: report.reveal_id,
+          selected_pool_id: report.selected_pool_id,
+          reveal_proof_hash: report.reveal_proof_hash
+        }
       })
     });
+    mysteryState.subscription = body;
     $('#mystery-subscribe-result').textContent = t('mystery_subscription_success', { tx: shortHash(body.txHash) });
     $('#mystery-subscribe-result').className = 'tone-ok';
     window.dispatchEvent(new CustomEvent('agentbl:portfoliochange'));
+    $('#mystery-claim-journey-btn').hidden = false;
+    $('#mystery-claim-journey-btn').disabled = !mysteryState.proofValid;
+    await loadPassportCollection(mysteryState.signer.address);
+    $('#mystery-subscribe-modal')?.close();
     toast(t('mystery_subscription_complete'));
   } catch (error) {
     $('#mystery-subscribe-result').textContent = error.message;
@@ -464,6 +709,7 @@ export function resetMysteryExperience(options = {}) {
   mysteryState.canonicalProof = null;
   mysteryState.proofValid = false;
   mysteryState.subscriptionSignature = null;
+  mysteryState.subscription = null;
   if (!options.preserveSigner) mysteryState.signer = null;
   resetSteps();
   const modal = $('#mystery-modal');
@@ -471,6 +717,7 @@ export function resetMysteryExperience(options = {}) {
   if (modal?.open) modal.close();
   if (subscribeModal?.open) subscribeModal.close();
   renderMysteryExperience();
+  renderPassportCollection();
 }
 
 export function initMysteryExperience() {
@@ -491,6 +738,27 @@ export function initMysteryExperience() {
   $('#mystery-subscribe-close')?.addEventListener('click', () => $('#mystery-subscribe-modal')?.close());
   $('#mystery-subscribe-amount')?.addEventListener('input', updateSubscriptionConfirmation);
   $('#mystery-risk-ack')?.addEventListener('change', updateSubscriptionConfirmation);
-  $('#mystery-subscribe-form')?.addEventListener('submit', confirmSubscription);
+  $('#mystery-confirm-subscribe')?.addEventListener('click', confirmSubscription);
+  $('#mystery-claim-discovery-btn')?.addEventListener('click', () => claimPassport('DISCOVERY'));
+  $('#mystery-claim-journey-btn')?.addEventListener('click', () => claimPassport('INVESTOR_JOURNEY'));
+  $('#passport-refresh-btn')?.addEventListener('click', () => loadPassportCollection());
+  $('#passport-show-hidden')?.addEventListener('change', (event) => { mysteryState.showHiddenPassports = event.target.checked; renderPassportCollection(); });
+  $('#passport-share-nickname')?.addEventListener('input', renderPassportSharePreview);
+  $('#passport-advanced-share')?.addEventListener('change', (event) => {
+    const confirm = $('#passport-advanced-confirm');
+    if (confirm) { confirm.disabled = !event.target.checked; if (!event.target.checked) confirm.checked = false; }
+    renderPassportSharePreview();
+  });
+  $('#passport-advanced-confirm')?.addEventListener('change', renderPassportSharePreview);
+  $('#passport-export-json')?.addEventListener('click', exportPassportJson);
+  $('#passport-export-png')?.addEventListener('click', exportPassportPng);
+  $('#passport-print')?.addEventListener('click', printPassport);
+  $('#passport-share-close')?.addEventListener('click', () => $('#passport-share-modal')?.close());
+  $('#passport-share-copy')?.addEventListener('click', async () => {
+    if (!mysteryState.shareCard) renderPassportSharePreview();
+    try { await navigator.clipboard.writeText(buildPassportShareText(mysteryState.shareCard)); toast(t('passport_copied')); }
+    catch { toast(t('passport_copy_failed'), true); }
+  });
   renderMysteryExperience();
+  renderPassportCollection();
 }

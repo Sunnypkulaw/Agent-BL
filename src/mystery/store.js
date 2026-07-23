@@ -100,6 +100,7 @@ export class MysteryRevealStore {
       user_nonce: null,
       proof: null,
       report: null,
+      passports: [],
       abort: null
     };
     this.index(record);
@@ -114,6 +115,30 @@ export class MysteryRevealStore {
     if (!record) throw new MysteryStoreError('mystery_not_found', 'Mystery reveal not found');
     await this.expireRecord(record);
     return options.internal ? structuredClone(record) : this.publicRecord(record);
+  }
+
+  async list(options = {}) {
+    await this.load();
+    await this.expireStale();
+    const records = [...this.records.values()];
+    return records.map((record) => (options.internal ? structuredClone(record) : this.publicRecord(record)));
+  }
+
+  async claimPassport(revealId, credential) {
+    await this.load();
+    const record = this.records.get(revealId);
+    if (!record) throw new MysteryStoreError('mystery_not_found', 'Mystery reveal not found');
+    await this.expireRecord(record);
+    if (record.state !== 'REVEALED') {
+      throw new MysteryStoreError('mystery_not_revealed', 'A Passport can only be claimed after a verified reveal');
+    }
+    if (!Array.isArray(record.passports)) record.passports = [];
+    const existing = record.passports.find((item) => item.stamp_type === credential.stamp_type);
+    if (existing) return structuredClone(existing);
+    record.passports.push(structuredClone(credential));
+    record.updated_at = new Date(this.now()).toISOString();
+    await this.persist();
+    return structuredClone(credential);
   }
 
   async markPaidAndReveal(input) {
@@ -247,7 +272,8 @@ export class MysteryRevealStore {
       ...this.publicPreview(record),
       state: record.state,
       proof: record.proof,
-      report: record.report
+      report: record.report,
+      passports: record.passports ?? []
     };
   }
 

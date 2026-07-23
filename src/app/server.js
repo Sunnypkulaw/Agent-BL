@@ -438,6 +438,65 @@ export async function handleRequest(request, response) {
         return;
       }
 
+      const passportClaimMatch = url.pathname.match(/^\/api\/mystery\/([^/]+)\/passport\/claim$/u);
+      if (request.method === 'POST' && passportClaimMatch) {
+        const revealId = decodeURIComponent(passportClaimMatch[1]);
+        const body = await readJsonBody(request);
+        const { claimMysteryPassport, mysteryHttpStatus } = await import('../mystery/service.js');
+        try {
+          sendJson(response, 201, await claimMysteryPassport({
+            ...(body ?? {}),
+            reveal_id: revealId
+          }, { investments: storeState.investments }));
+        } catch (error) {
+          sendJson(response, mysteryHttpStatus(error), {
+            ok: false,
+            code: error.code ?? 'passport_claim_failed',
+            error: error.message,
+            details: error.details
+          });
+        }
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/mystery/passports') {
+        const { listMysteryPassports, mysteryHttpStatus } = await import('../mystery/service.js');
+        try {
+          sendJson(response, 200, await listMysteryPassports(url.searchParams.get('wallet_address')));
+        } catch (error) {
+          sendJson(response, mysteryHttpStatus(error), {
+            ok: false,
+            code: error.code ?? 'passport_list_failed',
+            error: error.message
+          });
+        }
+        return;
+      }
+
+      const passportVerifyMatch = url.pathname.match(/^\/api\/mystery\/passport\/([^/]+)\/verify$/u);
+      if (request.method === 'GET' && passportVerifyMatch) {
+        const credentialId = decodeURIComponent(passportVerifyMatch[1]);
+        const { verifyPublicMysteryPassport, mysteryHttpStatus } = await import('../mystery/service.js');
+        try {
+          sendJson(response, 200, await verifyPublicMysteryPassport(credentialId));
+        } catch (error) {
+          sendJson(response, mysteryHttpStatus(error), {
+            ok: false,
+            code: error.code ?? 'passport_verify_failed',
+            error: error.message
+          });
+        }
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname === '/api/mystery/analytics') {
+        const { getMysteryRevealStore } = await import('../mystery/store.js');
+        const { buildMysteryAnalytics } = await import('../mystery/analytics.js');
+        const records = await getMysteryRevealStore().list({ internal: true });
+        sendJson(response, 200, buildMysteryAnalytics({ records, investments: storeState.investments }));
+        return;
+      }
+
       // BE-11: Market Listings
       if (request.method === 'GET' && url.pathname === '/api/market/listings') {
         await ensureMockPools();
@@ -480,10 +539,27 @@ export async function handleRequest(request, response) {
         const body = await readJsonBody(request);
         await ensureMockPools();
         try {
-          const res = subscribeToPool(body.wallet_address || '0xDemoWallet', body.pool_id, body.amount_usd);
+          const walletAddress = body.wallet_address || '0xDemoWallet';
+          const { validateMysterySubscriptionSource } = await import('../mystery/service.js');
+          const source = await validateMysterySubscriptionSource({
+            wallet_address: walletAddress,
+            pool_id: body.pool_id,
+            source: body.mystery_source
+          });
+          const res = subscribeToPool(walletAddress, body.pool_id, body.amount_usd, { source });
           sendJson(response, 200, { ok: true, ...res });
         } catch (err) {
-          sendError(response, err);
+          if (err.code) {
+            const { mysteryHttpStatus } = await import('../mystery/service.js');
+            sendJson(response, mysteryHttpStatus(err), {
+              ok: false,
+              code: err.code,
+              error: err.message,
+              details: err.details
+            });
+          } else {
+            sendError(response, err);
+          }
         }
         return;
       }
@@ -504,7 +580,10 @@ export async function handleRequest(request, response) {
       // BE-13: Investors Portfolio
       if (request.method === 'GET' && url.pathname === '/api/investors/portfolio') {
         const walletAddress = url.searchParams.get('wallet_address') || '0xDemoWallet';
-        const myInvestments = storeState.investments.filter(inv => inv.walletAddress === walletAddress);
+        const normalizedWalletAddress = walletAddress.toLowerCase();
+        const myInvestments = storeState.investments.filter(
+          (investment) => String(investment.walletAddress).toLowerCase() === normalizedWalletAddress
+        );
         
         let totalInvested = 0;
         let weightedYieldSum = 0;

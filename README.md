@@ -53,7 +53,7 @@ Exporter uploads eBL → AI underwrites in 5 min → Investors pay $0.50 for ris
 | Criteria | Our Evidence | Where to Verify |
 |----------|--------------|-----------------|
 | **🚀 Innovation** | AI risk intelligence is *sold as a product* via x402, not just a feature. The report itself is tradeable and verifiable on-chain. | [x402 Live Payment](#x402-paid-intelligence) → PaymentOracle binds report hash to USDC settlement |
-| **⚙️ Technical Execution** | 341 AI/backend tests + 32 contract tests. 5-contract protocol deployed. MCP server with 7 tools + 3 resources. All transactions verified on Injective testnet. | [`npm test`](#test-coverage) → [Deployed Contracts](#deployed-contracts) → [Live Transactions](#live-evidence) |
+| **⚙️ Technical Execution** | 341 AI/backend tests + 32 contract tests. 5-contract protocol deployed. MCP server with 9 tools + 3 resources, including Mystery Voyage preview and proof verification. All transactions verified on Injective testnet. | [`npm test`](#test-coverage) → [Deployed Contracts](#deployed-contracts) → [Live Transactions](#live-evidence) |
 | **💎 Real Use Case** | Solves $2.5T trade finance gap. Banks, insurers, investors, and other AI Agents can buy reports without accounts or subscriptions. Clear revenue model. | [Problem Statement](#the-problem) → [Business Model](#business-model) |
 | **🎨 Product & UX** | 402 challenge → wallet signature → settlement → unlock intelligence—all in one flow. Evidence expandable. Wallet failure recovery. | [Quick Start](#quick-start-judge-mode) → 5-second comprehension test |
 | **🌐 Ecosystem Fit** | Built on official **Injective x402 SDK**, **Injective iAgent Framework**, **Injective MCP Server**, and **Microsoft Azure OpenAI**. Full integration with Injective inEVM, optional native precompiles, and Azure AI Foundry tracing. | Every integration links to [code/config/trace/tx](#tech-stack) |
@@ -599,7 +599,7 @@ npm run demo:default
 #### AI Agent Interoperability
 - **MCP Standard**: `@modelcontextprotocol/sdk` v1.29+
 - **Injective MCP**: Official Injective Labs MCP server integration
-- **Tools**: 7 core tools (analyze_ebl, price_offering, settle_offering, etc.)
+- **Tools**: 9 core tools (including `preview_mystery_voyage` and `verify_mystery_reveal`)
 - **Resources**: 3 live data feeds (offerings, risk intel, settlement history)
 
 #### Frontend
@@ -685,7 +685,7 @@ Build the **Bloomberg Terminal for AI-priced trade finance**:
 | 评审标准          | 我们的证据                                                                                                                                                                                     | 如何验证                                                                                   |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | **🚀 创新性**    | AI 风险情报不是普通功能，而是通过 x402 被直接销售为一种产品。风险报告本身可交易、可验证，并能在链上留痕。                                                                                                                                 | [x402 实时支付](#x402-paid-intelligence) → PaymentOracle 将报告哈希与 USDC 结算绑定                  |
-| **⚙️ 技术执行力**  | 341 个 AI/后端测试 + 32 个合约测试。已部署 5 合约协议。MCP Server 提供 7 个工具 + 3 个资源。所有交易均可在 Injective 测试网上验证。                                                                                                 | [`npm test`](#test-coverage) → [已部署合约](#deployed-contracts) → [链上实时证据](#live-evidence) |
+| **⚙️ 技术执行力**  | 341 个 AI/后端测试 + 32 个合约测试。已部署 5 合约协议。MCP Server 当前提供 9 个工具 + 3 个资源（7 个 Wave B 基线工具 + 2 个 Mystery Voyage 工具）。所有交易均可在 Injective 测试网上验证。                                                                                                 | [`npm test`](#test-coverage) → [已部署合约](#deployed-contracts) → [链上实时证据](#live-evidence) |
 | **💎 真实应用场景** | 解决 2.5 万亿美元贸易融资缺口。银行、保险公司、投资者以及其他 AI Agent 都可以在无账号、无订阅的情况下购买报告。商业模式清晰。                                                                                                                    | [问题陈述](#the-problem) → [商业模式](#business-model)                                         |
 | **🎨 产品与 UX** | 402 支付挑战 → 钱包签名 → 链上结算 → 解锁情报，全流程一体化完成。证据可展开查看，钱包失败后可恢复。                                                                                                                                  | [快速开始](#quick-start-judge-mode) → 5 秒理解测试                                              |
 | **🌐 生态契合度**  | 基于官方 **Injective x402 SDK**、**Injective iAgent Framework**、**Injective MCP Server** 和 **Microsoft Azure OpenAI** 构建。完整集成 Injective inEVM，可选接入原生 precompiles，并支持 Azure AI Foundry tracing。 | 每个集成都可追溯到 [代码 / 配置 / Trace / 交易](#tech-stack)                                          |

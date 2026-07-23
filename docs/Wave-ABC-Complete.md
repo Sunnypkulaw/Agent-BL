@@ -9,7 +9,7 @@
 | Wave | 任务路径 | Gate 标准 | 状态 |
 |------|---------|----------|------|
 | **Wave A** | X402-1→3/4/6→8→13/14 + DEMO-1/5 | Demo Mode 稳定；12+ x402 tests 全绿 | ✅ 已达成 |
-| **Wave B** | X402-7/9/10/15 → WEB3-17 → MCP-6/7/8/10/9 | 真实支付链路追溯；MCP 7 tools + 3 resources | ✅ 已达成 |
+| **Wave B** | X402-7/9/10/15 → WEB3-17 → MCP-6/7/8/10/9 | 真实支付链路追溯；MCP 7-tool baseline + 2 Mystery tools + 3 resources | ✅ 已达成 |
 | **Wave C** | SP-8/9/10 → TRUST-1/2/3/5 → X402-11/12 → DEMO-3/4/6 | Azure eval 达阈值；trace 完整；60 秒演示 | ✅ 核心已达成 |
 
 ---
@@ -37,7 +37,7 @@
 - ✅ X402-7/9/10/15 完成
 - ✅ WEB3-17 五合约协议部署
 - ✅ MCP-6/7/8/9/10 完成
-- ✅ 7 tools + 3 resources stdio server
+- ✅ 7-tool baseline + 2 Mystery tools + 3 resources stdio server
 - ✅ 官方 Injective MCP 集成
 
 **证据**: 
@@ -96,7 +96,7 @@ npm test
 
 ### Wave B: 链上可信与 MCP
 - `contracts/` - 五合约协议
-- `src/mcp/` - MCP server (7 tools + 3 resources)
+- `src/mcp/` - MCP server (9 tools + 3 resources; Wave B baseline was 7)
 - `docs/wave-b.md` - Wave B 证据
 
 ### Wave C: AI 质量证明
@@ -137,7 +137,7 @@ npm test
 - ✅ 五合约协议部署（Testnet 1439）
 - ✅ PaymentOracle + RiskPricingOracle
 - ✅ 真实 USDC 支付
-- ✅ MCP Server (7 tools + 3 resources)
+- ✅ MCP Server (9 tools + 3 resources; 7-tool Wave B baseline plus Mystery Voyage)
 - ✅ 官方 Injective MCP 集成
 
 ### 3. Microsoft Foundry 集成 ✅

@@ -1,13 +1,15 @@
 // AgentBL MCP Tool Implementations
-// 7 tools: deterministic trade/pricing/document/report capabilities plus
+// 9 tools: deterministic trade/pricing/document/report capabilities plus
 // policy-guarded oracle writes.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { calculateRisk } from '../core/riskEngine.js';
-import { normalizeHash32 } from '../core/pricingSchema.js';
+import { quoteFromCase } from '../core/pricingEngine.js';
+import { normalizeHash32, normalizePricingQuoteHashes, PAYOUT_SPEEDS, assertPricingQuote } from '../core/pricingSchema.js';
 import { simulateWorkflow } from '../core/workflow.js';
 import { assertTradeCase } from '../core/schema.js';
 import { listHarnessCaseFiles } from '../core/scenarioRunner.js';
@@ -16,6 +18,9 @@ import { checkDocumentConsistency } from '../agent/documentConsistency.js';
 import { authorizeMcpWrite, MCP_PINNED_NETWORK } from './security.js';
 import { X402_SERVICES } from '../x402/config.js';
 import chainConfigLib from '../../scripts/lib/chain-config.cjs';
+import { previewMysteryVoyage } from '../mystery/service.js';
+import { MysteryRevealStore } from '../mystery/store.js';
+import { verifyRevealProof } from '../mystery/fairness.js';
 
 // Import Bowen's pricing engine — for real PricingQuote generation
 async function tryImportPricingEngine() {
@@ -29,6 +34,42 @@ async function tryImportPricingEngine() {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '../..');
+const MYSTERY_OPEN_PRICE_USDC = 0.001;
+
+async function loadMysteryPools(caseId) {
+  const pools = new Map();
+  const files = await listHarnessCaseFiles({ includeDemo: true });
+  for (const file of files) {
+    const caseData = JSON.parse(await fs.readFile(file, 'utf8'));
+    if (caseId && caseData.case_id !== caseId) continue;
+    if (!caseData.financing) continue;
+    try {
+      const configuredSpeed = caseData.financing.payout_speed;
+      const quote = normalizePricingQuoteHashes(quoteFromCase(caseData, {
+        payout_speed: PAYOUT_SPEEDS.includes(configuredSpeed) ? configuredSpeed : 'BALANCED'
+      }));
+      assertPricingQuote(quote, caseData);
+      const createdAt = new Date().toISOString();
+      pools.set(caseData.case_id, {
+        poolId: caseData.case_id,
+        caseData,
+        quote,
+        status: 'Open',
+        subscribedUsd: 0,
+        targetUsd: quote.requested_cash_usd,
+        createdAt,
+        quoteUpdatedAt: createdAt,
+        complianceStatus: 'CLEARED',
+        investorEligible: true
+      });
+    } catch {
+      // Skip legacy fixtures that cannot be normalized into a PricingQuote.
+    }
+  }
+  if (caseId && !pools.has(caseId)) throw new Error(`Mystery case not found or not priceable: ${caseId}`);
+  if (pools.size === 0) throw new Error('No priceable Mystery Voyage cases are available');
+  return pools;
+}
 
 /**
  * Load a trade case by its case_id.
@@ -475,6 +516,90 @@ export async function handlePurchasePremiumAnalysis({
         onchain: false,
         reason: 'demo_mode'
       }
+    }
+  };
+}
+
+// ============================================================
+// Tool 8: preview_mystery_voyage
+// ============================================================
+
+export async function handlePreviewMysteryVoyage({
+  wallet_address,
+  case_id,
+  risk_passport = { tier: 'BALANCED' },
+  budget_usdc = MYSTERY_OPEN_PRICE_USDC,
+  idempotency_key,
+  ttl_seconds
+} = {}) {
+  const budget = Number(budget_usdc);
+  if (!Number.isFinite(budget) || budget < MYSTERY_OPEN_PRICE_USDC) {
+    throw new Error(`Mystery Voyage report price is ${MYSTERY_OPEN_PRICE_USDC} USDC; budget_usdc is too low`);
+  }
+  if (!wallet_address) throw new Error('Missing required parameter: wallet_address');
+  const pools = await loadMysteryPools(case_id);
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'agentbl-mcp-mystery-'));
+  const store = new MysteryRevealStore({ filePath: path.join(directory, 'reveals.json') });
+  try {
+    const preview = await previewMysteryVoyage({
+      wallet_address,
+      risk_passport,
+      idempotency_key,
+      ttl_seconds
+    }, { pools, store });
+    return {
+      tool: 'preview_mystery_voyage',
+      result: {
+        ...preview,
+        authorization: {
+          report_price_usdc: MYSTERY_OPEN_PRICE_USDC,
+          budget_usdc: budget,
+          budget_ok: true,
+          payment_authorized: false,
+          human_approval_required: true,
+          automatically_subscribes_rwa: false,
+          next_step: 'Use the host wallet and the x402 payment flow to open the report.'
+        }
+      }
+    };
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+}
+
+// ============================================================
+// Tool 9: verify_mystery_reveal
+// ============================================================
+
+export async function handleVerifyMysteryReveal({ proof, report, report_envelope } = {}) {
+  if (!proof || typeof proof !== 'object') throw new Error('Missing required parameter: proof');
+  const verification = verifyRevealProof(proof);
+  const errors = [...verification.errors];
+  const bindings = [
+    ['report.selected_pool_id', report?.selected_pool_id, proof.selected_pool_id],
+    ['report.reveal_proof_hash', report?.reveal_proof_hash, proof.reveal_proof_hash],
+    ['report.risk_passport_hash', report?.risk_passport_hash, proof.risk_passport_hash],
+    ['report_envelope.selected_pool_id', report_envelope?.selected_pool_id, proof.selected_pool_id],
+    ['report_envelope.reveal_proof_hash', report_envelope?.reveal_proof_hash, proof.reveal_proof_hash],
+    ['report_envelope.risk_passport_hash', report_envelope?.risk_passport_hash, proof.risk_passport_hash],
+    ['report_envelope.payment_tx', report_envelope?.payment_tx, proof.payment_tx_hash]
+  ];
+  for (const [field, actual, expected] of bindings) {
+    if (actual !== undefined && String(actual).toLowerCase() !== String(expected).toLowerCase()) {
+      errors.push(`${field} mismatch`);
+    }
+  }
+  return {
+    tool: 'verify_mystery_reveal',
+    result: {
+      valid: errors.length === 0,
+      errors,
+      reveal_id: proof.reveal_id,
+      selected_pool_id: proof.selected_pool_id,
+      reveal_proof_hash: proof.reveal_proof_hash,
+      candidate_count: proof.candidate_pool_ids?.length ?? 0,
+      investment_authorized: false,
+      subscription_requires_independent_signature: true
     }
   };
 }

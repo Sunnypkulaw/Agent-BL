@@ -34,7 +34,7 @@ export function createPool(poolId, caseData, quote, options = {}) {
   return storeState.pools.get(poolId);
 }
 
-export function subscribeToPool(walletAddress, poolId, amountUsd) {
+export function subscribeToPool(walletAddress, poolId, amountUsd, options = {}) {
   const pool = storeState.pools.get(poolId);
   if (!pool) throw new Error('Pool not found');
   if (pool.status !== 'Open') throw new Error(`Cannot subscribe to pool in status: ${pool.status}`);
@@ -51,10 +51,11 @@ export function subscribeToPool(walletAddress, poolId, amountUsd) {
 
   const txHash = '0x' + crypto.randomBytes(32).toString('hex');
   const tokenCount = amountUsd / (pool.quote.final_issue_price_usd || 1);
+  const normalizedWalletAddress = String(walletAddress ?? '').toLowerCase();
 
   const investment = {
     txHash,
-    walletAddress,
+    walletAddress: normalizedWalletAddress,
     poolId,
     amountUsd,
     tokenCount,
@@ -62,6 +63,7 @@ export function subscribeToPool(walletAddress, poolId, amountUsd) {
     yieldBps: pool.quote.implied_gross_yield_bps,
     riskLevel: pool.quote.risk_level,
     label: pool.caseData?.bill_of_lading?.cargo || poolId,
+    source: options.source ? structuredClone(options.source) : null,
     timestamp: new Date().toISOString()
   };
 
