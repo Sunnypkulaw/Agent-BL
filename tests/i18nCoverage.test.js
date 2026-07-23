@@ -6,11 +6,13 @@ import { hasTranslation, setLang, t, tData } from '../public/i18n.js';
 
 const html = await fs.readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 const app = await fs.readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+const mystery = await fs.readFile(new URL('../public/mystery.js', import.meta.url), 'utf8');
 
 function referencedTranslationKeys() {
   const keys = new Set();
   for (const match of html.matchAll(/data-i18n(?:-html|-ph|-title)?="([^"]+)"/gu)) keys.add(match[1]);
   for (const match of app.matchAll(/\bt\('([^']+)'(?=\s*(?:,|\)))/gu)) keys.add(match[1]);
+  for (const match of mystery.matchAll(/\bt\('([^']+)'(?=\s*(?:,|\)))/gu)) keys.add(match[1]);
   return [...keys].sort();
 }
 

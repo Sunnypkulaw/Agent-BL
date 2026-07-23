@@ -110,6 +110,41 @@
           <div id="market-stats" class="market-stats" aria-live="polite"></div>
         </section>
 
+        <section id="mystery-entry" class="mystery-entry" aria-labelledby="mystery-entry-title">
+          <div class="mystery-entry-copy">
+            <span class="mystery-mark" aria-hidden="true">M</span>
+            <div>
+              <p class="eyebrow" data-i18n="mystery_eyebrow">Mystery Voyage · x402</p>
+              <h2 id="mystery-entry-title" data-i18n="mystery_title">Open one route. Verify every draw.</h2>
+              <p data-i18n="mystery_subtitle">Choose a Risk Passport, lock an equal-odds route set, and reveal an AI due-diligence report for 0.001 USDC.</p>
+            </div>
+          </div>
+          <fieldset id="mystery-tier-selector" class="mystery-tier-selector">
+            <legend data-i18n="mystery_tier_legend">Risk Passport</legend>
+            <label class="mystery-tier-option">
+              <input type="radio" name="mystery-tier" value="CONSERVATIVE" />
+              <span><strong data-i18n="mystery_tier_conservative">Conservative</strong><small data-i18n="mystery_tier_conservative_hint">Risk ≤ 500 bps</small></span>
+            </label>
+            <label class="mystery-tier-option">
+              <input type="radio" name="mystery-tier" value="BALANCED" checked />
+              <span><strong data-i18n="mystery_tier_balanced">Balanced</strong><small data-i18n="mystery_tier_balanced_hint">Risk ≤ 1,000 bps</small></span>
+            </label>
+            <label class="mystery-tier-option">
+              <input type="radio" name="mystery-tier" value="ADVENTUROUS" />
+              <span><strong data-i18n="mystery_tier_adventurous">Adventurous</strong><small data-i18n="mystery_tier_adventurous_hint">Risk ≤ 1,500 bps</small></span>
+            </label>
+          </fieldset>
+          <div class="mystery-entry-action">
+            <div class="mystery-entry-metrics" aria-live="polite">
+              <div><span data-i18n="mystery_yield_range">Yield range</span><strong id="mystery-entry-yield">5–14%</strong></div>
+              <div><span data-i18n="mystery_stress_cap">Stress loss range</span><strong id="mystery-entry-loss">5%–50%</strong></div>
+              <div><span data-i18n="mystery_price">Open price</span><strong>0.001 USDC</strong></div>
+            </div>
+            <button id="mystery-preview-btn" class="btn mystery-primary" type="button" data-i18n="mystery_preview_btn">Create fair round</button>
+            <span id="mystery-mode-note" class="mystery-mode-note"></span>
+          </div>
+        </section>
+
         <section class="market-shell">
           <aside class="market-rail" aria-label="Marketplace controls">
             <div class="market-rail-head">
@@ -546,6 +581,133 @@
             </section>
           </section>
         </div>
+      </dialog>
+
+      <dialog id="mystery-modal" class="mystery-modal" aria-labelledby="mystery-modal-title">
+        <form method="dialog" class="modal-close-bar">
+          <div class="modal-header">
+            <span class="mystery-mark sm" aria-hidden="true">M</span>
+            <div>
+              <h2 id="mystery-modal-title" data-i18n="mystery_modal_title">Mystery Voyage</h2>
+              <span class="muted" id="mystery-modal-subtitle" data-i18n="mystery_modal_subtitle">Commit-reveal AI due diligence</span>
+            </div>
+          </div>
+          <button class="btn ghost sm close-btn" type="submit" data-i18n="modal_close">Close</button>
+        </form>
+
+        <div class="mystery-modal-body">
+          <div id="mystery-stepper" class="x402-flow mystery-stepper" aria-label="Mystery Voyage settlement progress">
+            <div class="x402-step" id="mystery-step-commit"><div class="x402-step-num">1</div><div class="x402-step-body"><strong data-i18n="mystery_step_commit">Commit</strong><p class="muted" data-i18n="mystery_step_commit_desc">Freeze eligible routes</p></div><span class="x402-step-status">—</span></div>
+            <div class="x402-step-arrow" aria-hidden="true">→</div>
+            <div class="x402-step" id="mystery-step-challenge"><div class="x402-step-num">2</div><div class="x402-step-body"><strong data-i18n="mystery_step_402">402</strong><p class="muted" data-i18n="mystery_step_402_desc">Price challenge</p></div><span class="x402-step-status">—</span></div>
+            <div class="x402-step-arrow" aria-hidden="true">→</div>
+            <div class="x402-step" id="mystery-step-settlement"><div class="x402-step-num">3</div><div class="x402-step-body"><strong data-i18n="mystery_step_settlement">Settlement</strong><p class="muted" data-i18n="mystery_step_settlement_desc">Bind payment evidence</p></div><span class="x402-step-status">—</span></div>
+            <div class="x402-step-arrow" aria-hidden="true">→</div>
+            <div class="x402-step" id="mystery-step-reveal"><div class="x402-step-num">4</div><div class="x402-step-body"><strong data-i18n="mystery_step_reveal">Reveal</strong><p class="muted" data-i18n="mystery_step_reveal_desc">Open selected route</p></div><span class="x402-step-status">—</span></div>
+            <div class="x402-step-arrow" aria-hidden="true">→</div>
+            <div class="x402-step" id="mystery-step-verify"><div class="x402-step-num">5</div><div class="x402-step-body"><strong data-i18n="mystery_step_verify">Verify</strong><p class="muted" data-i18n="mystery_step_verify_desc">Recompute locally</p></div><span class="x402-step-status">—</span></div>
+          </div>
+
+          <section id="mystery-preopen" class="mystery-preopen">
+            <div class="mystery-preopen-head">
+              <div>
+                <span class="metric-label" data-i18n="mystery_round_frozen">Committed candidate set</span>
+                <h3><span id="mystery-candidate-count">—</span> <span data-i18n="mystery_routes">eligible routes</span></h3>
+              </div>
+              <span id="mystery-odds" class="badge tone-info">—</span>
+            </div>
+            <div class="mystery-boundary-grid">
+              <div><span data-i18n="mystery_risk_boundary">Risk score</span><strong id="mystery-risk-boundary">—</strong></div>
+              <div><span data-i18n="mystery_yield_range">Yield range</span><strong id="mystery-yield-boundary">—</strong></div>
+              <div><span data-i18n="mystery_stress_cap">Stress loss cap</span><strong id="mystery-loss-boundary">—</strong></div>
+              <div><span data-i18n="mystery_price">Open price</span><strong>0.001 USDC</strong></div>
+            </div>
+            <div class="mystery-commit-evidence">
+              <div><span data-i18n="mystery_server_commitment">Server commitment</span><code id="mystery-server-commitment">—</code></div>
+              <div><span data-i18n="mystery_candidate_hash">Candidate-set hash</span><code id="mystery-candidate-hash">—</code></div>
+            </div>
+            <p class="mystery-disclosure" data-i18n="mystery_non_subscription">You are buying an AI due-diligence reveal, not subscribing to an RWA. Any investment requires a separate signature.</p>
+            <div class="mystery-open-row">
+              <button id="mystery-open-btn" class="btn mystery-primary" type="button" data-i18n="mystery_open_btn">Open for 0.001 USDC</button>
+              <span id="mystery-payment-note" class="muted" aria-live="polite"></span>
+            </div>
+          </section>
+
+          <section id="mystery-reveal" class="mystery-reveal" hidden>
+            <div class="mystery-container-scene" aria-hidden="true">
+              <div class="mystery-container">
+                <div class="mystery-container-door door-left"><span>AGENTBL</span></div>
+                <div class="mystery-container-door door-right"><span>SEALED</span></div>
+                <div class="mystery-container-cargo"><img id="mystery-cargo-image" alt="" /></div>
+              </div>
+              <div class="mystery-seal">M</div>
+            </div>
+            <div class="mystery-route-reveal">
+              <div class="mystery-route-heading">
+                <div><span class="metric-label" data-i18n="mystery_selected_route">Selected voyage</span><h3 id="mystery-cargo-name">—</h3></div>
+                <span id="mystery-risk-badge" class="badge">—</span>
+              </div>
+              <div class="mystery-map-route">
+                <div><span data-i18n="vp_dep">Departure</span><strong id="mystery-port-from">—</strong></div>
+                <div class="mystery-route-line"><span class="mystery-route-ship" aria-hidden="true">◆</span></div>
+                <div><span data-i18n="vp_arr">ETA</span><strong id="mystery-port-to">—</strong></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="mystery-risk-passport" class="mystery-risk-passport" hidden>
+            <div class="mystery-section-head"><div><span class="metric-label">AI Risk Passport</span><h3 id="mystery-report-route">—</h3></div><span id="mystery-match-badge" class="badge tone-ok">—</span></div>
+            <div class="mystery-report-kpis">
+              <div><span data-i18n="market_issue_price">Issue price</span><strong id="mystery-report-price">—</strong></div>
+              <div><span data-i18n="market_detail_upside">Potential upside</span><strong id="mystery-report-yield">—</strong></div>
+              <div><span data-i18n="mystery_stress_recovery">Stress recovery / token</span><strong id="mystery-report-recovery">—</strong></div>
+              <div><span data-i18n="mystery_collateral_coverage">Collateral coverage</span><strong id="mystery-report-coverage">—</strong></div>
+              <div><span data-i18n="mystery_evidence_freshness">Evidence freshness</span><strong id="mystery-report-freshness">—</strong></div>
+              <div><span data-i18n="mystery_payment_evidence">Payment evidence</span><strong id="mystery-report-payment">—</strong></div>
+            </div>
+            <div class="mystery-report-columns">
+              <div><h4 data-i18n="mystery_match_reasons">Why it matches</h4><ul id="mystery-report-reasons"></ul></div>
+              <div><h4 data-i18n="mystery_risk_factors">Risk factors</h4><ul id="mystery-report-risks"></ul></div>
+            </div>
+            <p id="mystery-non-guarantee" class="mystery-disclosure"></p>
+          </section>
+
+          <section id="mystery-proof-tool" class="mystery-proof-tool" hidden>
+            <div class="mystery-section-head">
+              <div><span class="metric-label" data-i18n="mystery_local_verifier">Browser-local proof verifier</span><h3 data-i18n="mystery_verifier_title">Commit-reveal proof</h3></div>
+              <span id="mystery-proof-status" class="mystery-proof-status">—</span>
+            </div>
+            <textarea id="mystery-proof-json" spellcheck="false" aria-label="Mystery Voyage reveal proof JSON"></textarea>
+            <div class="mystery-proof-actions"><button id="mystery-proof-reset" class="btn ghost sm" type="button" data-i18n="mystery_reset_proof">Reset proof</button></div>
+            <div id="mystery-proof-summary" class="mystery-proof-summary" aria-live="polite"></div>
+          </section>
+
+          <div id="mystery-post-actions" class="mystery-post-actions" hidden>
+            <button id="mystery-view-report-btn" class="btn ghost" type="button" data-i18n="mystery_view_report">View Risk Passport</button>
+            <button id="mystery-subscribe-btn" class="btn mystery-primary" type="button" data-i18n="mystery_subscribe_selected">Subscribe selected RWA</button>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="mystery-subscribe-modal" class="mystery-subscribe-modal" aria-labelledby="mystery-subscribe-title">
+        <form id="mystery-subscribe-form">
+          <div class="modal-close-bar">
+            <div class="modal-header"><h2 id="mystery-subscribe-title" data-i18n="mystery_second_confirmation">Independent investment confirmation</h2></div>
+            <button id="mystery-subscribe-close" class="btn ghost sm" type="button" data-i18n="modal_close">Close</button>
+          </div>
+          <div class="mystery-subscribe-body">
+            <div class="mystery-subscribe-summary">
+              <div><span data-i18n="mystery_selected_pool">Selected pool</span><strong id="mystery-confirm-pool">—</strong></div>
+              <div><span data-i18n="market_detail_risk">Risk</span><strong id="mystery-confirm-risk">—</strong></div>
+              <div><span data-i18n="mystery_max_stress_loss">Stress-case loss</span><strong id="mystery-confirm-loss">—</strong></div>
+            </div>
+            <label class="control-label" for="mystery-subscribe-amount" data-i18n="mystery_amount_label">Independent subscription amount (USD)</label>
+            <input id="mystery-subscribe-amount" type="number" min="1" step="100" value="10000" inputmode="decimal" />
+            <label class="mystery-signature-check"><input id="mystery-risk-ack" type="checkbox" /><span data-i18n="mystery_risk_ack">I independently authorize this subscription and accept the displayed loss and risk; the blind-box payment did not invest for me.</span></label>
+            <p id="mystery-subscribe-result" class="muted" aria-live="polite"></p>
+            <button id="mystery-confirm-subscribe" class="btn mystery-primary" type="submit" disabled data-i18n="mystery_confirm_subscribe">Sign and subscribe</button>
+          </div>
+        </form>
       </dialog>
 
       <footer class="page-foot">

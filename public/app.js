@@ -18,6 +18,7 @@ import { t, tData, toggleLang, onLangChange, applyStaticI18n } from './i18n.js';
 import { initVoyage, renderVoyage, startVoyageClock, stopVoyageClock } from './voyage.js';
 import { initPopupAssistant } from './popup-assistant.js';
 import { getDeepSeekClient } from './llm-client.js';
+import { initMysteryExperience, renderMysteryExperience, resetMysteryExperience } from './mystery.js';
 
 const PAUSED_ACTIONS = new Set(['PAUSE_OFFERING', 'FREEZE_POOL', 'TRIGGER_LIQUIDATION']);
 const MARKET_PLAY_MS = 90000;
@@ -102,6 +103,7 @@ async function boot() {
   applyStaticI18n();
   wireStaticHandlers();
   await loadDemoRuntimeMode();
+  initMysteryExperience();
   initVoyage();
   initPopupAssistant();
   onLangChange(onLangChanged);
@@ -181,6 +183,7 @@ function refreshDemoModeUi() {
   }
   const smoke = $('#x402-smoke-btn');
   if (smoke) smoke.disabled = !state.demoMode;
+  renderMysteryExperience();
 }
 
 async function onModeToggle() {
@@ -196,6 +199,7 @@ async function onModeToggle() {
     state.demoMode = data.demoMode;
     state.liveAvailable = data.liveAvailable;
     state.modeGeneration = data.generation;
+    resetMysteryExperience();
     refreshDemoModeUi();
     toast(`Switched to ${target.toUpperCase()} mode`);
   } catch (error) {
@@ -216,6 +220,7 @@ async function onDemoReset() {
     state.voyageInjected = false;
     state.voyageOffering = null;
     state.voyageEvents = [];
+    resetMysteryExperience();
     renderX402FlowReset();
     await selectCase(state.cases[0]?.case_id);
     setView('market');
@@ -241,6 +246,7 @@ function onLangChanged() {
   highlightSpeed();
   renderMarket();
   renderPortfolio();
+  renderMysteryExperience();
   renderViewMint();
   if (state.view === 'voyage') renderVoyage();
   if (state.view === 'intel') renderIntelMarket();
@@ -2691,6 +2697,7 @@ function wireStaticHandlers() {
     if (!event.detail?.address) state.wallet = null;
     refreshWalletUi();
   });
+  window.addEventListener('agentbl:portfoliochange', renderPortfolio);
   // Close the wallet menu on an outside click or Escape.
   document.addEventListener('click', (e) => {
     if (isWalletMenuOpen() && !e.target.closest('.wallet-wrap')) closeWalletMenu();

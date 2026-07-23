@@ -1146,14 +1146,14 @@ MBOX-PM-4 完成标准：产品定义、credential 字段、视觉/分享白名�
 
 | ID | Priority | Task | Owner | Status | Verification | Done Evidence |
 |---|---|---|---|---|---|---|
-| MBOX-FE-1 | P0 | 在市场首屏增加 Mystery Voyage 入口和 Risk Passport 三档选择器 | Frontend | Todo | 375px/1440px 手动验收；键盘可操作 | - |
-| MBOX-FE-2 | P0 | 开盒前卡片展示 N、等概率、风险/收益/压力损失区间、0.001 USDC 和非认购说明 | Frontend + PM | Todo | 5 秒理解测试；截图 review | - |
-| MBOX-FE-3 | P0 | 复用 x402 stepper 展示 Commit → 402 → Settlement → Reveal → Verify | Frontend | Todo | Demo/Live 两模式；Live 仅真实 tx 可跳 Explorer | - |
-| MBOX-FE-4 | P0 | 实现开箱动画和路线揭晓：集装箱封条、地图航线、cargo image、风险脉冲 | Frontend | Todo | `prefers-reduced-motion` 下无强动画；无 layout shift | - |
-| MBOX-FE-5 | P0 | 实现浏览器本地 proof verifier，任一字段被篡改立即红色 fail closed | Frontend + Web3 | Todo | Playwright/DOM tamper cases；成功显示复算摘要 | - |
-| MBOX-FE-6 | P0 | 揭晓后保持“看报告/认购”双 CTA；认购前弹出第二次金额、损失与风险确认 | Frontend + Compliance | Todo | 不签第二次确认不会调用 subscribe | - |
+| MBOX-FE-1 | P0 | 在市场首屏增加 Mystery Voyage 入口和 Risk Passport 三档选择器 | Frontend | Done | 375px/1440px 手动验收；键盘可操作 | `public/index.html`/`public/styles.css`：市场首屏入口 + 3 个原生 radio 风险档；1080/760/420px 响应式约束，原生方向键/Tab 可操作；`tests/mysteryFrontend.test.js` DOM contract 通过 |
+| MBOX-FE-2 | P0 | 开盒前卡片展示 N、等概率、风险/收益/压力损失区间、0.001 USDC 和非认购说明 | Frontend + PM | Done | 5 秒理解测试；截图 review | `public/mystery.js` 使用真实 preview 的 `candidate_count`/commit hashes，支付前同时显示 `1/N`、三档风险/收益/压力损失区间、`0.001 USDC`、`$1 target != 保本` 与“不自动认购”说明 |
+| MBOX-FE-3 | P0 | 复用 x402 stepper 展示 Commit → 402 → Settlement → Reveal → Verify | Frontend | Done | Demo/Live 两模式；Live 仅真实 tx 可跳 Explorer | `public/index.html`/`public/mystery.js`：五步状态机接真实 preview→402→signed settlement→reveal→proof API；Demo 明示 receipt；Explorer anchor 仅在 `payment.live === true` 且 tx/URL 有效时生成 |
+| MBOX-FE-4 | P0 | 实现开箱动画和路线揭晓：集装箱封条、地图航线、cargo image、风险脉冲 | Frontend | Done | `prefers-reduced-motion` 下无强动画；无 layout shift | `public/styles.css`：固定 aspect-ratio/最小高度的集装箱双门与封条、航线轨迹、风险脉冲；`public/mystery.js` 复用 6 类真实 cargo 图片；reduced-motion 关闭 transition/animation 并直接开门 |
+| MBOX-FE-5 | P0 | 实现浏览器本地 proof verifier，任一字段被篡改立即红色 fail closed | Frontend + Web3 | Done | Playwright/DOM tamper cases；成功显示复算摘要 | `public/mystery-proof.js` 本地复算 canonical hash、commitment、candidate set、rejection sampling、selected index 与 report/envelope/payment bindings；proof textarea 输入即验，失败红色 FAIL CLOSED 并禁用认购；测试覆盖 10 类 proof 篡改及 report/envelope 篡改 |
+| MBOX-FE-6 | P0 | 揭晓后保持“看报告/认购”双 CTA；认购前弹出第二次金额、损失与风险确认 | Frontend + Compliance | Done | 不签第二次确认不会调用 subscribe | `public/index.html`/`public/mystery.js`：双 CTA 持续可见；独立弹窗显示 pool/金额/风险/压力损失，勾选后仍须完成第二次签名；源码顺序测试断言 `/api/pool/subscribe` 只在签名成功后调用 |
 | MBOX-FE-7 | P1 | Voyage Passport 收藏册、可分享但脱敏的航线卡 | Frontend | Todo | 卡片不含商业秘密、钱包余额或误导性收益承诺 | - |
-| MBOX-I18N-1 | P0 | 补齐中英双语 Mystery Voyage 文案并加入 i18n coverage | Frontend | Todo | `tests/i18nCoverage.test.js` | - |
+| MBOX-I18N-1 | P0 | 补齐中英双语 Mystery Voyage 文案并加入 i18n coverage | Frontend | Done | `tests/i18nCoverage.test.js` | `public/i18n.js` 覆盖入口、三档 Passport、五步支付、揭晓、验证与二次认购；coverage 已扩展扫描 `public/mystery.js` 动态 key，中英缺失/英文混入中文测试通过 |
 
 #### 20.7.4 Contract / Security / QA
 
