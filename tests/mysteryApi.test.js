@@ -180,6 +180,16 @@ test('MBOX-BE-5/X402-1/2/AI-1: preview → 402 → paid reveal → public proof 
   assert.ok(analytics.events.some((event) => event.stage === 'MYSTERY_SUBSCRIPTION'));
 });
 
+test('MBOX-BE-5: demo preview refreshes stale deterministic quotes before filtering', async () => {
+  const staleTimestamp = '2000-01-01T00:00:00.000Z';
+  for (const pool of storeState.pools.values()) pool.quoteUpdatedAt = staleTimestamp;
+
+  const created = await preview(Wallet.createRandom(), 'api-stale-demo-refresh');
+  assert.equal(created.response.status, 201);
+  assert.ok(created.body.candidate_count > 0);
+  assert.ok([...storeState.pools.values()].every((pool) => pool.quoteUpdatedAt !== staleTimestamp));
+});
+
 test('MBOX-BE-6: a candidate invalidated before payment aborts without collecting or replacing', async () => {
   const wallet = Wallet.createRandom();
   const created = await preview(wallet, 'api-invalidated');

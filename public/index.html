@@ -112,7 +112,12 @@
 
         <section id="mystery-entry" class="mystery-entry" aria-labelledby="mystery-entry-title">
           <div class="mystery-entry-copy">
-            <span class="mystery-mark" aria-hidden="true">M</span>
+            <span class="mystery-entry-box" aria-hidden="true">
+              <span class="mystery-entry-box-lid"></span>
+              <span class="mystery-entry-box-body"><span>?</span></span>
+              <span class="mystery-entry-box-spark spark-a"></span>
+              <span class="mystery-entry-box-spark spark-b"></span>
+            </span>
             <div>
               <p class="eyebrow" data-i18n="mystery_eyebrow">Mystery Voyage · x402</p>
               <h2 id="mystery-entry-title" data-i18n="mystery_title">Open one route. Verify every draw.</h2>
@@ -630,6 +635,19 @@
           </div>
 
           <section id="mystery-preopen" class="mystery-preopen">
+            <div id="mystery-box-stage" class="mystery-box-stage" aria-hidden="true">
+              <div class="mystery-blind-box">
+                <div class="mystery-blind-box-lid"><span></span></div>
+                <div class="mystery-blind-box-body">
+                  <span class="mystery-box-route-line"></span>
+                  <span class="mystery-box-question">?</span>
+                  <span class="mystery-box-seal">M</span>
+                </div>
+              </div>
+              <div class="mystery-box-sparks">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
             <div class="mystery-preopen-head">
               <div>
                 <span class="metric-label" data-i18n="mystery_round_frozen">Committed candidate set</span>
@@ -656,6 +674,7 @@
 
           <section id="mystery-reveal" class="mystery-reveal" hidden>
             <div class="mystery-container-scene" aria-hidden="true">
+              <div class="mystery-reveal-burst"><span></span><span></span><span></span><span></span><span></span><span></span></div>
               <div class="mystery-container">
                 <div class="mystery-container-door door-left"><span>AGENTBL</span></div>
                 <div class="mystery-container-door door-right"><span>SEALED</span></div>

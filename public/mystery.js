@@ -123,6 +123,15 @@ function resetSteps() {
   ['commit', 'challenge', 'settlement', 'reveal', 'verify'].forEach((step) => setStep(step));
 }
 
+function setMysteryBoxMotion(phase = 'idle') {
+  const preopen = $('#mystery-preopen');
+  if (!preopen) return;
+  preopen.classList.remove('is-unlocking', 'is-bursting');
+  if (phase === 'unlocking' || phase === 'bursting') preopen.classList.add(`is-${phase}`);
+  if (phase === 'unlocking') preopen.setAttribute('aria-busy', 'true');
+  else preopen.removeAttribute('aria-busy');
+}
+
 function renderModeNote() {
   const note = $('#mystery-mode-note');
   if (!note) return;
@@ -392,6 +401,8 @@ async function createPreview() {
     mysteryState.canonicalProof = null;
     mysteryState.proofValid = false;
     mysteryState.subscription = null;
+    setMysteryBoxMotion();
+    $('#mystery-reveal')?.classList.remove('is-opening', 'is-open');
     resetSteps();
     renderCommittedPreview();
     $('#mystery-preopen').hidden = false;
@@ -421,6 +432,8 @@ async function openMysteryVoyage() {
   const button = $('#mystery-open-btn');
   if (button) button.disabled = true;
   const userNonce = randomHex32();
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  setMysteryBoxMotion('unlocking');
   try {
     setStep('challenge', 'active', t('mystery_requesting_402'));
     setPaymentNote(t('mystery_requesting_402'));
@@ -458,18 +471,22 @@ async function openMysteryVoyage() {
     mysteryState.report = report;
     setStep('settlement', 'done', report.payment?.live ? t('mystery_onchain') : t('mystery_demo_receipt'));
     setStep('reveal', 'active', t('mystery_opening'));
+    setMysteryBoxMotion('bursting');
+    await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 0 : 520));
     renderReveal(report);
     const reveal = $('#mystery-reveal');
+    reveal.classList.remove('is-opening', 'is-open');
     reveal.hidden = false;
     requestAnimationFrame(() => reveal.classList.add('is-opening'));
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 0 : 1250));
     reveal.classList.add('is-open');
     setStep('reveal', 'done', t('mystery_revealed'));
     $('#mystery-preopen').hidden = true;
+    setMysteryBoxMotion();
     renderReport(report);
     await loadAndVerifyProof();
   } catch (error) {
+    setMysteryBoxMotion();
     const stage = $('#mystery-step-settlement')?.classList.contains('is-active') ? 'settlement' : 'challenge';
     setStep(stage, 'error', t('mystery_failed'));
     setPaymentNote(error.message, 'tone-crit');
@@ -710,6 +727,8 @@ export function resetMysteryExperience(options = {}) {
   mysteryState.proofValid = false;
   mysteryState.subscriptionSignature = null;
   mysteryState.subscription = null;
+  setMysteryBoxMotion();
+  $('#mystery-reveal')?.classList.remove('is-opening', 'is-open');
   if (!options.preserveSigner) mysteryState.signer = null;
   resetSteps();
   const modal = $('#mystery-modal');

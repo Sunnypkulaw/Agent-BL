@@ -18,6 +18,7 @@ import {
 } from '../core/pricingSchema.js';
 import { X402_SERVICES } from '../x402/config.js';
 import { demoModeController, LiveModeUnavailableError } from '../demo/mode.js';
+import { DEFAULT_MYSTERY_QUOTE_MAX_AGE_SECONDS } from '../mystery/policy.js';
 import { storeState, createPool, subscribeToPool } from './store.js';
 import { recommend } from '../agent/investmentAdvisor.js';
 import {
@@ -382,20 +383,36 @@ export async function handleRequest(request, response) {
       
       // Lazily initialize demo market pools from the same canonical PricingQuote
       // consumed by pricing, oracle and Mystery Voyage.
-      const ensureMockPools = async () => {
+      const quotePoolCase = (caseData) => {
+        const configuredSpeed = caseData.financing.payout_speed;
+        const quote = normalizePricingQuoteHashes(quoteFromCase(caseData, {
+          // A few imported/desensitized fixtures predate the FAST/BALANCED/
+          // LOW_COST enum. They still receive a real deterministic quote.
+          payout_speed: PAYOUT_SPEEDS.includes(configuredSpeed) ? configuredSpeed : 'BALANCED'
+        }));
+        assertPricingQuote(quote, caseData);
+        return quote;
+      };
+
+      const ensureMockPools = async (options = {}) => {
         if (storeState.pools.size === 0) {
           const cases = await loadCaseCatalog();
           for (const c of cases) {
             const caseData = c.case;
             if (!caseData || !caseData.financing) continue;
-            const configuredSpeed = caseData.financing.payout_speed;
-            const quote = normalizePricingQuoteHashes(quoteFromCase(caseData, {
-              // A few imported/desensitized fixtures predate the FAST/BALANCED/
-              // LOW_COST enum. They still receive a real deterministic quote.
-              payout_speed: PAYOUT_SPEEDS.includes(configuredSpeed) ? configuredSpeed : 'BALANCED'
-            }));
-            assertPricingQuote(quote, caseData);
-            createPool(c.case_id, caseData, quote);
+            createPool(c.case_id, caseData, quotePoolCase(caseData));
+          }
+        }
+
+        if (options.refreshStaleDemoQuotes && demoModeController.snapshot().demoMode) {
+          const now = Date.now();
+          const refreshedAt = new Date(now).toISOString();
+          for (const pool of storeState.pools.values()) {
+            const updatedAt = Date.parse(pool.quoteUpdatedAt ?? pool.createdAt);
+            const quoteAgeSeconds = Number.isFinite(updatedAt) ? (now - updatedAt) / 1000 : Infinity;
+            if (quoteAgeSeconds <= DEFAULT_MYSTERY_QUOTE_MAX_AGE_SECONDS) continue;
+            pool.quote = quotePoolCase(pool.caseData);
+            pool.quoteUpdatedAt = refreshedAt;
           }
         }
       };
@@ -403,7 +420,7 @@ export async function handleRequest(request, response) {
       // MBOX-BE-5: freeze an eligible candidate snapshot before payment.
       if (request.method === 'POST' && url.pathname === '/api/mystery/preview') {
         const body = await readJsonBody(request);
-        await ensureMockPools();
+        await ensureMockPools({ refreshStaleDemoQuotes: true });
         const { mysteryHttpStatus, previewMysteryVoyage } = await import('../mystery/service.js');
         try {
           const preview = await previewMysteryVoyage(body ?? {}, { pools: storeState.pools });

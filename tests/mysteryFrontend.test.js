@@ -161,11 +161,17 @@ test('MBOX-FE-1~6: DOM contract includes tiers, five steps, reveal, verifier and
   for (const id of ['mystery-cargo-image', 'mystery-proof-json', 'mystery-view-report-btn', 'mystery-subscribe-btn', 'mystery-risk-ack']) {
     assert.match(html, new RegExp(`id="${id}"`, 'u'));
   }
+  for (const visual of ['mystery-entry-box', 'mystery-box-stage', 'mystery-blind-box', 'mystery-reveal-burst']) {
+    assert.match(html, new RegExp(`class="[^"]*${visual}`, 'u'));
+  }
   for (const id of ['passport-collection', 'passport-collection-grid', 'mystery-claim-discovery-btn', 'mystery-claim-journey-btn', 'passport-share-modal', 'passport-advanced-share', 'passport-advanced-confirm', 'passport-export-json', 'passport-export-png', 'passport-print']) {
     assert.match(html, new RegExp(`id="${id}"`, 'u'));
   }
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/u);
   assert.match(css, /@media \(max-width: 420px\)/u);
+  for (const animation of ['mysteryBoxRattle', 'mysteryLidLaunch', 'mysterySparkBurst', 'mysteryRevealSpark']) {
+    assert.match(css, new RegExp(`@keyframes ${animation}`, 'u'));
+  }
   const secondSignature = ui.indexOf('subscriptionSignature = await mysteryState.signer.signMessage');
   const subscribeCall = ui.indexOf("fetchJson('/api/pool/subscribe'");
   assert.ok(secondSignature >= 0 && subscribeCall > secondSignature, 'pool subscribe must follow the second signature');
@@ -175,4 +181,5 @@ test('MBOX-FE-1~6: DOM contract includes tiers, five steps, reveal, verifier and
   assert.match(ui, /mystery_source:\s*\{[^]*reveal_id:\s*report\.reveal_id[^]*selected_pool_id:\s*report\.selected_pool_id[^]*reveal_proof_hash:\s*report\.reveal_proof_hash/u);
   assert.match(ui, /onclick:\s*\(\)\s*=>\s*openPassportShare/u);
   assert.match(ui, /payment\.live === true[^]*payment\.explorerUrl/u);
+  assert.match(ui, /setMysteryBoxMotion\('unlocking'\)[^]*setMysteryBoxMotion\('bursting'\)/u);
 });

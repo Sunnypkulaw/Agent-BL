@@ -1,5 +1,7 @@
 import { hashCanonical } from './fairness.js';
 
+export const DEFAULT_MYSTERY_QUOTE_MAX_AGE_SECONDS = 3600;
+
 export const RISK_PASSPORT_TIERS = Object.freeze({
   CONSERVATIVE: Object.freeze({
     max_risk_score_bps: 500,
@@ -34,7 +36,12 @@ export function normalizeRiskPassport(input = {}) {
       0,
       10
     ),
-    max_quote_age_seconds: finite(input.max_quote_age_seconds, 3600, 10, 86_400),
+    max_quote_age_seconds: finite(
+      input.max_quote_age_seconds,
+      DEFAULT_MYSTERY_QUOTE_MAX_AGE_SECONDS,
+      10,
+      86_400
+    ),
     min_remaining_capacity_usd: finite(input.min_remaining_capacity_usd, 1, 0, Number.MAX_SAFE_INTEGER),
     excluded_cargo: normalizeList(input.excluded_cargo),
     excluded_routes: normalizeList(input.excluded_routes),
